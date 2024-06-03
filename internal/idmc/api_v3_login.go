@@ -5,22 +5,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 )
 
-type ApiItemLoginRequest struct {
+type ApiV3LoginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-type ApiItemLoginResponse struct {
-	Products []ApiItemLoginResponseProduct `json:"products"`
-	UserInfo ApiItemLoginResponseUserInfo  `json:"userInfo"`
+type ApiV3LoginResponse struct {
+	Products []ApiV3LoginResponseProduct `json:"products"`
+	UserInfo ApiV3LoginResponseUserInfo  `json:"userInfo"`
 }
 
-type ApiItemLoginResponseProduct struct {
+type ApiV3LoginResponseProduct struct {
 	Name       string `json:"name"`
 	BaseApiUrl string `json:"baseApiUrl"`
 }
 
-type ApiItemLoginResponseUserInfo struct {
+type ApiV3LoginResponseUserInfo struct {
 	SessionId   string            `json:"sessionId"`
 	Id          string            `json:"id"`
 	Name        string            `json:"name"`
@@ -31,17 +31,17 @@ type ApiItemLoginResponseUserInfo struct {
 	Status      string            `json:"status"`
 }
 
-func (api *Api) DoLogin(diag *diag.Diagnostics, authUser string, authPass string) *Api {
+func (api *ApiV3) DoLogin(diag *diag.Diagnostics, authUser string, authPass string) *Api {
 
 	// Set up the login function config
-	authFunction := ApiItem[ApiItemLoginRequest, ApiItemLoginResponse]{
-		Api:    api,
+	authFunction := ApiItem[ApiV3LoginRequest, ApiV3LoginResponse]{
+		Api:    api.Root,
 		Method: "POST",
 		Path:   "core/v3/login",
 	}
 
 	// Attempt to perform the login request
-	authResponse := authFunction.Call(diag, nil, nil, &ApiItemLoginRequest{
+	authResponse := authFunction.Call(diag, nil, nil, &ApiV3LoginRequest{
 		Username: authUser,
 		Password: authPass,
 	})
@@ -52,7 +52,7 @@ func (api *Api) DoLogin(diag *diag.Diagnostics, authUser string, authPass string
 	// A new explicit api struct is created to allow for a single base api to
 	// be used for multiple user logins if needed.
 	authedApi := Api{
-		Client:    api.Client,
+		Client:    api.Root.Client,
 		BaseUrl:   "",
 		SessionId: authResponse.UserInfo.SessionId,
 	}

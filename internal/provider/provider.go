@@ -126,7 +126,7 @@ func (p *IdmcProvider) Configure(
 		return
 	}
 
-	idmcApi := idmc.NewApi(fmt.Sprintf("https://%s/public", config.AuthHost)).DoLogin(&resp.Diagnostics, authUser, authPass)
+	idmcApi := idmc.NewApi(fmt.Sprintf("https://%s/public", config.AuthHost)).V3.DoLogin(&resp.Diagnostics, authUser, authPass)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -143,6 +143,7 @@ func (p *IdmcProvider) Resources(ctx context.Context) []func() resource.Resource
 
 func (p *IdmcProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
+		NewV2AgentInstallerInfoDataSource,
 	}
 }
 
