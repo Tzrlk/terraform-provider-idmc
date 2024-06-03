@@ -3,16 +3,18 @@ package provider
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"net/http"
 	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/function"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"terraform-provider-idmc/internal/idmc"
 )
 
 // Ensure IdmcProvider satisfies various provider interfaces.
@@ -124,8 +126,13 @@ func (p *IdmcProvider) Configure(
 		return
 	}
 
-	// Configuration values are now available.
-	// if data.Endpoint.IsNull() { /* ... */ }
+	idmcApi := idmc.NewApi(fmt.Sprintf("https://%s/public", config.AuthHost)).DoLogin(&resp.Diagnostics, authUser, authPass)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.DataSourceData = idmcApi
+	resp.ResourceData   = idmcApi
 
 }
 
