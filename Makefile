@@ -1,16 +1,20 @@
 default: build
 
+CMD_OAPI_CODEGEN ?= go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
+
 #: Generate OpenAPI clients
-codegen: internal/idmc/client.gen.go
+codegen: \
+		internal/idmc/admin/v2/idmc-admin-v2.gen.go \
+		internal/idmc/admin/v3/idmc-admin-v3.gen.go
 .PHONY: gen
 
-internal/idmc/client.gen.go: \
-		tools/oapi-codegen.yml \
-		internal/idmc/apiv2.yml \
-		internal/idmc/apiv3.yml
-	go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen \
-			--config=${<} \
-			internal/idmc/*.yml
+%.gen.go: VPATH = internal/idmc
+%.gen.go: %.yml
+	${CMD_OAPI_CODEGEN} \
+			-generate types,client,spec \
+			-package $(lastword $(subst /, ,$(dir ${@}))) \
+			-o ${@} \
+			${<}
 
 #: Compile module.
 build: \
