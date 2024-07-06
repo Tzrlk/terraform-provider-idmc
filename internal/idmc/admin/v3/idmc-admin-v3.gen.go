@@ -8,14 +8,49 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"path"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/oapi-codegen/runtime"
 )
+
+// Defines values for GetRolesParamsExpand.
+const (
+	Privileges GetRolesParamsExpand = "privileges"
+)
+
+// LoginJSONBody defines parameters for Login.
+type LoginJSONBody struct {
+	// Password Informatica Intelligent Cloud Services password.
+	Password string `json:"password"`
+
+	// Username Informatica Intelligent Cloud Services user name for the organization that you want to log in to.
+	Username string `json:"username"`
+}
+
+// GetRolesParams defines parameters for GetRoles.
+type GetRolesParams struct {
+	// Q Query filter. You can filter using one of the following fields:
+	// * roleId. Unique identifier for the role.
+	// * roleName. Name of the role.
+	Q *string `form:"q,omitempty" json:"q,omitempty"`
+
+	// Expand Returns the privileges associated with the role specified in the query filter.
+	Expand        *GetRolesParamsExpand `form:"expand,omitempty" json:"expand,omitempty"`
+	INFASESSIONID string                `json:"INFA-SESSION-ID"`
+}
+
+// GetRolesParamsExpand defines parameters for GetRoles.
+type GetRolesParamsExpand string
+
+// LoginJSONRequestBody defines body for Login for application/json ContentType.
+type LoginJSONRequestBody LoginJSONBody
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -90,6 +125,167 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// LoginWithBody request with any body
+	LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetRoles request
+	GetRoles(ctx context.Context, params *GetRolesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+func (c *Client) LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLoginRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLoginRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetRoles(ctx context.Context, params *GetRolesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetRolesRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// NewLoginRequest calls the generic Login builder with application/json body
+func NewLoginRequest(server string, body LoginJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewLoginRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewLoginRequestWithBody generates requests for Login with any type of body
+func NewLoginRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/saas/public/core/v3/login")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetRolesRequest generates requests for GetRoles
+func NewGetRolesRequest(server string, params *GetRolesParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/saas/public/core/v3/roles")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Q != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "q", runtime.ParamLocationQuery, *params.Q); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Expand != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "expand", runtime.ParamLocationQuery, *params.Expand); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "INFA-SESSION-ID", runtime.ParamLocationHeader, params.INFASESSIONID)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("INFA-SESSION-ID", headerParam0)
+
+	}
+
+	return req, nil
 }
 
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
@@ -135,13 +331,267 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// LoginWithBodyWithResponse request with any body
+	LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginResponse, error)
+
+	LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginResponse, error)
+
+	// GetRolesWithResponse request
+	GetRolesWithResponse(ctx context.Context, params *GetRolesParams, reqEditors ...RequestEditorFn) (*GetRolesResponse, error)
+}
+
+type LoginResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Products Subscribed Informatica products.
+		Products *[]struct {
+			// BaseApiUrl Base API URL for the product. Use in REST API requests.
+			BaseApiUrl *string `json:"baseApiUrl,omitempty"`
+
+			// Name Product name.
+			Name *string `json:"name,omitempty"`
+		} `json:"products,omitempty"`
+		UserInfo *struct {
+			// Groups User group information for the user.
+			Groups *map[string]interface{} `json:"groups,omitempty"`
+
+			// Id User ID.
+			Id *string `json:"id,omitempty"`
+
+			// Name User name.
+			Name *string `json:"name,omitempty"`
+
+			// OrgId ID of the organization the user belongs to.
+			OrgId *string `json:"orgId,omitempty"`
+
+			// OrgName Organization name.
+			OrgName *string `json:"orgName,omitempty"`
+
+			// ParentOrgId Organization ID for the parent.
+			ParentOrgId *string `json:"parentOrgId,omitempty"`
+
+			// SessionId REST API session ID for the current session. Use in most REST API request headers.
+			SessionId *string `json:"sessionId,omitempty"`
+
+			// Status Status of the user.
+			Status *N200UserInfoStatus `json:"status,omitempty"`
+		} `json:"userInfo,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r LoginResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r LoginResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetRolesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]struct {
+		CreateTime         *string `json:"createTime,omitempty"`
+		CreatedBy          *string `json:"createdBy,omitempty"`
+		Description        *string `json:"description,omitempty"`
+		DisplayDescription *string `json:"displayDescription,omitempty"`
+		DisplayName        *string `json:"displayName,omitempty"`
+		Id                 *string `json:"id,omitempty"`
+		OrgId              *string `json:"orgId,omitempty"`
+		Privileges         *[]struct {
+			Description *string               `json:"description,omitempty"`
+			Id          *string               `json:"id,omitempty"`
+			Name        *string               `json:"name,omitempty"`
+			Service     *string               `json:"service,omitempty"`
+			Status      *N200PrivilegesStatus `json:"status,omitempty"`
+		} `json:"privileges,omitempty"`
+		RoleName   *string     `json:"roleName,omitempty"`
+		Status     *N200Status `json:"status,omitempty"`
+		SystemRole *bool       `json:"systemRole,omitempty"`
+		UpdateTime *string     `json:"updateTime,omitempty"`
+		UpdatedBy  *string     `json:"updatedBy,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r GetRolesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetRolesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// LoginWithBodyWithResponse request with arbitrary body returning *LoginResponse
+func (c *ClientWithResponses) LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginResponse, error) {
+	rsp, err := c.LoginWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLoginResponse(rsp)
+}
+
+func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginResponse, error) {
+	rsp, err := c.Login(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLoginResponse(rsp)
+}
+
+// GetRolesWithResponse request returning *GetRolesResponse
+func (c *ClientWithResponses) GetRolesWithResponse(ctx context.Context, params *GetRolesParams, reqEditors ...RequestEditorFn) (*GetRolesResponse, error) {
+	rsp, err := c.GetRoles(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetRolesResponse(rsp)
+}
+
+// ParseLoginResponse parses an HTTP response from a LoginWithResponse call
+func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &LoginResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Products Subscribed Informatica products.
+			Products *[]struct {
+				// BaseApiUrl Base API URL for the product. Use in REST API requests.
+				BaseApiUrl *string `json:"baseApiUrl,omitempty"`
+
+				// Name Product name.
+				Name *string `json:"name,omitempty"`
+			} `json:"products,omitempty"`
+			UserInfo *struct {
+				// Groups User group information for the user.
+				Groups *map[string]interface{} `json:"groups,omitempty"`
+
+				// Id User ID.
+				Id *string `json:"id,omitempty"`
+
+				// Name User name.
+				Name *string `json:"name,omitempty"`
+
+				// OrgId ID of the organization the user belongs to.
+				OrgId *string `json:"orgId,omitempty"`
+
+				// OrgName Organization name.
+				OrgName *string `json:"orgName,omitempty"`
+
+				// ParentOrgId Organization ID for the parent.
+				ParentOrgId *string `json:"parentOrgId,omitempty"`
+
+				// SessionId REST API session ID for the current session. Use in most REST API request headers.
+				SessionId *string `json:"sessionId,omitempty"`
+
+				// Status Status of the user.
+				Status *N200UserInfoStatus `json:"status,omitempty"`
+			} `json:"userInfo,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetRolesResponse parses an HTTP response from a GetRolesWithResponse call
+func ParseGetRolesResponse(rsp *http.Response) (*GetRolesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetRolesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []struct {
+			CreateTime         *string `json:"createTime,omitempty"`
+			CreatedBy          *string `json:"createdBy,omitempty"`
+			Description        *string `json:"description,omitempty"`
+			DisplayDescription *string `json:"displayDescription,omitempty"`
+			DisplayName        *string `json:"displayName,omitempty"`
+			Id                 *string `json:"id,omitempty"`
+			OrgId              *string `json:"orgId,omitempty"`
+			Privileges         *[]struct {
+				Description *string               `json:"description,omitempty"`
+				Id          *string               `json:"id,omitempty"`
+				Name        *string               `json:"name,omitempty"`
+				Service     *string               `json:"service,omitempty"`
+				Status      *N200PrivilegesStatus `json:"status,omitempty"`
+			} `json:"privileges,omitempty"`
+			RoleName   *string     `json:"roleName,omitempty"`
+			Status     *N200Status `json:"status,omitempty"`
+			SystemRole *bool       `json:"systemRole,omitempty"`
+			UpdateTime *string     `json:"updateTime,omitempty"`
+			UpdatedBy  *string     `json:"updatedBy,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/zzMsQrCQAwG4Fc5/jmUglu2oksHwVcommLAJuEuuBz37oJD12/4Op5+hJtYNnAfBLXd",
-	"wR2p+REwltehVpbHWnavZb3dryB8pTZ1A+MyzdOMQfAQ20JPIsSW7386fgEAAP//fgjTGWYAAAA=",
+	"H4sIAAAAAAAC/6xWTW8bNxD9KwQvBYqV1nCQHgQYhR2lxQL5ahQditgHijtaMeCSFGdoWzX03wtyP7SW",
+	"Vkma9GJrOeSbmcc3M3zi0tbOGjCEfPa0z7gya8tnT5wUaeAzfl3WyrDrDwVbW8+K+dtXPOP34FFZw2f8",
+	"xfRiesH3GbcOjHCqX8q4E7SJoDxHITB3YaWVzKX1kN+/yLWtlIlWZ5Hif+vAC1LWFCWf8TfJnHEP2wBI",
+	"N7bcxU3SGgKT9gvntJLpRP4FbcJCuYFaJFQf8UhBisAJxAfry/i7BJReOWriL8za+lqQkoIVhkBrVYEh",
+	"9krbULIF+HslAVkHMOUZr8XjGzAVbfjs8uXLjNPORaKQvDJVpCIgeCNq+GFvEYBFhMQ5bYBZXwmj/knZ",
+	"MtoIYjsb2IMwxMgybSumDCP7HeHtG06Vh5LPPh9izQ4k3fWH7OoLSOL7fXMMnTXYMHp5cfEz9+FtGWSS",
+	"3BFDi7CKnyso2ZCs7kBMUBHUeIq5EgjXTi29PkW9EQhJw8uPb3pOW8wpWyJE+j6+XnxKm1rNJWcnlzt+",
+	"sR8arHRpI8f2J4z2C8J7setUU7TF9zyzytvgRrhaRpkkI1MdV9b0+UXAQSwHz6o8g1XM/0PKy06ko2es",
+	"r4qxcpszux5TdBMuW4G2psIRKV9mvFZm+Dnm891oqO+Hvs6G7IQHQ+/HA38GUcwPIkqHfiBYBMS22R37",
+	"6oXY7hn6k8FHh52pF29tkU4UzDYgSvDjQkYSFMYqMK1319SJCEyoY7+4lqTuY7cojGh+3n2H2kdW9tlx",
+	"1kDBm7b5DfWsmki6nBQyDFIC4jroadubRkeMtxpGEvzbBiaF6QEjeAkklMZEs9A6Zr+zwT9T6S/IEiKz",
+	"/vzZKAhSMmjh0+7IXQWpQcIjxV6r51amqELsVHxD5HCW56WVOFWHljeVts6VIaiaqTiRcUbkpSAxGSzn",
+	"rSAm7UjOPSBNhFMTD2vwYCTkTguKuJPe1m6evIhLNngJ2LCVV0CkTDWJX5M2s+mGat3O+MGI/hPoY2I4",
+	"lY6ogcAjn30+5vuvAH7H1koT+Cnr2G++WUBlKmYNdIJbW63tQ1xcK9Alzm7Nr4nJopyypVHbAEyVYEit",
+	"Ffi+LhLX3dbYBaYs/u1Qu6uAR1G79K4ZFcvv26vu/NXVLb+J0QEieyuMqMDf8ttwcXH5Gzw6Ycor59W9",
+	"0lAlCuJjhm9jqrzrmHzLs8EIPKmSpzMV0AynDpsJRCuVICjZg6JNnw9DBzKyUKbhvwG2HTJ9JqYm9meB",
+	"dbU9yGesqJ8avKanHACLd39cTxavF4vi/btJMefD9wX5AF+j4O4nXxVnngLSgyD4pJpZcNL5GnN5sxu1",
+	"PruTMbtCp8Vu/n3buoF0Ym+G8Pm5eTqeDrdzPvNvBX/GqzkXJTZP0nFbP0A6Ab02YqUhimuusPl590Nv",
+	"oa4I/0+/GccdEtSxZw1wV9ZqECa9wFz5Ndk05nHZfDup8wMv1fLRwDuecPv9vwEAAP//Z/sFFqoNAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

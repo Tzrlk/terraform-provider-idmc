@@ -2,6 +2,186 @@ openapi: '3.0.0'
 info:
   title:   'Admin API for IDMC'
   version: '3.0.0'
-paths: {}
+paths:
+
+  # https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/login.html
+  /saas/public/core/v3/login:
+    post:
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: |-
+                    Informatica Intelligent Cloud Services user name for the organization that you want to log in to.
+                  maxLength: 255
+                password:
+                  type: string
+                  description: |-
+                    Informatica Intelligent Cloud Services password.
+                  maxLength: 255
+              required:
+                - username
+                - password
+      responses:
+        200:
+          description: |-
+            Returns user information if the request is successful.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    description: |-
+                      Subscribed Informatica products.
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: |-
+                            Product name.
+                        baseApiUrl:
+                          type: string
+                          description: |-
+                            Base API URL for the product. Use in REST API requests.
+                  userInfo:
+                    type: object
+                    properties:
+                      sessionId:
+                        type: string
+                        description: |-
+                          REST API session ID for the current session. Use in most REST API request headers.
+                      id:
+                        type: string
+                        description: |-
+                          User ID.
+                      name:
+                        type: string
+                        description: |-
+                          User name.
+                      parentOrgId:
+                        type: string
+                        description: |-
+                          Organization ID for the parent.
+                        minLength: 22
+                        maxLength: 22
+                      orgId:
+                        type: string
+                        description: |-
+                          ID of the organization the user belongs to.
+                        minLength: 22
+                        maxLength: 22
+                      orgName:
+                        type: string
+                        description: |-
+                          Organization name.
+                      groups:
+                        type: object
+                        description: |-
+                          User group information for the user.
+                      status:
+                        type: string
+                        description: |-
+                          Status of the user.
+                        enum:
+                          - Active
+                          - Inactive
+
+  # https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/roles/getting-role-details.html
+  /saas/public/core/v3/roles:
+    description: |-
+      You can request the details for all of your organization's roles or request the details for a particular role.
+    get:
+      operationId: getRoles
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/roles/getting-role-details.html
+      parameters:
+        - name: q
+          in:   query
+          schema:
+            type: string
+          description: |-
+            Query filter. You can filter using one of the following fields:
+            * roleId. Unique identifier for the role.
+            * roleName. Name of the role.
+          example: |-
+            /public/core/v3/roles?q=roleName=="Business Manager"&expand=privileges
+        - name: expand
+          in:   query
+          description: |-
+            Returns the privileges associated with the role specified in the query filter.
+          schema:
+            type: string
+            enum:
+              - privileges
+        - name: INFA-SESSION-ID
+          in:   header
+          schema:
+            type: string
+          required: true
+
+      responses:
+        200:
+          description: |-
+            Returns role information if successful.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    orgId:
+                      type: string
+                    createdBy:
+                      type: string
+                    updatedBy:
+                      type: string
+                    createTime:
+                      type: string
+                    updateTime:
+                      type: string
+                    roleName:
+                      type: string
+                    description:
+                      type: string
+                    displayName:
+                      type: string
+                    displayDescription:
+                      type: string
+                    systemRole:
+                      type: boolean
+                    status:
+                      type: string
+                      enum:
+                        - Enabled
+                        - Disabled
+                    privileges:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          name:
+                            type: string
+                          description:
+                            type: string
+                          service:
+                            type: string
+                          status:
+                            type: string
+                            enum:
+                              - Enabled
+                              - Disabled
 
 components: {}
