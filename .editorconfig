@@ -8,6 +8,10 @@ insert_final_newline     = true
 indent_style             = tab
 indent_size              = unset
 
+[*.tf]
+indent_style = space
+indent_size  = 2
+
 [*.yml]
 indent_style = space
 indent_size  = 2

@@ -3,9 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"os"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -13,6 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"net/http"
+	"os"
+	"terraform-provider-idmc/internal/idmc"
 )
 
 // Ensure IdmcProvider satisfies various provider interfaces.
@@ -76,11 +76,13 @@ func (p *IdmcProvider) Schema(ctx context.Context, req provider.SchemaRequest, r
 func (p *IdmcProvider) Configure(
 	ctx context.Context,
 	req provider.ConfigureRequest,
-	resp *provider.ConfigureResponse) {
-	var config IdmcProviderModel
+	resp *provider.ConfigureResponse,
+) {
+	diags := &resp.Diagnostics
 
-	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
-	if resp.Diagnostics.HasError() {
+	var config IdmcProviderModel
+	diags.Append(req.Config.Get(ctx, &config)...)
+	if diags.HasError() {
 		return
 	}
 
@@ -89,7 +91,7 @@ func (p *IdmcProvider) Configure(
 		authHost = config.AuthHost.ValueString()
 	}
 	if authHost == "" {
-		resp.Diagnostics.AddAttributeError(
+		diags.AddAttributeError(
 			path.Root("auth_host"),
 			"Missing IDMC API authentication host",
 			"Either 'auth_host' in the config or 'IDMC_AUTH_HOST' in the env is needed.",
@@ -101,7 +103,7 @@ func (p *IdmcProvider) Configure(
 		authUser = config.AuthUser.ValueString()
 	}
 	if authUser == "" {
-		resp.Diagnostics.AddAttributeError(
+		diags.AddAttributeError(
 			path.Root("auth_user"),
 			"Missing IDMC API authentication username",
 			"Either 'auth_user' in the config or 'IDMC_AUTH_USER' in the env is needed.",
@@ -113,19 +115,25 @@ func (p *IdmcProvider) Configure(
 		authPass = config.AuthPass.ValueString()
 	}
 	if authPass == "" {
-		resp.Diagnostics.AddAttributeError(
+		diags.AddAttributeError(
 			path.Root("auth_pass"),
 			"Missing IDMC API authentication password",
 			"Either 'auth_pass' in the config or 'IDMC_AUTH_PASS' in the env is needed.",
 		)
 	}
 
-	if resp.Diagnostics.HasError() {
+	// Catching errors here lets us display all the config issues in one go,
+	// rather than treating the user to an onion of failure.
+	if diags.HasError() {
 		return
 	}
 
-	idmcApi := idmc.NewApi(fmt.Sprintf("https://%s/public", config.AuthHost)).V3.DoLogin(&resp.Diagnostics, authUser, authPass)
-	if resp.Diagnostics.HasError() {
+	idmcApi, idmcApiErr := idmc.NewIdmcApi(ctx, authHost, authUser, authPass)
+	if idmcApiErr != nil {
+		diags.AddError(
+			"Api Initialisation Error",
+			fmt.Sprintf("Unable to initialise the IDMC api: %s", idmcApiErr),
+		)
 		return
 	}
 
@@ -140,6 +148,7 @@ func (p *IdmcProvider) Resources(ctx context.Context) []func() resource.Resource
 
 func (p *IdmcProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
+		NewAgentInstallerDataSource,
 		NewRbacRolesDataSource,
 	}
 }
