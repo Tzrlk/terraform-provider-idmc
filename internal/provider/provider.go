@@ -13,8 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
-	"terraform-provider-idmc/internal/idmc"
 )
 
 // Ensure IdmcProvider satisfies various provider interfaces.
@@ -76,9 +74,9 @@ func (p *IdmcProvider) Schema(ctx context.Context, req provider.SchemaRequest, r
 }
 
 func (p *IdmcProvider) Configure(
-		ctx context.Context,
-		req provider.ConfigureRequest,
-		resp *provider.ConfigureResponse) {
+	ctx context.Context,
+	req provider.ConfigureRequest,
+	resp *provider.ConfigureResponse) {
 	var config IdmcProviderModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -132,22 +130,20 @@ func (p *IdmcProvider) Configure(
 	}
 
 	resp.DataSourceData = idmcApi
-	resp.ResourceData   = idmcApi
+	resp.ResourceData = idmcApi
 
 }
 
 func (p *IdmcProvider) Resources(ctx context.Context) []func() resource.Resource {
-	return []func() resource.Resource{
-	}
+	return []func() resource.Resource{}
 }
 
 func (p *IdmcProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		NewV2AgentInstallerInfoDataSource,
+		NewRbacRolesDataSource,
 	}
 }
 
 func (p *IdmcProvider) Functions(ctx context.Context) []func() function.Function {
-	return []func() function.Function{
-	}
+	return []func() function.Function{}
 }

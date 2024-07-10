@@ -16,17 +16,28 @@ codegen: \
 			-o ${@} \
 			${<}
 
+################################################################################
+#: Format module sources.
+format:
+	go fmt
+	terraform fmt -recursive ./examples/
+
+################################################################################
 #: Compile module.
 build: \
 		codegen
 	go install
 .PHONY: build
 
+################################################################################
 #: Generate documentation.
 docs:
-	go generate
+	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs \
+		generate \
+		-provider-name idmc
 .PHONY: docs
 
+################################################################################
 #: Run acceptance tests.
 verify:
 	TF_ACC=1 go test ./... -v ${TESTARGS} -timeout 120m

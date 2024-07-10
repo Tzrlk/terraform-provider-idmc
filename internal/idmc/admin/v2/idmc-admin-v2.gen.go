@@ -17,21 +17,36 @@ import (
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/oapi-codegen/runtime"
 )
+
+// Defines values for GetAgentInstallerInfoParamsPlatform.
+const (
+	Linux64 GetAgentInstallerInfoParamsPlatform = "linux64"
+	Win64   GetAgentInstallerInfoParamsPlatform = "win64"
+)
+
+// Defines values for LoginJSONBodyType.
+const (
+	Login LoginJSONBodyType = "login"
+)
+
+// GetAgentInstallerInfoParamsPlatform defines parameters for GetAgentInstallerInfo.
+type GetAgentInstallerInfoParamsPlatform string
 
 // LoginJSONBody defines parameters for Login.
 type LoginJSONBody struct {
-	Type *string `json:"@type,omitempty"`
+	Type *LoginJSONBodyType `json:"@type,omitempty"`
 
 	// Password Informatica Intelligent Cloud Services password.
-	// Maximum length is 255 characters.
 	Password string `json:"password"`
 
-	// Username Informatica Intelligent Cloud Services user name for the organization that you
-	// want to log in to.
-	// Maximum length is 255 characters.
+	// Username Informatica Intelligent Cloud Services user name for the organization that you want to log in to.
 	Username string `json:"username"`
 }
+
+// LoginJSONBodyType defines parameters for Login.
+type LoginJSONBodyType string
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody LoginJSONBody
@@ -109,10 +124,25 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// GetAgentInstallerInfo request
+	GetAgentInstallerInfo(ctx context.Context, platform GetAgentInstallerInfoParamsPlatform, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// LoginWithBody request with any body
 	LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+func (c *Client) GetAgentInstallerInfo(ctx context.Context, platform GetAgentInstallerInfoParamsPlatform, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAgentInstallerInfoRequest(c.Server, platform)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 func (c *Client) LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -137,6 +167,40 @@ func (c *Client) Login(ctx context.Context, body LoginJSONRequestBody, reqEditor
 		return nil, err
 	}
 	return c.Client.Do(req)
+}
+
+// NewGetAgentInstallerInfoRequest generates requests for GetAgentInstallerInfo
+func NewGetAgentInstallerInfoRequest(server string, platform GetAgentInstallerInfoParamsPlatform) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "platform", runtime.ParamLocationPath, platform)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/agent/installerInfo/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
 }
 
 // NewLoginRequest calls the generic Login builder with application/json body
@@ -222,10 +286,40 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// GetAgentInstallerInfoWithResponse request
+	GetAgentInstallerInfoWithResponse(ctx context.Context, platform GetAgentInstallerInfoParamsPlatform, reqEditors ...RequestEditorFn) (*GetAgentInstallerInfoResponse, error)
+
 	// LoginWithBodyWithResponse request with any body
 	LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginResponse, error)
 
 	LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginResponse, error)
+}
+
+type GetAgentInstallerInfoResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Type                *N200Type `json:"@type,omitempty"`
+		ChecksumDownloadUrl *string   `json:"checksumDownloadUrl,omitempty"`
+		DownloadUrl         *string   `json:"downloadUrl,omitempty"`
+		InstallToken        *string   `json:"installToken,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAgentInstallerInfoResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAgentInstallerInfoResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
 }
 
 type LoginResponse struct {
@@ -349,6 +443,15 @@ func (r LoginResponse) StatusCode() int {
 	return 0
 }
 
+// GetAgentInstallerInfoWithResponse request returning *GetAgentInstallerInfoResponse
+func (c *ClientWithResponses) GetAgentInstallerInfoWithResponse(ctx context.Context, platform GetAgentInstallerInfoParamsPlatform, reqEditors ...RequestEditorFn) (*GetAgentInstallerInfoResponse, error) {
+	rsp, err := c.GetAgentInstallerInfo(ctx, platform, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAgentInstallerInfoResponse(rsp)
+}
+
 // LoginWithBodyWithResponse request with arbitrary body returning *LoginResponse
 func (c *ClientWithResponses) LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginResponse, error) {
 	rsp, err := c.LoginWithBody(ctx, contentType, body, reqEditors...)
@@ -364,6 +467,37 @@ func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJ
 		return nil, err
 	}
 	return ParseLoginResponse(rsp)
+}
+
+// ParseGetAgentInstallerInfoResponse parses an HTTP response from a GetAgentInstallerInfoWithResponse call
+func ParseGetAgentInstallerInfoResponse(rsp *http.Response) (*GetAgentInstallerInfoResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAgentInstallerInfoResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Type                *N200Type `json:"@type,omitempty"`
+			ChecksumDownloadUrl *string   `json:"checksumDownloadUrl,omitempty"`
+			DownloadUrl         *string   `json:"downloadUrl,omitempty"`
+			InstallToken        *string   `json:"installToken,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
 }
 
 // ParseLoginResponse parses an HTTP response from a LoginWithResponse call
@@ -494,28 +628,32 @@ func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/7RXW3PayBL+K13z7MIuUjkPPB0H8InOGnC41NbWaosapJY0qVGPMhdYkuK/b81IAmyL",
-	"OHayT6BRT1++7v669Y0lqqwUIVnDBt8OV0xQptjgG7PCSmQDdpuWguD2IYJMaYhGkyG7YlvURihiA9bv",
-	"3fRu2OGKqQqJV4IN2LtwdMUqbguvlF2X/JpX4nrbv3YG9bVUuSD/olLG+l9VoeZWKIpSNmD34fUV0/jF",
-	"obEfVLr3QokiixTkeVVJkYQb15+NCrpMUmDJg1bt9VmBwfh/7b5C/yfFjDtp2YDJxkD9hhmrBeU+hoob",
-	"s1M6rcVNokVl6zAjypQuuRUJh4gsSilyJAtDqVwKC9RbkaCBVkEvpgn/W5SuBImU2wKEgf7795AUXPPE",
-	"oja9Lgc8PMRLfLMDXgF4DSFbtkBQOuckvgawwBbcwl65mHacLFgFUuUgCKx6m8uHOk1CY8oGf578P8Py",
-	"r+MltfmMiWWHQ33NVIpMnaT+zc1PpDjRyC0uRRduvxdIAYeADE8S5cjCjhuob6WdeWjefdj/XCJ2hWrN",
-	"PPOh0+4jU08tj05PoLKjwk5FWHIhzXMdY38OPE01GuPzv0EgZUUmMIXdI6ySglOOJhy0uB3ru8tmJrSx",
-	"087qvfOvHtfli1hkSic4DE48XOzLEVrUpSA0IE6QQOmMBY0GbThr3QaeWTwzL1VufPW3PoUIwIoSexBR",
-	"Il3axJ8pKdVOUA5bLh2aQUxL7bAHyxcs9mK649KcSwrjEYcQXupT0HHrhMdGKYmcPCAiWaAxDUu+sSxN",
-	"rQGiUQi64XHow3y8WAaWbyR6Ma0MenBKZWyXYEPPUCBPL/GZ6PB05UGIRp3ykl+qoHv+6gL6NUTaqVrp",
-	"vDMJo7Yxn7Bu4+0GpaLc910P+v1zZo1pOluOBzA7u2dqut6hxiOLCAKJOU/2cB5H7Xsp8sJCwbcInGJ6",
-	"5ELt2X9emj9K5yvXmTQSXxyCSJECWejO+dJ73VBdcIkm9EENz7H82+ZrKKltm0RRJnKn67bhzhbem4Rb",
-	"BFto5fICTiq7fSkUddTEgz8GcuXmLLCL3KqVxA5qnYXpVudMtOTBwUtDPfmCauRJUR9yY0ROdTDnBh8P",
-	"t++OhLnXc3b0ij4IV0OBwxyt02TAg9DU74nwEpUGvms6A4aKjCtRxzTC4L+OKeyIncvBk8l/xQwmTgu7",
-	"vyWzQ/3crfq8haSVhkA1lwJspT41Qh2V9kzPDwb9MFstxuvJeLyMpv9bD6PlHzHdRfPFcv3/2Yfmefgx",
-	"uh99nM1G67t5NJ6OYprMlh/H8/XkNhqNp+vp7WQc08N42fw7yU+j4W/N2WqxnE3Wn1bjxTKaTQcxi93N",
-	"zbuk9Tc8Ycy6w9db1Cst30x2q/n9pX3xMXPF5KnLD4Y6O41h4L7SN9zU7Hx5YhjlfLev5lE3/5hsdXED",
-	"fsoWde3+W0xhKnFEtNLor6ZsYLXDJ1saWxbCQCZQpvVoB4+UH031BrvxnU4pFNzABpHgpK/TsN8+vnay",
-	"lF9w4etZvQbCgNNxoUhpAyO+l2EULPjWF7MX8HtIyIz2M70pCkVXYBDPNIS6v+BW+Bx87pOV+OI26qr0",
-	"DQu6Xwagvpp+R+0v2dLPbf3YduFc9Ko5eQGcQ8fX0dMKa6nq6FczTpqNt13EhAHjkgSNyZzshc+sw+Gf",
-	"AAAA//90B9vJ4Q8AAA==",
+	"H4sIAAAAAAAC/7RYTW/bPBL+KwOeBTvI+7YHnzaNnVa7iZ36A4tFXQS0NJbYSkOVpOKmgf/7YijJlmO5",
+	"SbPZkyNqOPPMM5/Ko4h0XmhCclYMHreBULTWYvAonHIZioG4iHNFcHEbwlobCIc3lyIQ92is0iQG4rx3",
+	"1jsT20DoAkkWSgzEX/4oEIV0KSsVfVmo/v15XyZIrq/IOpllaEJa6/5jkUm31ibfsmSCjn9itJFRhatM",
+	"zDUY/FGidSAJ6uvg9HcksBpcKh086BIiScDeZOgQXIoww6g0CBdsFgwmyjojWSkURkdoLWgDTkOCzstH",
+	"KUbfbZmDXvtnj7cxuLuYGJkL72+lLIzFQHxE582Ebec8B0bm6NBYMfjyKBT7w7yIQJDMmd/GfxEIG6WY",
+	"yw4CUoRGzEeBwXXB6olAIJW5GHwRmaLy5/u/RSA2it7/Lb4Gwj0UbNE6oygR2+3XQBi0hSaLPk7nZ2f8",
+	"E2lySD4QsigyFXkb/W+WwTy2UBaGSXCquv2PSv3jDoE8JuQYRCAa1od6Q5mW8cJkPv+eysXPvK8JmXNe",
+	"dAhsd6b16htGTmz56JDoC7BlxImxLrNdzhl0pSHrSW8wwGJ6HRymYgCS4n0KtSV7bGsbiH4um1IoLZp+",
+	"phPloRbaeroPc+rav+YYeSAfdPzwluGprHdFpJDWbrSJjzORg2hy6VQkISSHWaZ8jVxmuoxhhuZeRWih",
+	"UcD5mMuf10iJS8Xg/N27DmtMRVULr7TGCoA17GpDm0SS+lXVxq4/bCQ5LvdMJ6AInH4BvG1FvzIYM2c7",
+	"rC2SvnYk1vZNKysyKB3OVRdH/06RvM+eBRlFuiQHG2mhuuVjcFxz1bsPD/8b6ZtUN2aOMHTaPTD11PJw",
+	"/9R0YFbYqQhzqTJ7rGPE5yDj2HB7dxpWCKSdWiuMYXPAVZRKSrCq64a3duIe2VwrY924M1Ov+NVhDj7L",
+	"xVqbCC89iNuTBTfk2ZErQgtqTwnkpW9Mth5cDWyQa4ct85lOLKd6g8l7AE7l2IOQoqyMa//XOsv0RlEC",
+	"9zIr0Q6WNDcl9mD+jMXekq5kZtuSyjLj4N2LOQQdt/Z8rLTOUJJv4NEMra273yvT0lYaIBx6p+s9Bc5h",
+	"OprN/RZTS/SWtLA8RSHX1nUJNv0/RRmjsZ0xVB1IF0xCOOyUz+SpDLqWf5xAb9M0O1Vrk3QGYdgU5pMO",
+	"W6NdYaYp4brrwfk5V5iRES8/vSWNJ/PRACate7ZqzRs0uOsiiiDDREYP0Pajwp6rJHWQynsESUs6gFAh",
+	"e982ecKvRdkZNFI/SgQVI/lmYTpnSafO09NyJjO0vg4qenbp3xRf3ZKasok0rVVSmqpsZOlSRhNJv84a",
+	"XSYp7FV2Y0k1deTELR8Dlfmq5djJ3mp0hh2tdeKnWxUz1TQPCSwN1eTzqlFGaXUorVUJVc60DR4Ot9+O",
+	"hCnraR39QR34qz7BYVpvcExCnb/7hhfp2Pe7ujLgUpMtczRLGqLHb5bkv4FE8PxKGQjL3xzKPVyQ3aA5",
+	"hlWdN5Q00uBbzSkHG6nPtVBHph3peaHTt5PFbHR3MxrNw/HHu8tw/p8lXYXT2fzun5MP9fPlp/B6+Gky",
+	"Gd5dTcPReLikm8n802h6d3MRDkfju/HFzWhJt6N5/ddefhxe/qs+W8zmk5u7z4vRbB5OxoOlWJZnZ39F",
+	"DV7/hEvR7b65R1Ov/a9qdovp9and8LBzLYlbFw+GKjq1YZCc6Stpq+58emJYXXK1L6Zhd/+x68XJbfdp",
+	"t6hy9//VKWyhdowWBvlqLAbOlBgcfX0qC2uFWVyNdmCmeDRVG+yKK51iSKWFFSLBXl+nYd4+fnV2KV5w",
+	"4VcrX33DgP1xqkkbC0P5kPlRMJP3nMwswHuIj4zhmV4nhaYALGJLg8/7E7D8vzuOMbkMn91GyyJ+xYLO",
+	"ywBUV+PfqH2TLb1t62XbRVmGfzQnT5Dzks/uaesL2+Oqx0m98TaLmLKtz/Pqm3q7/W8AAAD//9jRvZTB",
+	"EgAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -14,18 +14,18 @@ paths:
               properties:
                 '@type':
                    type: string
-                   default: login
+                   enum:
+                     - login
                 username:
                   type: string
                   description: |-
-                    Informatica Intelligent Cloud Services user name for the organization that you
-                    want to log in to.
-                    Maximum length is 255 characters.
+                    Informatica Intelligent Cloud Services user name for the organization that you want to log in to.
+                  maxLength: 255
                 password:
                   type: string
                   description: |-
                     Informatica Intelligent Cloud Services password.
-                    Maximum length is 255 characters.
+                  maxLength: 255
               required:
                 - username
                 - password
@@ -165,5 +165,40 @@ paths:
                       Determines if the user must reset the password after the user logs in for the first time. Includes the following values:
                       True. The user must reset the password.
                       False. The user is not forced to reset the password.
+
+  /api/v2/agent/installerInfo/{platform}:
+    get:
+      operationId: getAgentInstallerInfo
+      description: |-
+        To request an install token so that you can complete the Secure Agent registration process or to get the checksum of the agent installation program
+      parameters:
+        - name: platform
+          in:   path
+          schema:
+            type: string
+            enum:
+              - linux64
+              - win64
+            description: |-
+              The platform for the installation program.
+      responses:
+        200:
+          description: |-
+            A successful request returns the download URL, install token, and checksum download URL.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  '@type':
+                    type:    string
+                    enum:
+                      - agentInstallerInfo
+                  downloadUrl:
+                    type: string
+                  installToken:
+                    type: string
+                  checksumDownloadUrl:
+                    type: string
 
 components: {}
