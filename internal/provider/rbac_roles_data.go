@@ -200,7 +200,7 @@ func (d *RbacRolesDataSource) Read(
 		params.Q = &query
 	}
 	if config.ExpandPrivileges.ValueBool() {
-		expand := v3.Privileges
+		expand := "privileges"
 		params.Expand = &expand
 	}
 

@@ -2,6 +2,7 @@ default: build
 
 CMD_OAPI_CODEGEN ?= go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
 
+################################################################################
 #: Generate OpenAPI clients
 codegen: \
 		internal/idmc/admin/v2/idmc-admin-v2.gen.go \
@@ -26,6 +27,7 @@ format:
 #: Compile module.
 build: \
 		codegen
+	go mod tidy
 	go install
 .PHONY: build
 

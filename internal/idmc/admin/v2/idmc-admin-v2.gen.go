@@ -20,23 +20,9 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
-// Defines values for GetAgentInstallerInfoParamsPlatform.
-const (
-	Linux64 GetAgentInstallerInfoParamsPlatform = "linux64"
-	Win64   GetAgentInstallerInfoParamsPlatform = "win64"
-)
-
-// Defines values for LoginJSONBodyType.
-const (
-	Login LoginJSONBodyType = "login"
-)
-
-// GetAgentInstallerInfoParamsPlatform defines parameters for GetAgentInstallerInfo.
-type GetAgentInstallerInfoParamsPlatform string
-
 // LoginJSONBody defines parameters for Login.
 type LoginJSONBody struct {
-	Type *LoginJSONBodyType `json:"@type,omitempty"`
+	Type *string `json:"@type,omitempty"`
 
 	// Password Informatica Intelligent Cloud Services password.
 	Password string `json:"password"`
@@ -44,9 +30,6 @@ type LoginJSONBody struct {
 	// Username Informatica Intelligent Cloud Services user name for the organization that you want to log in to.
 	Username string `json:"username"`
 }
-
-// LoginJSONBodyType defines parameters for Login.
-type LoginJSONBodyType string
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody LoginJSONBody
@@ -125,7 +108,7 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 // The interface specification for the client above.
 type ClientInterface interface {
 	// GetAgentInstallerInfo request
-	GetAgentInstallerInfo(ctx context.Context, platform GetAgentInstallerInfoParamsPlatform, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetAgentInstallerInfo(ctx context.Context, platform string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// LoginWithBody request with any body
 	LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -133,7 +116,7 @@ type ClientInterface interface {
 	Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) GetAgentInstallerInfo(ctx context.Context, platform GetAgentInstallerInfoParamsPlatform, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) GetAgentInstallerInfo(ctx context.Context, platform string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAgentInstallerInfoRequest(c.Server, platform)
 	if err != nil {
 		return nil, err
@@ -170,7 +153,7 @@ func (c *Client) Login(ctx context.Context, body LoginJSONRequestBody, reqEditor
 }
 
 // NewGetAgentInstallerInfoRequest generates requests for GetAgentInstallerInfo
-func NewGetAgentInstallerInfoRequest(server string, platform GetAgentInstallerInfoParamsPlatform) (*http.Request, error) {
+func NewGetAgentInstallerInfoRequest(server string, platform string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -287,7 +270,7 @@ func WithBaseURL(baseURL string) ClientOption {
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
 	// GetAgentInstallerInfoWithResponse request
-	GetAgentInstallerInfoWithResponse(ctx context.Context, platform GetAgentInstallerInfoParamsPlatform, reqEditors ...RequestEditorFn) (*GetAgentInstallerInfoResponse, error)
+	GetAgentInstallerInfoWithResponse(ctx context.Context, platform string, reqEditors ...RequestEditorFn) (*GetAgentInstallerInfoResponse, error)
 
 	// LoginWithBodyWithResponse request with any body
 	LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginResponse, error)
@@ -299,10 +282,10 @@ type GetAgentInstallerInfoResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
-		Type                *N200Type `json:"@type,omitempty"`
-		ChecksumDownloadUrl *string   `json:"checksumDownloadUrl,omitempty"`
-		DownloadUrl         *string   `json:"downloadUrl,omitempty"`
-		InstallToken        *string   `json:"installToken,omitempty"`
+		Type                *string `json:"@type,omitempty"`
+		ChecksumDownloadUrl *string `json:"checksumDownloadUrl,omitempty"`
+		DownloadUrl         *string `json:"downloadUrl,omitempty"`
+		InstallToken        *string `json:"installToken,omitempty"`
 	}
 }
 
@@ -444,7 +427,7 @@ func (r LoginResponse) StatusCode() int {
 }
 
 // GetAgentInstallerInfoWithResponse request returning *GetAgentInstallerInfoResponse
-func (c *ClientWithResponses) GetAgentInstallerInfoWithResponse(ctx context.Context, platform GetAgentInstallerInfoParamsPlatform, reqEditors ...RequestEditorFn) (*GetAgentInstallerInfoResponse, error) {
+func (c *ClientWithResponses) GetAgentInstallerInfoWithResponse(ctx context.Context, platform string, reqEditors ...RequestEditorFn) (*GetAgentInstallerInfoResponse, error) {
 	rsp, err := c.GetAgentInstallerInfo(ctx, platform, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -485,10 +468,10 @@ func ParseGetAgentInstallerInfoResponse(rsp *http.Response) (*GetAgentInstallerI
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest struct {
-			Type                *N200Type `json:"@type,omitempty"`
-			ChecksumDownloadUrl *string   `json:"checksumDownloadUrl,omitempty"`
-			DownloadUrl         *string   `json:"downloadUrl,omitempty"`
-			InstallToken        *string   `json:"installToken,omitempty"`
+			Type                *string `json:"@type,omitempty"`
+			ChecksumDownloadUrl *string `json:"checksumDownloadUrl,omitempty"`
+			DownloadUrl         *string `json:"downloadUrl,omitempty"`
+			InstallToken        *string `json:"installToken,omitempty"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
@@ -628,32 +611,31 @@ func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"EgAA",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

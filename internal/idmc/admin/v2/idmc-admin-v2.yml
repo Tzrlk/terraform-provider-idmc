@@ -14,8 +14,8 @@ paths:
               properties:
                 '@type':
                    type: string
-                   enum:
-                     - login
+#                   enum:
+#                     - login
                 username:
                   type: string
                   description: |-
@@ -176,9 +176,9 @@ paths:
           in:   path
           schema:
             type: string
-            enum:
-              - linux64
-              - win64
+#            enum:
+#              - linux64
+#              - win64
             description: |-
               The platform for the installation program.
       responses:
@@ -192,8 +192,8 @@ paths:
                 properties:
                   '@type':
                     type:    string
-                    enum:
-                      - agentInstallerInfo
+#                    enum:
+#                      - agentInstallerInfo
                   downloadUrl:
                     type: string
                   installToken:

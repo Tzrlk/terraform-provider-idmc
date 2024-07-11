@@ -2,12 +2,15 @@ openapi: '3.0.0'
 info:
   title:   'Admin API for IDMC'
   version: '3.0.0'
+externalDocs:
+  url: https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources.html
 paths:
 
-  # https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/login.html
-  /saas/public/core/v3/login:
+  /public/core/v3/login:
     post:
       operationId: login
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/login.html
       requestBody:
         content:
           application/json:
@@ -90,12 +93,11 @@ paths:
                         type: string
                         description: |-
                           Status of the user.
-                        enum:
-                          - Active
-                          - Inactive
+#                        enum:
+#                          - Active
+#                          - Inactive
 
-  # https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/roles/getting-role-details.html
-  /saas/public/core/v3/roles:
+  /public/core/v3/roles:
     description: |-
       You can request the details for all of your organization's roles or request the details for a particular role.
     get:
@@ -103,6 +105,7 @@ paths:
       externalDocs:
         url: https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/roles/getting-role-details.html
       parameters:
+        - $ref: '#/components/parameters/headerSession'
         - name: q
           in:   query
           schema:
@@ -119,14 +122,8 @@ paths:
             Returns the privileges associated with the role specified in the query filter.
           schema:
             type: string
-            enum:
-              - privileges
-        - name: INFA-SESSION-ID
-          in:   header
-          schema:
-            type: string
-          required: true
-
+#            enum:
+#              - privileges
       responses:
         200:
           description: |-
@@ -136,52 +133,229 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
+                  allOf:
+                    - $ref: '#/components/schemas/roleInfo'
+                    - $ref: '#/components/schemas/withPrivilegeItems'
+    post:
+      operationId: createRole
+      description: You can create custom roles for your organization.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/withPrivilegeRefs'
+                - type: object
                   properties:
-                    id:
+                    name:
                       type: string
-                    orgId:
-                      type: string
-                    createdBy:
-                      type: string
-                    updatedBy:
-                      type: string
-                    createTime:
-                      type: string
-                    updateTime:
-                      type: string
-                    roleName:
-                      type: string
+                      description: |-
+                        Name of the role.
                     description:
                       type: string
-                    displayName:
-                      type: string
-                    displayDescription:
-                      type: string
-                    systemRole:
-                      type: boolean
-                    status:
-                      type: string
-                      enum:
-                        - Enabled
-                        - Disabled
-                    privileges:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          id:
-                            type: string
-                          name:
-                            type: string
-                          description:
-                            type: string
-                          service:
-                            type: string
-                          status:
-                            type: string
-                            enum:
-                              - Enabled
-                              - Disabled
+                      description: |-
+                        Description of the role.
+              required:
+                - name
+                - privileges
+      responses:
+        200:
+          description: |-
+            If successful, returns the roles object with the details you included in the POST request.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/withPrivilegeItems'
+                  - $ref: '#/components/schemas/roleInfo'
 
-components: {}
+  /public/core/v3/roles/{role_ref}:
+    parameters:
+      - $ref: '#/components/parameters/headerSession'
+      - $ref: '#/components/parameters/pathRole'
+    delete:
+      operationId: deleteRole
+      description: |-
+        You can delete custom roles from your organization.
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/roles/deleting-a-role.html
+      responses:
+        200:
+          description: A successful deletion.
+
+  /public/core/v3/roles/{role_ref}/addPrivileges:
+    parameters:
+      - $ref: '#/components/parameters/headerSession'
+      - $ref: '#/components/parameters/pathRole'
+    put:
+      operationId: addRolePrivileges
+      description: |-
+        You can add privileges for custom roles.
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/roles/updating-a-role.html
+      requestBody:
+        $ref: '#/components/requestBodies/rolePrivileges'
+      responses:
+        200:
+          description: Successfully added privileges.
+
+  /public/core/v3/roles/{role_ref}/removePrivileges:
+    parameters:
+      - $ref: '#/components/parameters/headerSession'
+      - $ref: '#/components/parameters/pathRole'
+    put:
+      operationId: removeRolePrivileges
+      description: |-
+        You can add privileges for custom roles.
+        You can't remove all of the privileges from a role. A role must have at least one privilege assigned to it.
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/roles/updating-a-role.html
+      requestBody:
+        $ref: '#/components/requestBodies/rolePrivileges'
+      responses:
+        200:
+          description: Successfully removed privileges.
+
+components:
+
+  parameters:
+
+    headerSession:
+      name: INFA-SESSION-ID
+      in:   header
+      schema:
+        type: string
+      required: true
+
+    pathRole:
+      name: role_ref
+      in:   path
+      schema:
+        type: string
+      required: true
+      description: |-
+        Either role id or role name.
+
+  requestBodies:
+
+    rolePrivileges:
+      description: |-
+        A partial role object with an array of privileges.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/withPrivilegeRefs'
+
+  schemas:
+
+    roleInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          description: |-
+            Role ID.
+        orgId:
+          type: string
+          description: |-
+            ID of the organization the role belongs to.
+        createdBy:
+          type: string
+          description: |-
+            User who created the role.
+        updatedBy:
+          type: string
+          description: |-
+            User who last updated the role.
+        createTime:
+          type: string
+          description: |-
+            Date and time the role was created.
+        updateTime:
+          type: string
+          description: |-
+            Date and time the role was last updated.
+        roleName:
+          type: string
+          description: |-
+            Name of the role.
+        description:
+          type: string
+          description: |-
+            Description of the role.
+        displayName:
+          type: string
+          description: |-
+            Role name displayed in the user interface.
+        displayDescription:
+          type: string
+          description: |-
+            Description displayed in the user interface.
+        systemRole:
+          type: boolean
+          description: |-
+            Whether the role is a system-defined role.
+        status:
+          type: string
+          description: |-
+            Whether the organization's license to use the role is valid or has expired.
+#          enum:
+#            - Enabled
+#            - Disabled
+
+    withPrivilegeItems:
+      type: object
+      properties:
+        privileges:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+                description: |-
+                  Name of the privilege.
+              description:
+                type: string
+                description: |-
+                  Description of the privilege.
+              service:
+                type: string
+              status:
+                type: string
+#                enum:
+#                  - Enabled
+#                  - Disabled
+      example: |-
+        {
+          "privileges": [
+            {
+              "id": "0nTOXl8dzEwlSFoM0cO8gI",
+              "name": "view.ai.designer",
+              "description": "View application integration designer"
+            },
+            {
+              "id": "aQwUdcM8RcQewA1yWphZ4F",
+              "name": "view.ai.assets",
+              "description": "View  application integration assets"
+            }
+          ]
+        }
+
+    withPrivilegeRefs:
+      type: object
+      properties:
+        privileges:
+          type: array
+          items:
+            type: string
+          description: |-
+            IDs of the privileges to assign to the role.
+            A role must have at least one privilege assigned to it.
+          minItems: 1
+      example: |-
+        {
+          "privileges" : ["create.api.collection", "delete.api.collection"]
+        }

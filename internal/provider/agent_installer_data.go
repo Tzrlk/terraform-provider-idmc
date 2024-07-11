@@ -99,11 +99,8 @@ func (d *AgentInstallerDataSource) Read(
 		return
 	}
 
-	// Obtain request parameters from config.
-	// TODO
-
 	// Perform the API request.
-	response, err := d.Client.GetAgentInstallerInfoWithResponse(ctx, v2.GetAgentInstallerInfoParamsPlatform(config.Platform.ValueString()))
+	response, err := d.Client.GetAgentInstallerInfoWithResponse(ctx, config.Platform.ValueString())
 	if err != nil {
 		diags.AddError(
 			"Http Request Failure",

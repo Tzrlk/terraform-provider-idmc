@@ -20,10 +20,74 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
-// Defines values for GetRolesParamsExpand.
-const (
-	Privileges GetRolesParamsExpand = "privileges"
-)
+// RoleInfo defines model for roleInfo.
+type RoleInfo struct {
+	// CreateTime Date and time the role was created.
+	CreateTime *string `json:"createTime,omitempty"`
+
+	// CreatedBy User who created the role.
+	CreatedBy *string `json:"createdBy,omitempty"`
+
+	// Description Description of the role.
+	Description *string `json:"description,omitempty"`
+
+	// DisplayDescription Description displayed in the user interface.
+	DisplayDescription *string `json:"displayDescription,omitempty"`
+
+	// DisplayName Role name displayed in the user interface.
+	DisplayName *string `json:"displayName,omitempty"`
+
+	// Id Role ID.
+	Id *string `json:"id,omitempty"`
+
+	// OrgId ID of the organization the role belongs to.
+	OrgId *string `json:"orgId,omitempty"`
+
+	// RoleName Name of the role.
+	RoleName *string `json:"roleName,omitempty"`
+
+	// Status Whether the organization's license to use the role is valid or has expired.
+	Status *string `json:"status,omitempty"`
+
+	// SystemRole Whether the role is a system-defined role.
+	SystemRole *bool `json:"systemRole,omitempty"`
+
+	// UpdateTime Date and time the role was last updated.
+	UpdateTime *string `json:"updateTime,omitempty"`
+
+	// UpdatedBy User who last updated the role.
+	UpdatedBy *string `json:"updatedBy,omitempty"`
+}
+
+// WithPrivilegeItems defines model for withPrivilegeItems.
+type WithPrivilegeItems struct {
+	Privileges *[]struct {
+		// Description Description of the privilege.
+		Description *string `json:"description,omitempty"`
+		Id          *string `json:"id,omitempty"`
+
+		// Name Name of the privilege.
+		Name    *string `json:"name,omitempty"`
+		Service *string `json:"service,omitempty"`
+		Status  *string `json:"status,omitempty"`
+	} `json:"privileges,omitempty"`
+}
+
+// WithPrivilegeRefs defines model for withPrivilegeRefs.
+type WithPrivilegeRefs struct {
+	// Privileges IDs of the privileges to assign to the role.
+	// A role must have at least one privilege assigned to it.
+	Privileges *[]string `json:"privileges,omitempty"`
+}
+
+// HeaderSession defines model for headerSession.
+type HeaderSession = string
+
+// PathRole defines model for pathRole.
+type PathRole = string
+
+// RolePrivileges defines model for rolePrivileges.
+type RolePrivileges = WithPrivilegeRefs
 
 // LoginJSONBody defines parameters for Login.
 type LoginJSONBody struct {
@@ -42,15 +106,49 @@ type GetRolesParams struct {
 	Q *string `form:"q,omitempty" json:"q,omitempty"`
 
 	// Expand Returns the privileges associated with the role specified in the query filter.
-	Expand        *GetRolesParamsExpand `form:"expand,omitempty" json:"expand,omitempty"`
-	INFASESSIONID string                `json:"INFA-SESSION-ID"`
+	Expand        *string       `form:"expand,omitempty" json:"expand,omitempty"`
+	INFASESSIONID HeaderSession `json:"INFA-SESSION-ID"`
 }
 
-// GetRolesParamsExpand defines parameters for GetRoles.
-type GetRolesParamsExpand string
+// CreateRoleJSONBody defines parameters for CreateRole.
+type CreateRoleJSONBody struct {
+	// Description Description of the role.
+	Description *string `json:"description,omitempty"`
+
+	// Name Name of the role.
+	Name *string `json:"name,omitempty"`
+
+	// Privileges IDs of the privileges to assign to the role.
+	// A role must have at least one privilege assigned to it.
+	Privileges *[]string `json:"privileges,omitempty"`
+}
+
+// DeleteRoleParams defines parameters for DeleteRole.
+type DeleteRoleParams struct {
+	INFASESSIONID HeaderSession `json:"INFA-SESSION-ID"`
+}
+
+// AddRolePrivilegesParams defines parameters for AddRolePrivileges.
+type AddRolePrivilegesParams struct {
+	INFASESSIONID HeaderSession `json:"INFA-SESSION-ID"`
+}
+
+// RemoveRolePrivilegesParams defines parameters for RemoveRolePrivileges.
+type RemoveRolePrivilegesParams struct {
+	INFASESSIONID HeaderSession `json:"INFA-SESSION-ID"`
+}
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody LoginJSONBody
+
+// CreateRoleJSONRequestBody defines body for CreateRole for application/json ContentType.
+type CreateRoleJSONRequestBody CreateRoleJSONBody
+
+// AddRolePrivilegesJSONRequestBody defines body for AddRolePrivileges for application/json ContentType.
+type AddRolePrivilegesJSONRequestBody = WithPrivilegeRefs
+
+// RemoveRolePrivilegesJSONRequestBody defines body for RemoveRolePrivileges for application/json ContentType.
+type RemoveRolePrivilegesJSONRequestBody = WithPrivilegeRefs
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -132,6 +230,24 @@ type ClientInterface interface {
 
 	// GetRoles request
 	GetRoles(ctx context.Context, params *GetRolesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateRoleWithBody request with any body
+	CreateRoleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateRole(ctx context.Context, body CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteRole request
+	DeleteRole(ctx context.Context, roleRef PathRole, params *DeleteRoleParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AddRolePrivilegesWithBody request with any body
+	AddRolePrivilegesWithBody(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	AddRolePrivileges(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, body AddRolePrivilegesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RemoveRolePrivilegesWithBody request with any body
+	RemoveRolePrivilegesWithBody(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	RemoveRolePrivileges(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -170,6 +286,90 @@ func (c *Client) GetRoles(ctx context.Context, params *GetRolesParams, reqEditor
 	return c.Client.Do(req)
 }
 
+func (c *Client) CreateRoleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateRoleRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateRole(ctx context.Context, body CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateRoleRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteRole(ctx context.Context, roleRef PathRole, params *DeleteRoleParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteRoleRequest(c.Server, roleRef, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AddRolePrivilegesWithBody(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAddRolePrivilegesRequestWithBody(c.Server, roleRef, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AddRolePrivileges(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, body AddRolePrivilegesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAddRolePrivilegesRequest(c.Server, roleRef, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RemoveRolePrivilegesWithBody(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveRolePrivilegesRequestWithBody(c.Server, roleRef, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RemoveRolePrivileges(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveRolePrivilegesRequest(c.Server, roleRef, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // NewLoginRequest calls the generic Login builder with application/json body
 func NewLoginRequest(server string, body LoginJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -190,7 +390,7 @@ func NewLoginRequestWithBody(server string, contentType string, body io.Reader) 
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/saas/public/core/v3/login")
+	operationPath := fmt.Sprintf("/public/core/v3/login")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -219,7 +419,7 @@ func NewGetRolesRequest(server string, params *GetRolesParams) (*http.Request, e
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/saas/public/core/v3/roles")
+	operationPath := fmt.Sprintf("/public/core/v3/roles")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -288,6 +488,213 @@ func NewGetRolesRequest(server string, params *GetRolesParams) (*http.Request, e
 	return req, nil
 }
 
+// NewCreateRoleRequest calls the generic CreateRole builder with application/json body
+func NewCreateRoleRequest(server string, body CreateRoleJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateRoleRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateRoleRequestWithBody generates requests for CreateRole with any type of body
+func NewCreateRoleRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/public/core/v3/roles")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteRoleRequest generates requests for DeleteRole
+func NewDeleteRoleRequest(server string, roleRef PathRole, params *DeleteRoleParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "role_ref", runtime.ParamLocationPath, roleRef)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/public/core/v3/roles/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "INFA-SESSION-ID", runtime.ParamLocationHeader, params.INFASESSIONID)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("INFA-SESSION-ID", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewAddRolePrivilegesRequest calls the generic AddRolePrivileges builder with application/json body
+func NewAddRolePrivilegesRequest(server string, roleRef PathRole, params *AddRolePrivilegesParams, body AddRolePrivilegesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAddRolePrivilegesRequestWithBody(server, roleRef, params, "application/json", bodyReader)
+}
+
+// NewAddRolePrivilegesRequestWithBody generates requests for AddRolePrivileges with any type of body
+func NewAddRolePrivilegesRequestWithBody(server string, roleRef PathRole, params *AddRolePrivilegesParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "role_ref", runtime.ParamLocationPath, roleRef)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/public/core/v3/roles/%s/addPrivileges", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "INFA-SESSION-ID", runtime.ParamLocationHeader, params.INFASESSIONID)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("INFA-SESSION-ID", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewRemoveRolePrivilegesRequest calls the generic RemoveRolePrivileges builder with application/json body
+func NewRemoveRolePrivilegesRequest(server string, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRemoveRolePrivilegesRequestWithBody(server, roleRef, params, "application/json", bodyReader)
+}
+
+// NewRemoveRolePrivilegesRequestWithBody generates requests for RemoveRolePrivileges with any type of body
+func NewRemoveRolePrivilegesRequestWithBody(server string, roleRef PathRole, params *RemoveRolePrivilegesParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "role_ref", runtime.ParamLocationPath, roleRef)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/public/core/v3/roles/%s/removePrivileges", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "INFA-SESSION-ID", runtime.ParamLocationHeader, params.INFASESSIONID)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("INFA-SESSION-ID", headerParam0)
+
+	}
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -338,6 +745,24 @@ type ClientWithResponsesInterface interface {
 
 	// GetRolesWithResponse request
 	GetRolesWithResponse(ctx context.Context, params *GetRolesParams, reqEditors ...RequestEditorFn) (*GetRolesResponse, error)
+
+	// CreateRoleWithBodyWithResponse request with any body
+	CreateRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateRoleResponse, error)
+
+	CreateRoleWithResponse(ctx context.Context, body CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateRoleResponse, error)
+
+	// DeleteRoleWithResponse request
+	DeleteRoleWithResponse(ctx context.Context, roleRef PathRole, params *DeleteRoleParams, reqEditors ...RequestEditorFn) (*DeleteRoleResponse, error)
+
+	// AddRolePrivilegesWithBodyWithResponse request with any body
+	AddRolePrivilegesWithBodyWithResponse(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AddRolePrivilegesResponse, error)
+
+	AddRolePrivilegesWithResponse(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, body AddRolePrivilegesJSONRequestBody, reqEditors ...RequestEditorFn) (*AddRolePrivilegesResponse, error)
+
+	// RemoveRolePrivilegesWithBodyWithResponse request with any body
+	RemoveRolePrivilegesWithBodyWithResponse(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RemoveRolePrivilegesResponse, error)
+
+	RemoveRolePrivilegesWithResponse(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody, reqEditors ...RequestEditorFn) (*RemoveRolePrivilegesResponse, error)
 }
 
 type LoginResponse struct {
@@ -375,7 +800,7 @@ type LoginResponse struct {
 			SessionId *string `json:"sessionId,omitempty"`
 
 			// Status Status of the user.
-			Status *N200UserInfoStatus `json:"status,omitempty"`
+			Status *string `json:"status,omitempty"`
 		} `json:"userInfo,omitempty"`
 	}
 }
@@ -400,25 +825,51 @@ type GetRolesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]struct {
-		CreateTime         *string `json:"createTime,omitempty"`
-		CreatedBy          *string `json:"createdBy,omitempty"`
-		Description        *string `json:"description,omitempty"`
+		// CreateTime Date and time the role was created.
+		CreateTime *string `json:"createTime,omitempty"`
+
+		// CreatedBy User who created the role.
+		CreatedBy *string `json:"createdBy,omitempty"`
+
+		// Description Description of the role.
+		Description *string `json:"description,omitempty"`
+
+		// DisplayDescription Description displayed in the user interface.
 		DisplayDescription *string `json:"displayDescription,omitempty"`
-		DisplayName        *string `json:"displayName,omitempty"`
-		Id                 *string `json:"id,omitempty"`
-		OrgId              *string `json:"orgId,omitempty"`
-		Privileges         *[]struct {
-			Description *string               `json:"description,omitempty"`
-			Id          *string               `json:"id,omitempty"`
-			Name        *string               `json:"name,omitempty"`
-			Service     *string               `json:"service,omitempty"`
-			Status      *N200PrivilegesStatus `json:"status,omitempty"`
+
+		// DisplayName Role name displayed in the user interface.
+		DisplayName *string `json:"displayName,omitempty"`
+
+		// Id Role ID.
+		Id *string `json:"id,omitempty"`
+
+		// OrgId ID of the organization the role belongs to.
+		OrgId      *string `json:"orgId,omitempty"`
+		Privileges *[]struct {
+			// Description Description of the privilege.
+			Description *string `json:"description,omitempty"`
+			Id          *string `json:"id,omitempty"`
+
+			// Name Name of the privilege.
+			Name    *string `json:"name,omitempty"`
+			Service *string `json:"service,omitempty"`
+			Status  *string `json:"status,omitempty"`
 		} `json:"privileges,omitempty"`
-		RoleName   *string     `json:"roleName,omitempty"`
-		Status     *N200Status `json:"status,omitempty"`
-		SystemRole *bool       `json:"systemRole,omitempty"`
-		UpdateTime *string     `json:"updateTime,omitempty"`
-		UpdatedBy  *string     `json:"updatedBy,omitempty"`
+
+		// RoleName Name of the role.
+		RoleName *string `json:"roleName,omitempty"`
+
+		// Status Whether the organization's license to use the role is valid or has expired.
+		Status *string `json:"status,omitempty"`
+
+		// SystemRole Whether the role is a system-defined role.
+		SystemRole *bool `json:"systemRole,omitempty"`
+
+		// UpdateTime Date and time the role was last updated.
+		UpdateTime *string `json:"updateTime,omitempty"`
+
+		// UpdatedBy User who last updated the role.
+		UpdatedBy *string `json:"updatedBy,omitempty"`
 	}
 }
 
@@ -432,6 +883,137 @@ func (r GetRolesResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetRolesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateRoleResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// CreateTime Date and time the role was created.
+		CreateTime *string `json:"createTime,omitempty"`
+
+		// CreatedBy User who created the role.
+		CreatedBy *string `json:"createdBy,omitempty"`
+
+		// Description Description of the role.
+		Description *string `json:"description,omitempty"`
+
+		// DisplayDescription Description displayed in the user interface.
+		DisplayDescription *string `json:"displayDescription,omitempty"`
+
+		// DisplayName Role name displayed in the user interface.
+		DisplayName *string `json:"displayName,omitempty"`
+
+		// Id Role ID.
+		Id *string `json:"id,omitempty"`
+
+		// OrgId ID of the organization the role belongs to.
+		OrgId      *string `json:"orgId,omitempty"`
+		Privileges *[]struct {
+			// Description Description of the privilege.
+			Description *string `json:"description,omitempty"`
+			Id          *string `json:"id,omitempty"`
+
+			// Name Name of the privilege.
+			Name    *string `json:"name,omitempty"`
+			Service *string `json:"service,omitempty"`
+			Status  *string `json:"status,omitempty"`
+		} `json:"privileges,omitempty"`
+
+		// RoleName Name of the role.
+		RoleName *string `json:"roleName,omitempty"`
+
+		// Status Whether the organization's license to use the role is valid or has expired.
+		Status *string `json:"status,omitempty"`
+
+		// SystemRole Whether the role is a system-defined role.
+		SystemRole *bool `json:"systemRole,omitempty"`
+
+		// UpdateTime Date and time the role was last updated.
+		UpdateTime *string `json:"updateTime,omitempty"`
+
+		// UpdatedBy User who last updated the role.
+		UpdatedBy *string `json:"updatedBy,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateRoleResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateRoleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteRoleResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteRoleResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteRoleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AddRolePrivilegesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r AddRolePrivilegesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AddRolePrivilegesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RemoveRolePrivilegesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r RemoveRolePrivilegesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RemoveRolePrivilegesResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -462,6 +1044,66 @@ func (c *ClientWithResponses) GetRolesWithResponse(ctx context.Context, params *
 		return nil, err
 	}
 	return ParseGetRolesResponse(rsp)
+}
+
+// CreateRoleWithBodyWithResponse request with arbitrary body returning *CreateRoleResponse
+func (c *ClientWithResponses) CreateRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateRoleResponse, error) {
+	rsp, err := c.CreateRoleWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateRoleResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateRoleWithResponse(ctx context.Context, body CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateRoleResponse, error) {
+	rsp, err := c.CreateRole(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateRoleResponse(rsp)
+}
+
+// DeleteRoleWithResponse request returning *DeleteRoleResponse
+func (c *ClientWithResponses) DeleteRoleWithResponse(ctx context.Context, roleRef PathRole, params *DeleteRoleParams, reqEditors ...RequestEditorFn) (*DeleteRoleResponse, error) {
+	rsp, err := c.DeleteRole(ctx, roleRef, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteRoleResponse(rsp)
+}
+
+// AddRolePrivilegesWithBodyWithResponse request with arbitrary body returning *AddRolePrivilegesResponse
+func (c *ClientWithResponses) AddRolePrivilegesWithBodyWithResponse(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AddRolePrivilegesResponse, error) {
+	rsp, err := c.AddRolePrivilegesWithBody(ctx, roleRef, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAddRolePrivilegesResponse(rsp)
+}
+
+func (c *ClientWithResponses) AddRolePrivilegesWithResponse(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, body AddRolePrivilegesJSONRequestBody, reqEditors ...RequestEditorFn) (*AddRolePrivilegesResponse, error) {
+	rsp, err := c.AddRolePrivileges(ctx, roleRef, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAddRolePrivilegesResponse(rsp)
+}
+
+// RemoveRolePrivilegesWithBodyWithResponse request with arbitrary body returning *RemoveRolePrivilegesResponse
+func (c *ClientWithResponses) RemoveRolePrivilegesWithBodyWithResponse(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RemoveRolePrivilegesResponse, error) {
+	rsp, err := c.RemoveRolePrivilegesWithBody(ctx, roleRef, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveRolePrivilegesResponse(rsp)
+}
+
+func (c *ClientWithResponses) RemoveRolePrivilegesWithResponse(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody, reqEditors ...RequestEditorFn) (*RemoveRolePrivilegesResponse, error) {
+	rsp, err := c.RemoveRolePrivileges(ctx, roleRef, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveRolePrivilegesResponse(rsp)
 }
 
 // ParseLoginResponse parses an HTTP response from a LoginWithResponse call
@@ -511,7 +1153,7 @@ func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
 				SessionId *string `json:"sessionId,omitempty"`
 
 				// Status Status of the user.
-				Status *N200UserInfoStatus `json:"status,omitempty"`
+				Status *string `json:"status,omitempty"`
 			} `json:"userInfo,omitempty"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -540,25 +1182,51 @@ func ParseGetRolesResponse(rsp *http.Response) (*GetRolesResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest []struct {
-			CreateTime         *string `json:"createTime,omitempty"`
-			CreatedBy          *string `json:"createdBy,omitempty"`
-			Description        *string `json:"description,omitempty"`
+			// CreateTime Date and time the role was created.
+			CreateTime *string `json:"createTime,omitempty"`
+
+			// CreatedBy User who created the role.
+			CreatedBy *string `json:"createdBy,omitempty"`
+
+			// Description Description of the role.
+			Description *string `json:"description,omitempty"`
+
+			// DisplayDescription Description displayed in the user interface.
 			DisplayDescription *string `json:"displayDescription,omitempty"`
-			DisplayName        *string `json:"displayName,omitempty"`
-			Id                 *string `json:"id,omitempty"`
-			OrgId              *string `json:"orgId,omitempty"`
-			Privileges         *[]struct {
-				Description *string               `json:"description,omitempty"`
-				Id          *string               `json:"id,omitempty"`
-				Name        *string               `json:"name,omitempty"`
-				Service     *string               `json:"service,omitempty"`
-				Status      *N200PrivilegesStatus `json:"status,omitempty"`
+
+			// DisplayName Role name displayed in the user interface.
+			DisplayName *string `json:"displayName,omitempty"`
+
+			// Id Role ID.
+			Id *string `json:"id,omitempty"`
+
+			// OrgId ID of the organization the role belongs to.
+			OrgId      *string `json:"orgId,omitempty"`
+			Privileges *[]struct {
+				// Description Description of the privilege.
+				Description *string `json:"description,omitempty"`
+				Id          *string `json:"id,omitempty"`
+
+				// Name Name of the privilege.
+				Name    *string `json:"name,omitempty"`
+				Service *string `json:"service,omitempty"`
+				Status  *string `json:"status,omitempty"`
 			} `json:"privileges,omitempty"`
-			RoleName   *string     `json:"roleName,omitempty"`
-			Status     *N200Status `json:"status,omitempty"`
-			SystemRole *bool       `json:"systemRole,omitempty"`
-			UpdateTime *string     `json:"updateTime,omitempty"`
-			UpdatedBy  *string     `json:"updatedBy,omitempty"`
+
+			// RoleName Name of the role.
+			RoleName *string `json:"roleName,omitempty"`
+
+			// Status Whether the organization's license to use the role is valid or has expired.
+			Status *string `json:"status,omitempty"`
+
+			// SystemRole Whether the role is a system-defined role.
+			SystemRole *bool `json:"systemRole,omitempty"`
+
+			// UpdateTime Date and time the role was last updated.
+			UpdateTime *string `json:"updateTime,omitempty"`
+
+			// UpdatedBy User who last updated the role.
+			UpdatedBy *string `json:"updatedBy,omitempty"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
@@ -570,28 +1238,161 @@ func ParseGetRolesResponse(rsp *http.Response) (*GetRolesResponse, error) {
 	return response, nil
 }
 
+// ParseCreateRoleResponse parses an HTTP response from a CreateRoleWithResponse call
+func ParseCreateRoleResponse(rsp *http.Response) (*CreateRoleResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateRoleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// CreateTime Date and time the role was created.
+			CreateTime *string `json:"createTime,omitempty"`
+
+			// CreatedBy User who created the role.
+			CreatedBy *string `json:"createdBy,omitempty"`
+
+			// Description Description of the role.
+			Description *string `json:"description,omitempty"`
+
+			// DisplayDescription Description displayed in the user interface.
+			DisplayDescription *string `json:"displayDescription,omitempty"`
+
+			// DisplayName Role name displayed in the user interface.
+			DisplayName *string `json:"displayName,omitempty"`
+
+			// Id Role ID.
+			Id *string `json:"id,omitempty"`
+
+			// OrgId ID of the organization the role belongs to.
+			OrgId      *string `json:"orgId,omitempty"`
+			Privileges *[]struct {
+				// Description Description of the privilege.
+				Description *string `json:"description,omitempty"`
+				Id          *string `json:"id,omitempty"`
+
+				// Name Name of the privilege.
+				Name    *string `json:"name,omitempty"`
+				Service *string `json:"service,omitempty"`
+				Status  *string `json:"status,omitempty"`
+			} `json:"privileges,omitempty"`
+
+			// RoleName Name of the role.
+			RoleName *string `json:"roleName,omitempty"`
+
+			// Status Whether the organization's license to use the role is valid or has expired.
+			Status *string `json:"status,omitempty"`
+
+			// SystemRole Whether the role is a system-defined role.
+			SystemRole *bool `json:"systemRole,omitempty"`
+
+			// UpdateTime Date and time the role was last updated.
+			UpdateTime *string `json:"updateTime,omitempty"`
+
+			// UpdatedBy User who last updated the role.
+			UpdatedBy *string `json:"updatedBy,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteRoleResponse parses an HTTP response from a DeleteRoleWithResponse call
+func ParseDeleteRoleResponse(rsp *http.Response) (*DeleteRoleResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteRoleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseAddRolePrivilegesResponse parses an HTTP response from a AddRolePrivilegesWithResponse call
+func ParseAddRolePrivilegesResponse(rsp *http.Response) (*AddRolePrivilegesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AddRolePrivilegesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseRemoveRolePrivilegesResponse parses an HTTP response from a RemoveRolePrivilegesWithResponse call
+func ParseRemoveRolePrivilegesResponse(rsp *http.Response) (*RemoveRolePrivilegesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RemoveRolePrivilegesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
