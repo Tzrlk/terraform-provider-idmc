@@ -1,5 +1,8 @@
 default: build
 
+.build/:
+	mkdir -p ${@}
+
 CMD_OAPI_CODEGEN ?= go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
 
 ################################################################################
@@ -33,11 +36,24 @@ build: \
 
 ################################################################################
 #: Generate documentation.
-docs:
+docs: docs/*
+.PHONY: docs
+
+docs/*: \
+	docs/data-sources/* \
+	docs/resources/* \
+	docs/functions/*
+
+docs/data-sources/* docs/resources/* docs/functions/* &: \
+		*.go \
+		$(shell find examples/ -name *.tf) \
+		*.md \
+		| .build/
 	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs \
 		generate \
-		-provider-name idmc
-.PHONY: docs
+		--provider-name idmc \
+		--website-temp-dir .build/tfplugindocs
+#		--providers-schema ??? (need to generate first)
 
 ################################################################################
 #: Run acceptance tests.

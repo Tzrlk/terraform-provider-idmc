@@ -1,6 +1,7 @@
 *.log
 
 # Build
+.build/
 bin/
 dist/
 *.dll

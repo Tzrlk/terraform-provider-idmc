@@ -57,19 +57,20 @@ func (p *IdmcProvider) Metadata(_ context.Context, _ provider.MetadataRequest, r
 
 func (p *IdmcProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Description: "TODO",
 		Attributes: map[string]schema.Attribute{
 			"auth_host": schema.StringAttribute{
-				MarkdownDescription: "The IDMC API authentication host.",
-				Optional:            true,
+				Description: "The IDMC API authentication host.",
+				Optional:    true,
 			},
 			"auth_user": schema.StringAttribute{
-				MarkdownDescription: "The IDMC user name.",
-				Optional:            true,
+				Description: "The IDMC user name.",
+				Optional:    true,
 			},
 			"auth_pass": schema.StringAttribute{
-				MarkdownDescription: "The IDMC user password.",
-				Optional:            true,
-				Sensitive:           true,
+				Description: "The IDMC user password.",
+				Optional:    true,
+				Sensitive:   true,
 			},
 		},
 	}

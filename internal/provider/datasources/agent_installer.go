@@ -6,14 +6,14 @@ import (
 	"terraform-provider-idmc/internal/idmc"
 	v2 "terraform-provider-idmc/internal/idmc/admin/v2"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	. "github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-var _ datasource.DataSource = &AgentInstallerDataSource{}
+var _ DataSource = &AgentInstallerDataSource{}
 
-func NewAgentInstallerDataSource() datasource.DataSource {
+func NewAgentInstallerDataSource() DataSource {
 	return &AgentInstallerDataSource{}
 }
 
@@ -28,46 +28,35 @@ type AgentInstallerDataSourceModel struct {
 	ChecksumDownloadUrl types.String `tfsdk:"checksum_download_url"`
 }
 
-func (d *AgentInstallerDataSource) Metadata(
-	_ context.Context,
-	req datasource.MetadataRequest,
-	resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_v2_agent_installer_info"
+func (d *AgentInstallerDataSource) Metadata(_ context.Context, req MetadataRequest, resp *MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_agent_installer"
 }
 
-func (d *AgentInstallerDataSource) Schema(
-	_ context.Context,
-	_ datasource.SchemaRequest,
-	resp *datasource.SchemaResponse) {
+func (d *AgentInstallerDataSource) Schema(_ context.Context, _ SchemaRequest, resp *SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform-rest-api-version-2-resources/agent.html",
-
+		Description: "https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform-rest-api-version-2-resources/agent.html",
 		Attributes: map[string]schema.Attribute{
 			"platform": schema.StringAttribute{
-				MarkdownDescription: "Platform of the Secure Agent machine. Must be one of the following values:\nwin64\nlinux64",
-				Optional:            true,
-				// TODO: Implement validation.
+				Description: "Platform of the Secure Agent machine. Must be one of the following values:\nwin64\nlinux64",
+				Optional:    true,
 			},
 			"download_url": schema.StringAttribute{
-				MarkdownDescription: "The URL of the latest Secure Agent installer package.",
-				Computed:            true,
+				Description: "The URL of the latest Secure Agent installer package.",
+				Computed:    true,
 			},
 			"install_token": schema.StringAttribute{
-				MarkdownDescription: "Token needed to install and register a Secure Agent.",
-				Computed:            true,
+				Description: "Token needed to install and register a Secure Agent.",
+				Computed:    true,
 			},
 			"checksum_download_url": schema.StringAttribute{
-				MarkdownDescription: "The URL of the CRC-32 SHA256 package checksum.",
-				Computed:            true,
+				Description: "The URL of the CRC-32 SHA256 package checksum.",
+				Computed:    true,
 			},
 		},
 	}
 }
 
-func (d *AgentInstallerDataSource) Configure(
-	_ context.Context,
-	req datasource.ConfigureRequest,
-	resp *datasource.ConfigureResponse) {
+func (d *AgentInstallerDataSource) Configure(_ context.Context, req ConfigureRequest, resp *ConfigureResponse) {
 
 	if req.ProviderData == nil {
 		return
@@ -85,11 +74,7 @@ func (d *AgentInstallerDataSource) Configure(
 
 }
 
-func (d *AgentInstallerDataSource) Read(
-	ctx context.Context,
-	req datasource.ReadRequest,
-	resp *datasource.ReadResponse,
-) {
+func (d *AgentInstallerDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
 	diags := &resp.Diagnostics
 
 	// Load the previous state if present.

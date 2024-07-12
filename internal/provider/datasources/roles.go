@@ -37,22 +37,23 @@ func (d *RolesDataSource) Metadata(_ context.Context, req MetadataRequest, resp 
 
 func (d *RolesDataSource) Schema(_ context.Context, _ SchemaRequest, resp *SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/roles/getting-role-details.html",
+		Description: "https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/roles/getting-role-details.html",
 
 		Blocks: map[string]schema.Block{
 			"filter": schema.SingleNestedBlock{
+				Description: "Allows for results to be narrowed.",
 				Attributes: map[string]schema.Attribute{
 					"role_id": schema.StringAttribute{
-						MarkdownDescription: "Unique identifier for the role.",
-						Optional:            true,
+						Description: "Unique identifier for the role.",
+						Optional:    true,
 					},
 					"role_name": schema.StringAttribute{
-						MarkdownDescription: "Name of the role.",
-						Optional:            true,
+						Description: "Name of the role.",
+						Optional:    true,
 					},
 					"expand_privileges": schema.BoolAttribute{
-						MarkdownDescription: "Returns the privileges associated with the role specified in the query filter.",
-						Optional:            true,
+						Description: "Returns the privileges associated with the role specified in the query filter.",
+						Optional:    true,
 					},
 				},
 			},
@@ -60,82 +61,82 @@ func (d *RolesDataSource) Schema(_ context.Context, _ SchemaRequest, resp *Schem
 
 		Attributes: map[string]schema.Attribute{
 			"roles": schema.MapNestedAttribute{
-				MarkdownDescription: "The query results",
-				Computed:            true,
+				Description: "The query results",
+				Computed:    true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						//"id": schema.StringAttribute{
-						//	MarkdownDescription: "",
+						//	Description: "Role ID.",
 						//	Computed:            true,
 						//},
 						"org_id": schema.StringAttribute{
-							MarkdownDescription: "",
-							Computed:            true,
+							Description: "ID of the organization the role belongs to.",
+							Computed:    true,
 						},
 						"created_by": schema.StringAttribute{
-							MarkdownDescription: "",
-							Computed:            true,
+							Description: "User who created the role.",
+							Computed:    true,
 						},
 						"updated_by": schema.StringAttribute{
-							MarkdownDescription: "",
-							Computed:            true,
+							Description: "User who last updated the role.",
+							Computed:    true,
 						},
-						"create_time": schema.StringAttribute{
-							MarkdownDescription: "",
-							Computed:            true,
+						"created_time": schema.StringAttribute{
+							Description: "Date and time the role was created.",
+							Computed:    true,
 						},
-						"update_time": schema.StringAttribute{
-							MarkdownDescription: "",
-							Computed:            true,
+						"updated_time": schema.StringAttribute{
+							Description: "Date and time the role was last updated.",
+							Computed:    true,
 						},
 						"role_name": schema.StringAttribute{
-							MarkdownDescription: "",
-							Computed:            true,
+							Description: "Name of the role.",
+							Computed:    true,
 						},
 						"description": schema.StringAttribute{
-							MarkdownDescription: "",
-							Computed:            true,
+							Description: "Description of the role.",
+							Computed:    true,
 						},
 						"display_name": schema.StringAttribute{
-							MarkdownDescription: "",
-							Computed:            true,
+							Description: "Role name displayed in the user interface.",
+							Computed:    true,
 						},
 						"display_description": schema.StringAttribute{
-							MarkdownDescription: "",
-							Computed:            true,
+							Description: "Description displayed in the user interface.",
+							Computed:    true,
 						},
 						"system_role": schema.StringAttribute{
-							MarkdownDescription: "",
-							Computed:            true,
+							Description: "Whether the role is a system-defined role.",
+							Computed:    true,
 						},
 						"status": schema.StringAttribute{
-							MarkdownDescription: "",
-							Computed:            true,
+							Description: "Whether the organization's license to use the role is valid or has expired.",
+							Computed:    true,
 						},
 						"privileges": schema.MapNestedAttribute{
-							MarkdownDescription: "",
-							Computed:            true,
+							Description: "The privileges assigned to the role.",
+							Computed:    true,
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
 									//"id": schema.StringAttribute{
-									//	MarkdownDescription: "",
+									//	Description: "Privilege ID.",
 									//	Computed:            true,
 									//},
 									"name": schema.StringAttribute{
-										MarkdownDescription: "",
-										Computed:            true,
+										Description: "Name of the privilege.",
+										Computed:    true,
 									},
 									"description": schema.StringAttribute{
-										MarkdownDescription: "",
-										Computed:            true,
+										Description: "Description of the privilege.",
+										Computed:    true,
 									},
 									"service": schema.StringAttribute{
-										MarkdownDescription: "",
-										Computed:            true,
+										Description: "Service the privilege applies to.",
+										Computed:    true,
 									},
 									"status": schema.StringAttribute{
-										MarkdownDescription: "",
-										Computed:            true,
+										Description: "Status of the privilege (Enabled/Disabled).",
+										Computed:    true,
 									},
 								},
 							},

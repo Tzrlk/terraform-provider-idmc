@@ -48,69 +48,69 @@ func (r RoleResource) Metadata(ctx context.Context, req MetadataRequest, resp *M
 
 func (r RoleResource) Schema(ctx context.Context, req SchemaRequest, resp *SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "",
+		Description: "TODO",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				MarkdownDescription: "Service generated identifier for the role.",
-				Computed:            true,
+				Description: "Service generated identifier for the role.",
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"name": schema.StringAttribute{
-				MarkdownDescription: "",
-				Required:            true,
+				Description: "Name of the role.",
+				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"description": schema.StringAttribute{
-				MarkdownDescription: "",
-				Optional:            true,
+				Description: "Description of the role.",
+				Optional:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"privileges": schema.SetAttribute{
-				MarkdownDescription: "",
-				Required:            true,
-				ElementType:         types.StringType,
+				Description: "The privileges assigned to the role.",
+				Required:    true,
+				ElementType: types.StringType,
 			},
 			"org_id": schema.StringAttribute{
-				MarkdownDescription: "",
-				Computed:            true,
+				Description: "ID of the organization the role belongs to.",
+				Computed:    true,
 			},
 			"display_name": schema.StringAttribute{
-				MarkdownDescription: "",
-				Computed:            true,
+				Description: "Role name displayed in the user interface.",
+				Computed:    true,
 			},
 			"display_description": schema.StringAttribute{
-				MarkdownDescription: "",
-				Computed:            true,
+				Description: "Description displayed in the user interface.",
+				Computed:    true,
 			},
 			"system_role": schema.BoolAttribute{
-				MarkdownDescription: "",
-				Computed:            true,
+				Description: "Whether the role is a system-defined role.",
+				Computed:    true,
 			},
 			"status": schema.StringAttribute{
-				MarkdownDescription: "",
-				Computed:            true,
+				Description: "Whether the organization's license to use the role is valid or has expired.",
+				Computed:    true,
 			},
 			"created_by": schema.StringAttribute{
-				MarkdownDescription: "",
-				Computed:            true,
+				Description: "User who created the role.",
+				Computed:    true,
 			},
 			"updated_by": schema.StringAttribute{
-				MarkdownDescription: "",
-				Computed:            true,
+				Description: "User who last updated the role.",
+				Computed:    true,
 			},
 			"created_time": schema.StringAttribute{
-				MarkdownDescription: "",
-				Computed:            true,
+				Description: "Date and time the role was created.",
+				Computed:    true,
 			},
 			"updated_time": schema.StringAttribute{
-				MarkdownDescription: "",
-				Computed:            true,
+				Description: "Date and time the role was last updated.",
+				Computed:    true,
 			},
 		},
 	}
