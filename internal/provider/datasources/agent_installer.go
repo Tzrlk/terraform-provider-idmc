@@ -1,4 +1,4 @@
-package provider
+package datasources
 
 import (
 	"context"
@@ -29,15 +29,15 @@ type AgentInstallerDataSourceModel struct {
 }
 
 func (d *AgentInstallerDataSource) Metadata(
-	ctx context.Context,
+	_ context.Context,
 	req datasource.MetadataRequest,
 	resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_v2_agent_installer_info"
 }
 
 func (d *AgentInstallerDataSource) Schema(
-	ctx context.Context,
-	req datasource.SchemaRequest,
+	_ context.Context,
+	_ datasource.SchemaRequest,
 	resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform-rest-api-version-2-resources/agent.html",
@@ -65,7 +65,7 @@ func (d *AgentInstallerDataSource) Schema(
 }
 
 func (d *AgentInstallerDataSource) Configure(
-	ctx context.Context,
+	_ context.Context,
 	req datasource.ConfigureRequest,
 	resp *datasource.ConfigureResponse) {
 

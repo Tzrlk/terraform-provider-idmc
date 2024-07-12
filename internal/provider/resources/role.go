@@ -1,4 +1,4 @@
-package provider
+package resources
 
 import (
 	"context"
@@ -16,13 +16,17 @@ import (
 	. "terraform-provider-idmc/internal/utils"
 )
 
-var _ Resource = &RbacRoleResource{}
+var _ Resource = &RoleResource{}
 
-type RbacRoleResource struct {
+func NewRoleResource() Resource {
+	return &RoleResource{}
+}
+
+type RoleResource struct {
 	Client *v3.ClientWithResponses
 }
 
-type RbacRoleResourceModel struct {
+type RoleResourceModel struct {
 	Id                 types.String `tfsdk:"id"`
 	Name               types.String `tfsdk:"name"`
 	Description        types.String `tfsdk:"description"`
@@ -38,11 +42,11 @@ type RbacRoleResourceModel struct {
 	UpdatedTime        types.String `tfsdk:"updated_time"`
 }
 
-func (r RbacRoleResource) Metadata(ctx context.Context, req MetadataRequest, resp *MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_rbac_role"
+func (r RoleResource) Metadata(ctx context.Context, req MetadataRequest, resp *MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_role"
 }
 
-func (r RbacRoleResource) Schema(ctx context.Context, req SchemaRequest, resp *SchemaResponse) {
+func (r RoleResource) Schema(ctx context.Context, req SchemaRequest, resp *SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "",
 		Attributes: map[string]schema.Attribute{
@@ -112,11 +116,11 @@ func (r RbacRoleResource) Schema(ctx context.Context, req SchemaRequest, resp *S
 	}
 }
 
-func (r RbacRoleResource) Create(ctx context.Context, req CreateRequest, resp *CreateResponse) {
+func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *CreateResponse) {
 	diags := &resp.Diagnostics
 
 	// Load configuration from plan.
-	var data RbacRoleResourceModel
+	var data RoleResourceModel
 	diags.Append(req.Plan.Get(ctx, &data)...)
 	if diags.HasError() {
 		return
@@ -182,11 +186,11 @@ func (r RbacRoleResource) Create(ctx context.Context, req CreateRequest, resp *C
 
 }
 
-func (r RbacRoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
+func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
 	diags := &resp.Diagnostics
 
 	// Load configuration from plan.
-	var data RbacRoleResourceModel
+	var data RoleResourceModel
 	diags.Append(req.State.Get(ctx, &data)...)
 	if diags.HasError() {
 		return
@@ -270,15 +274,15 @@ func (r RbacRoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadR
 
 }
 
-func (r RbacRoleResource) Update(ctx context.Context, req UpdateRequest, resp *UpdateResponse) {
+func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *UpdateResponse) {
 	diags := &resp.Diagnostics
 
 	// Load config from state for comparison.
-	var state RbacRoleResourceModel
+	var state RoleResourceModel
 	diags.Append(req.State.Get(ctx, &state)...)
 
 	// Load configuration from plan.
-	var plan RbacRoleResourceModel
+	var plan RoleResourceModel
 	diags.Append(req.Plan.Get(ctx, &plan)...)
 
 	// Only check for errors here so we can see if there are any issues with
@@ -390,11 +394,11 @@ func (r RbacRoleResource) Update(ctx context.Context, req UpdateRequest, resp *U
 
 }
 
-func (r RbacRoleResource) Delete(ctx context.Context, req DeleteRequest, resp *DeleteResponse) {
+func (r RoleResource) Delete(ctx context.Context, req DeleteRequest, resp *DeleteResponse) {
 	diags := &resp.Diagnostics
 
 	// Load configuration from plan.
-	var data RbacRoleResourceModel
+	var data RoleResourceModel
 	diags.Append(req.State.Get(ctx, &data)...)
 	if diags.HasError() {
 		return

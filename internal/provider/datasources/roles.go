@@ -1,4 +1,4 @@
-package provider
+package datasources
 
 import (
 	"context"
@@ -14,28 +14,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )
 
-var _ DataSource = &RbacRolesDataSource{}
+var _ DataSource = &RolesDataSource{}
 
-func NewRbacRolesDataSource() DataSource {
-	return &RbacRolesDataSource{}
+func NewRolesDataSource() DataSource {
+	return &RolesDataSource{}
 }
 
-type RbacRolesDataSource struct {
+type RolesDataSource struct {
 	Client *v3.ClientWithResponses
 }
 
-type RbacRolesDataSourceModel struct {
+type RolesDataSourceModel struct {
 	RoleId           types.String `tfsdk:"role_id"`
 	RoleName         types.String `tfsdk:"role_name"`
 	ExpandPrivileges types.Bool   `tfsdk:"expand_privileges"`
 	Roles            types.Map    `tfsdk:"roles"`
 }
 
-func (d *RbacRolesDataSource) Metadata(ctx context.Context, req MetadataRequest, resp *MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_rbac_roles"
+func (d *RolesDataSource) Metadata(_ context.Context, req MetadataRequest, resp *MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_roles"
 }
 
-func (d *RbacRolesDataSource) Schema(ctx context.Context, req SchemaRequest, resp *SchemaResponse) {
+func (d *RolesDataSource) Schema(_ context.Context, _ SchemaRequest, resp *SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/roles/getting-role-details.html",
 
@@ -147,7 +147,7 @@ func (d *RbacRolesDataSource) Schema(ctx context.Context, req SchemaRequest, res
 	}
 }
 
-func (d *RbacRolesDataSource) Configure(ctx context.Context, req ConfigureRequest, resp *ConfigureResponse) {
+func (d *RolesDataSource) Configure(_ context.Context, req ConfigureRequest, resp *ConfigureResponse) {
 
 	if req.ProviderData == nil {
 		return
@@ -165,11 +165,11 @@ func (d *RbacRolesDataSource) Configure(ctx context.Context, req ConfigureReques
 
 }
 
-func (d *RbacRolesDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
+func (d *RolesDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
 	diags := &resp.Diagnostics
 
 	// Load the previous state if present.
-	var config RbacRolesDataSourceModel
+	var config RolesDataSourceModel
 	diags.Append(req.Config.Get(ctx, &config)...)
 	if diags.HasError() {
 		return

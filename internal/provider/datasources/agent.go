@@ -1,3 +1,3 @@
-package provider
+package datasources
 
 // TODO: Provides list of agents.

@@ -13,6 +13,8 @@ import (
 	"net/http"
 	"os"
 	"terraform-provider-idmc/internal/idmc"
+	"terraform-provider-idmc/internal/provider/datasources"
+	"terraform-provider-idmc/internal/provider/resources"
 )
 
 // Ensure IdmcProvider satisfies various provider interfaces.
@@ -48,12 +50,12 @@ type IdmcProviderData struct {
 	SessionId types.String
 }
 
-func (p *IdmcProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
+func (p *IdmcProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "idmc"
 	resp.Version = p.version
 }
 
-func (p *IdmcProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
+func (p *IdmcProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"auth_host": schema.StringAttribute{
@@ -142,17 +144,19 @@ func (p *IdmcProvider) Configure(
 
 }
 
-func (p *IdmcProvider) Resources(ctx context.Context) []func() resource.Resource {
-	return []func() resource.Resource{}
-}
-
-func (p *IdmcProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{
-		NewAgentInstallerDataSource,
-		NewRbacRolesDataSource,
+func (p *IdmcProvider) Resources(_ context.Context) []func() resource.Resource {
+	return []func() resource.Resource{
+		resources.NewRoleResource,
 	}
 }
 
-func (p *IdmcProvider) Functions(ctx context.Context) []func() function.Function {
+func (p *IdmcProvider) DataSources(_ context.Context) []func() datasource.DataSource {
+	return []func() datasource.DataSource{
+		datasources.NewAgentInstallerDataSource,
+		datasources.NewRolesDataSource,
+	}
+}
+
+func (p *IdmcProvider) Functions(_ context.Context) []func() function.Function {
 	return []func() function.Function{}
 }

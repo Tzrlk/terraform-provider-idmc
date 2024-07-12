@@ -1,3 +1,3 @@
-package provider
+package resources
 
 // TODO: name, permissions
