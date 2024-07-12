@@ -8,14 +8,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"terraform-provider-idmc/internal/idmc"
 	"terraform-provider-idmc/internal/idmc/admin/v3"
+	. "terraform-provider-idmc/internal/utils"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	. "github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )
 
-var _ datasource.DataSource = &RbacRolesDataSource{}
+var _ DataSource = &RbacRolesDataSource{}
 
-func NewRbacRolesDataSource() datasource.DataSource {
+func NewRbacRolesDataSource() DataSource {
 	return &RbacRolesDataSource{}
 }
 
@@ -30,19 +31,11 @@ type RbacRolesDataSourceModel struct {
 	Roles            types.Map    `tfsdk:"roles"`
 }
 
-func (d *RbacRolesDataSource) Metadata(
-	ctx context.Context,
-	req datasource.MetadataRequest,
-	resp *datasource.MetadataResponse,
-) {
+func (d *RbacRolesDataSource) Metadata(ctx context.Context, req MetadataRequest, resp *MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_rbac_roles"
 }
 
-func (d *RbacRolesDataSource) Schema(
-	ctx context.Context,
-	req datasource.SchemaRequest,
-	resp *datasource.SchemaResponse,
-) {
+func (d *RbacRolesDataSource) Schema(ctx context.Context, req SchemaRequest, resp *SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/roles/getting-role-details.html",
 
@@ -154,11 +147,7 @@ func (d *RbacRolesDataSource) Schema(
 	}
 }
 
-func (d *RbacRolesDataSource) Configure(
-	ctx context.Context,
-	req datasource.ConfigureRequest,
-	resp *datasource.ConfigureResponse,
-) {
+func (d *RbacRolesDataSource) Configure(ctx context.Context, req ConfigureRequest, resp *ConfigureResponse) {
 
 	if req.ProviderData == nil {
 		return
@@ -176,11 +165,7 @@ func (d *RbacRolesDataSource) Configure(
 
 }
 
-func (d *RbacRolesDataSource) Read(
-	ctx context.Context,
-	req datasource.ReadRequest,
-	resp *datasource.ReadResponse,
-) {
+func (d *RbacRolesDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
 	diags := &resp.Diagnostics
 
 	// Load the previous state if present.
@@ -193,10 +178,10 @@ func (d *RbacRolesDataSource) Read(
 	// Obtain request parameters from config.
 	params := &v3.GetRolesParams{}
 	if !config.RoleId.IsNull() {
-		query := fmt.Sprintf("roleName==\"%s\"", config.RoleId.ValueString())
+		query := fmt.Sprintf("roleId==\"%s\"", config.RoleId.ValueString())
 		params.Q = &query
 	} else if !config.RoleName.IsNull() {
-		query := fmt.Sprintf("roleId==\"%s\"", config.RoleName.ValueString())
+		query := fmt.Sprintf("roleName==\"%s\"", config.RoleName.ValueString())
 		params.Q = &query
 	}
 	if config.ExpandPrivileges.ValueBool() {

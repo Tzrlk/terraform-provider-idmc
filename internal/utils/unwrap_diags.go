@@ -1,4 +1,4 @@
-package provider
+package utils
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -6,7 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 func UnwrapDiag[T any](
@@ -40,8 +39,8 @@ func UnwrapObjectValue(
 	path path.Path,
 	attributeTypes map[string]attr.Type,
 	attributes map[string]attr.Value,
-) basetypes.ObjectValue {
-	return UnwrapDiag(diagnostics, path, func() (basetypes.ObjectValue, diag.Diagnostics) {
+) types.Object {
+	return UnwrapDiag(diagnostics, path, func() (types.Object, diag.Diagnostics) {
 		return types.ObjectValue(attributeTypes, attributes)
 	})
 }
@@ -51,8 +50,19 @@ func UnwrapMapValue(
 	path path.Path,
 	elementType attr.Type,
 	elements map[string]attr.Value,
-) basetypes.MapValue {
-	return UnwrapDiag(diagnostics, path, func() (basetypes.MapValue, diag.Diagnostics) {
+) types.Map {
+	return UnwrapDiag(diagnostics, path, func() (types.Map, diag.Diagnostics) {
 		return types.MapValue(elementType, elements)
+	})
+}
+
+func UnwrapSetValue(
+	diagnostics *diag.Diagnostics,
+	path path.Path,
+	elementType attr.Type,
+	elements []attr.Value,
+) types.Set {
+	return UnwrapDiag(diagnostics, path, func() (types.Set, diag.Diagnostics) {
+		return types.SetValue(elementType, elements)
 	})
 }
