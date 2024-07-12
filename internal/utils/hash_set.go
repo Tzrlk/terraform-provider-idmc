@@ -33,16 +33,16 @@ func NewHashSet[T any](hasher func(T) int) *HashSet[T] {
 	}
 }
 
-//optional functionalities
+//optional functionalities.
 
-// AddAll Add multiple values in the set
+// AddAll Add multiple values in the set.
 func (set *HashSet[T]) AddAll(items ...T) {
 	for _, item := range items {
 		set.Add(item)
 	}
 }
 
-// Filter returns a subset, that contains only the values that satisfies the given predicate P
+// Filter returns a subset, that contains only the values that satisfies the given filter.
 func (set *HashSet[T]) Filter(filter func(item T) bool) *HashSet[T] {
 	result := NewHashSet(set.hasher)
 	for hash, value := range set.table {
@@ -73,9 +73,9 @@ func (set *HashSet[T]) Intersect(s2 *HashSet[T]) *HashSet[T] {
 	return set.Filter(s2.Has)
 }
 
-// Difference returns the subset from s, that doesn't exists in s2 (param)
-func (set *HashSet[T]) Difference(s2 *HashSet[T]) *HashSet[T] {
+// Difference returns the subset from set, that doesn't exists in other (param).
+func (set *HashSet[T]) Difference(other *HashSet[T]) *HashSet[T] {
 	return set.Filter(func(item T) bool {
-		return !s2.Has(item)
+		return !other.Has(item)
 	})
 }

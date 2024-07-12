@@ -27,6 +27,11 @@ format:
 	terraform fmt -recursive ./examples/
 
 ################################################################################
+#: Lint project
+lint:
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint run
+
+################################################################################
 #: Compile module.
 build: \
 		codegen

@@ -11,15 +11,7 @@ import (
 )
 
 // Run "go generate" to format example terraform files and generate the docs for the registry/website
-
-// If you do not have terraform installed, you can remove the formatting command, but its suggested to
-// ensure the documentation is formatted properly.
-//go:generate make format
-
 //go:generate make codegen
-
-// Run the docs generation tool, check its repository for more information on how it works and how docs
-// can be customized.
 //go:generate make docs
 
 var (
@@ -38,9 +30,6 @@ func main() {
 	flag.Parse()
 
 	opts := providerserver.ServeOpts{
-		// TODO: Update this string with the published name of your provider.
-		// Also update the tfplugindocs generate command to either remove the
-		// -provider-name flag or set its value to the updated provider name.
 		Address: "registry.terraform.io/tzrlk/idmc",
 		Debug:   debug,
 	}
