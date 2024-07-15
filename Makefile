@@ -4,6 +4,7 @@ default: build
 	mkdir -p ${@}
 
 CMD_OAPI_CODEGEN ?= go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
+CMD_TFPLUGINDOCS ?= go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 
 ################################################################################
 #: Generate OpenAPI clients
@@ -40,6 +41,11 @@ build: \
 .PHONY: build
 
 ################################################################################
+#: Run unit tests
+test:
+	go test
+
+################################################################################
 #: Generate documentation.
 docs: docs/*
 .PHONY: docs
@@ -54,7 +60,7 @@ docs/data-sources/* docs/resources/* docs/functions/* &: \
 		$(shell find examples/ -name *.tf) \
 		*.md \
 		| .build/
-	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs \
+	${CMD_TFPLUGINDOCS} \
 		generate \
 		--provider-name idmc \
 		--website-temp-dir .build/tfplugindocs

@@ -18,11 +18,38 @@ func NewIdmcApi(
 	authPass string,
 ) (*IdmcApi, error) {
 
+	// Perform the login operation with the provided credentials.
+	baseApiUrl, sessionId, loginError := doLogin(ctx, authHost, authUser, authPass)
+	if loginError != nil {
+		return nil, loginError
+	}
+
+	// Construct the actual client implementations.
+	idmcApi := &IdmcApi{}
+
+	idmcAdminApi, idmcAdminApiErr := admin.NewIdmcAdminApi(*baseApiUrl, sessionId)
+	if idmcAdminApiErr != nil {
+		return nil, idmcAdminApiErr
+	}
+
+	idmcApi.Admin = idmcAdminApi
+	return idmcApi, nil
+
+}
+
+func doLogin(
+	ctx context.Context,
+	authHost string,
+	authUser string,
+	authPass string,
+	opts ...v3.ClientOption,
+) (*string, *string, error) {
+
 	// First set up a client configured for api login.
 	loginServerUrl := fmt.Sprintf("https://%s/public", authHost)
-	loginClient, loginClientError := v3.NewClientWithResponses(loginServerUrl)
+	loginClient, loginClientError := v3.NewClientWithResponses(loginServerUrl, opts...)
 	if loginClientError != nil {
-		return nil, loginClientError
+		return nil, nil, loginClientError
 	}
 
 	// Perform the login operation with the provided credentials.
@@ -31,27 +58,32 @@ func NewIdmcApi(
 		Password: authPass,
 	})
 	if loginResponseError != nil {
-		return nil, loginResponseError
+		return nil, nil, loginResponseError
 	}
 
 	// Extract the key information from the login response
-	sessionId := loginResponse.JSON200.UserInfo.SessionId
-	var apiUrl string
+	if loginResponse.StatusCode() != 200 {
+		return nil, nil, fmt.Errorf(
+			"expected http 200 ok, got %s",
+			loginResponse.Status(),
+		)
+	}
+	if loginResponse.JSON200 == nil {
+		return nil, nil, fmt.Errorf(
+			"expected response to be parsed as json, found nil",
+		)
+	}
+	loginResponseJson := *loginResponse.JSON200
+	userInfo := *loginResponseJson.UserInfo
+
+	sessionId := userInfo.SessionId
 	for _, product := range *loginResponse.JSON200.Products {
-		if *product.Name == "" {
-			apiUrl = *product.BaseApiUrl
+		if *product.Name == "Integration Cloud" {
+			return product.BaseApiUrl, sessionId, nil
 		}
 	}
 
-	// Construct the actual client implementations.
-	idmcApi := &IdmcApi{}
-
-	idmcAdminApi, idmcAdminApiErr := admin.NewIdmcAdminApi(apiUrl, sessionId)
-	if idmcAdminApiErr != nil {
-		return nil, idmcAdminApiErr
-	}
-
-	idmcApi.Admin = idmcAdminApi
-	return idmcApi, nil
+	// TODO: This should probably just return an error, or fall-back to other products.
+	return &loginServerUrl, sessionId, nil
 
 }

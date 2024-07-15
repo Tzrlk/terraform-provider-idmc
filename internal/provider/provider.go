@@ -3,6 +3,8 @@ package provider
 import (
 	"context"
 	"fmt"
+	"os"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -10,11 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"net/http"
-	"os"
 	"terraform-provider-idmc/internal/idmc"
-	"terraform-provider-idmc/internal/provider/datasources"
-	"terraform-provider-idmc/internal/provider/resources"
 )
 
 // Ensure IdmcProvider satisfies various provider interfaces.
@@ -40,14 +38,12 @@ type IdmcProvider struct {
 // IdmcProviderModel describes the provider data model.
 type IdmcProviderModel struct {
 	AuthHost types.String `tfsdk:"auth_host"`
-	AuthUser types.String `tfsdk:"username"`
-	AuthPass types.String `tfsdk:"password"`
+	AuthUser types.String `tfsdk:"auth_user"`
+	AuthPass types.String `tfsdk:"auth_pass"`
 }
 
 type IdmcProviderData struct {
-	Client    *http.Client
-	BaseUrl   types.String
-	SessionId types.String
+	Api *idmc.IdmcApi
 }
 
 func (p *IdmcProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -140,21 +136,24 @@ func (p *IdmcProvider) Configure(
 		return
 	}
 
-	resp.DataSourceData = idmcApi
-	resp.ResourceData = idmcApi
+	idmcProviderData := IdmcProviderData{
+		Api: idmcApi,
+	}
+	resp.DataSourceData = idmcProviderData
+	resp.ResourceData = idmcProviderData
 
 }
 
 func (p *IdmcProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		resources.NewRoleResource,
+		NewRoleResource,
 	}
 }
 
 func (p *IdmcProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		datasources.NewAgentInstallerDataSource,
-		datasources.NewRolesDataSource,
+		NewAgentInstallerDataSource,
+		NewRolesDataSource,
 	}
 }
 

@@ -1,3 +1,3 @@
-package resources
+package provider
 
 // TODO: name, services, agents?

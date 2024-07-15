@@ -1,14 +1,15 @@
-package datasources
+package provider
 
 import (
 	"context"
 	"fmt"
-	"terraform-provider-idmc/internal/idmc"
+
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+
 	v2 "terraform-provider-idmc/internal/idmc/admin/v2"
 
 	. "github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var _ DataSource = &AgentInstallerDataSource{}
@@ -62,7 +63,7 @@ func (d *AgentInstallerDataSource) Configure(_ context.Context, req ConfigureReq
 		return
 	}
 
-	api, ok := req.ProviderData.(*idmc.IdmcApi)
+	data, ok := req.ProviderData.(*IdmcProviderData)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
@@ -70,7 +71,7 @@ func (d *AgentInstallerDataSource) Configure(_ context.Context, req ConfigureReq
 		)
 		return
 	}
-	d.Client = api.Admin.V2.Client
+	d.Client = data.Api.Admin.V2.Client
 
 }
 

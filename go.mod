@@ -1,8 +1,11 @@
 module terraform-provider-idmc
 
-go 1.21
+go 1.22
+
+toolchain go1.22.5
 
 require (
+	github.com/brianvoe/gofakeit/v7 v7.0.0
 	github.com/getkin/kin-openapi v0.126.0
 	github.com/golangci/golangci-lint v1.59.1
 	github.com/hashicorp/terraform-plugin-docs v0.19.4
@@ -11,6 +14,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.23.0
 	github.com/oapi-codegen/oapi-codegen/v2 v2.3.0
 	github.com/oapi-codegen/runtime v1.1.1
+	github.com/onsi/gomega v1.33.1
 	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc
 )
 

@@ -1,17 +1,17 @@
-package datasources
+package provider
 
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"terraform-provider-idmc/internal/idmc"
 	"terraform-provider-idmc/internal/idmc/admin/v3"
-	. "terraform-provider-idmc/internal/utils"
 
 	. "github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	. "terraform-provider-idmc/internal/utils"
 )
 
 var _ DataSource = &RolesDataSource{}
@@ -154,7 +154,7 @@ func (d *RolesDataSource) Configure(_ context.Context, req ConfigureRequest, res
 		return
 	}
 
-	api, ok := req.ProviderData.(*idmc.IdmcApi)
+	data, ok := req.ProviderData.(*IdmcProviderData)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
@@ -162,7 +162,7 @@ func (d *RolesDataSource) Configure(_ context.Context, req ConfigureRequest, res
 		)
 		return
 	}
-	d.Client = api.Admin.V3.Client
+	d.Client = data.Api.Admin.V3.Client
 
 }
 
