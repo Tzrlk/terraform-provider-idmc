@@ -3,32 +3,31 @@ package v3
 import (
 	"context"
 	"net/http"
+	"terraform-provider-idmc/internal/idmc/common"
+	"terraform-provider-idmc/internal/utils"
 )
 
 type IdmcAdminV3Api struct {
 	Client *ClientWithResponses
 }
 
-func NewIdmcAdminV3Api(baseUrl string, sessionId *string) (*IdmcAdminV3Api, error) {
-	api := &IdmcAdminV3Api{}
+func NewIdmcAdminV3Api(baseUrl string, sessionId string, httpClient common.HttpRequestDoer) (*IdmcAdminV3Api, error) {
 
 	// Initialise the OpenAPI client.
-	client, clientErr := NewClientWithResponses(baseUrl, func(httpClient *Client) error {
-
-		// Inject needed headers.
-		httpClient.RequestEditors = append(httpClient.RequestEditors, func(ctx context.Context, req *http.Request) error {
-			req.Header["INFA-SESSION-ID"] = []string{*sessionId}
-
+	apiClient, clientErr := NewClientWithResponses(baseUrl,
+		WithHTTPClient(httpClient),
+		WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+			req.Header["Accept"]          = []string{"application/json"}
+			req.Header["INFA-SESSION-ID"] = []string{sessionId}
 			return nil
-		})
-
-		return nil
-	})
+		}),
+	)
 	if clientErr != nil {
 		return nil, clientErr
 	}
 
-	api.Client = client
-	return api, nil
+	return utils.OkPtr(&IdmcAdminV3Api{
+		Client: apiClient,
+	})
 
 }

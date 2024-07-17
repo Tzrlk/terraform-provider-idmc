@@ -15,21 +15,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                  description: |-
-                    Informatica Intelligent Cloud Services user name for the organization that you want to log in to.
-                  maxLength: 255
-                password:
-                  type: string
-                  description: |-
-                    Informatica Intelligent Cloud Services password.
-                  maxLength: 255
-              required:
-                - username
-                - password
+              $ref: '#/components/schemas/loginRequestBody'
       responses:
         200:
           description: |-
@@ -37,65 +23,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  products:
-                    type: array
-                    description: |-
-                      Subscribed Informatica products.
-                    items:
-                      type: object
-                      properties:
-                        name:
-                          type: string
-                          description: |-
-                            Product name.
-                        baseApiUrl:
-                          type: string
-                          description: |-
-                            Base API URL for the product. Use in REST API requests.
-                  userInfo:
-                    type: object
-                    properties:
-                      sessionId:
-                        type: string
-                        description: |-
-                          REST API session ID for the current session. Use in most REST API request headers.
-                      id:
-                        type: string
-                        description: |-
-                          User ID.
-                      name:
-                        type: string
-                        description: |-
-                          User name.
-                      parentOrgId:
-                        type: string
-                        description: |-
-                          Organization ID for the parent.
-                        minLength: 22
-                        maxLength: 22
-                      orgId:
-                        type: string
-                        description: |-
-                          ID of the organization the user belongs to.
-                        minLength: 22
-                        maxLength: 22
-                      orgName:
-                        type: string
-                        description: |-
-                          Organization name.
-                      groups:
-                        type: object
-                        description: |-
-                          User group information for the user.
-                      status:
-                        type: string
-                        description: |-
-                          Status of the user.
-#                        enum:
-#                          - Active
-#                          - Inactive
+                $ref: '#/components/schemas/loginResponseBody'
 
   /public/core/v3/roles:
     description: |-
@@ -131,11 +59,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  allOf:
-                    - $ref: '#/components/schemas/roleInfo'
-                    - $ref: '#/components/schemas/withPrivilegeItems'
+                $ref: '#/components/schemas/getRolesResponseBody'
     post:
       operationId: createRole
       description: You can create custom roles for your organization.
@@ -143,21 +67,7 @@ paths:
         content:
           application/json:
             schema:
-              allOf:
-                - $ref: '#/components/schemas/withPrivilegeRefs'
-                - type: object
-                  properties:
-                    name:
-                      type: string
-                      description: |-
-                        Name of the role.
-                    description:
-                      type: string
-                      description: |-
-                        Description of the role.
-              required:
-                - name
-                - privileges
+              $ref: '#/components/schemas/createRoleRequestBody'
       responses:
         200:
           description: |-
@@ -165,9 +75,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/withPrivilegeItems'
-                  - $ref: '#/components/schemas/roleInfo'
+                $ref: '#/components/schemas/createRoleResponseBody'
 
   /public/core/v3/roles/{role_ref}:
     parameters:
@@ -246,7 +154,174 @@ components:
           schema:
             $ref: '#/components/schemas/withPrivilegeRefs'
 
+  # https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/informatica-intelligent-cloud-services-rest-api/rest-api-responses.html
+  responses:
+
+    400:
+      description: |-
+        Bad request. Can be a field or format issue such as an invalid character or incorrect string length.
+
+    401:
+      description: |-
+        Authentication issue. For example, invalid credentials or invalid session IDs.
+
+    403:
+      description: |-
+        Generic error. For example, user doesn't have required permissions for a resource.
+
+    404:
+      description: |-
+        Resource can't be found.
+
+    500:
+      description: |-
+        Unexpected error. Generic error message that appears when an unexpected condition was encountered.
+
+    502:
+      description: |-
+        Network issue.
+
+    503:
+      description: |-
+        Service unavailable. The server cannot handle the request.
+
   schemas:
+
+    apiErrorBody:
+      description: |-
+        When the REST API encounters an error, it returns a REST API error object.
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/informatica-intelligent-cloud-services-rest-api/error-object.html
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            requestId:
+              type: string
+            details: {} # Unknown type.
+      example: |-
+        {
+          "error": {
+            "code": "IDS_085",
+            "message": "User name or password is not valid.",
+            "requestId": "9hr8e2ObIcChbwYftgDui7",
+            "details": null
+          }
+        }
+
+    loginRequestBody:
+      type: object
+      properties:
+        username:
+          type: string
+          description: |-
+            Informatica Intelligent Cloud Services user name for the organization that you want to log in to.
+          maxLength: 255
+        password:
+          type: string
+          description: |-
+            Informatica Intelligent Cloud Services password.
+          maxLength: 255
+      required:
+        - username
+        - password
+
+    loginResponseBody:
+      type: object
+      properties:
+        products:
+          type: array
+          description: |-
+            Subscribed Informatica products.
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: |-
+                  Product name.
+              baseApiUrl:
+                type: string
+                description: |-
+                  Base API URL for the product. Use in REST API requests.
+        userInfo:
+          type: object
+          properties:
+            sessionId:
+              type: string
+              description: |-
+                REST API session ID for the current session. Use in most REST API request headers.
+            id:
+              type: string
+              description: |-
+                User ID.
+            name:
+              type: string
+              description: |-
+                User name.
+            parentOrgId:
+              type: string
+              description: |-
+                Organization ID for the parent.
+              minLength: 22
+              maxLength: 22
+            orgId:
+              type: string
+              description: |-
+                ID of the organization the user belongs to.
+              minLength: 22
+              maxLength: 22
+            orgName:
+              type: string
+              description: |-
+                Organization name.
+            groups:
+              type: object
+              description: |-
+                User group information for the user.
+            status:
+              type: string
+              description: |-
+                Status of the user.
+#              enum:
+#                - Active
+#                - Inactive
+
+
+
+    getRolesResponseBody:
+      type: array
+      items:
+        allOf:
+          - $ref: '#/components/schemas/roleInfo'
+          - $ref: '#/components/schemas/withPrivilegeItems'
+
+    createRoleRequestBody:
+      allOf:
+        - $ref: '#/components/schemas/withPrivilegeRefs'
+        - type: object
+          properties:
+            name:
+              type: string
+              description: |-
+                Name of the role.
+            description:
+              type: string
+              description: |-
+                Description of the role.
+      required:
+        - name
+        - privileges
+
+    createRoleResponseBody:
+      allOf:
+        - $ref: '#/components/schemas/roleInfo'
+        - $ref: '#/components/schemas/withPrivilegeItems'
 
     roleInfo:
       type: object

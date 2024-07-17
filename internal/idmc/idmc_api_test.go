@@ -18,6 +18,7 @@ import (
 type FakeHttpRequestDoer struct {
 	OnDo func(req *http.Request) (*http.Response, error)
 }
+
 func (f FakeHttpRequestDoer) Do(req *http.Request) (*http.Response, error) {
 	return f.OnDo(req)
 }
@@ -30,7 +31,7 @@ func TestDoLogin(t *testing.T) {
 	authPass := gofakeit.LetterN(8)
 
 	// Case inputs
-	ctx  := context.TODO()
+	ctx := context.TODO()
 
 	// Case outputs
 	fakeApiUrl := fmt.Sprintf("https://%s/saas", gofakeit.DomainName())
@@ -39,7 +40,7 @@ func TestDoLogin(t *testing.T) {
 	baseApiUrl, sessionId, loginErr := doLogin(
 		ctx, authHost, authUser, authPass,
 		func(client *v3.Client) error {
-			client.Client = FakeHttpRequestDoer {
+			client.Client = FakeHttpRequestDoer{
 				OnDo: func(req *http.Request) (*http.Response, error) {
 					body := fmt.Sprintf(
 						`{
@@ -72,7 +73,7 @@ func TestDoLogin(t *testing.T) {
 						Body:          io.NopCloser(bytes.NewBufferString(body)),
 						ContentLength: int64(len(body)),
 						Request:       req,
-						Header:        http.Header {
+						Header: http.Header{
 							"Content-Type": {"application/json"},
 						},
 					}, nil

@@ -3,8 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"os"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -12,7 +10,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"net/http"
+	"os"
 	"terraform-provider-idmc/internal/idmc"
+	v3 "terraform-provider-idmc/internal/idmc/admin/v3"
+	"terraform-provider-idmc/internal/idmc/common"
+	"terraform-provider-idmc/internal/provider/utils"
 )
 
 // Ensure IdmcProvider satisfies various provider interfaces.
@@ -127,7 +131,22 @@ func (p *IdmcProvider) Configure(
 		return
 	}
 
-	idmcApi, idmcApiErr := idmc.NewIdmcApi(ctx, authHost, authUser, authPass)
+	tflog.Debug(ctx, "Setting-up IDMC api client", map[string]any{
+		"auth_host": authHost,
+		"auth_user": authUser,
+	})
+
+	httpClient := &http.Client{}
+	baseApiUrl, sessionId, loginErr := doLogin(ctx, authHost, authUser, authPass, httpClient)
+	if loginErr != nil {
+		diags.AddError(
+			"IDMC API login failed",
+			fmt.Sprintf("Login to IDMC api failed: %s", loginErr),
+		)
+		return
+	}
+
+	idmcApi, idmcApiErr := idmc.NewIdmcApi(baseApiUrl, sessionId, httpClient)
 	if idmcApiErr != nil {
 		diags.AddError(
 			"Api Initialisation Error",
@@ -143,6 +162,63 @@ func (p *IdmcProvider) Configure(
 	resp.ResourceData = idmcProviderData
 
 }
+
+func doLogin(ctx context.Context, authHost string, authUser string, authPass string, httpClient common.HttpRequestDoer) (string, string, error) {
+
+	// First set up a client configured for api login.
+	loginServerUrl := fmt.Sprintf("https://%s/saas", authHost)
+	loginClient, loginClientError := v3.NewClientWithResponses(loginServerUrl,
+		v3.WithHTTPClient(httpClient),
+		v3.WithRequestEditorFn(func(httpCtx context.Context, req *http.Request) error {
+			req.Header["Accept"] = []string{"application/json"}
+			return utils.LogHttpRequest(ctx, req)
+		}),
+	)
+	if loginClientError != nil {
+		return "", "", loginClientError
+	}
+
+	// Perform the login operation with the provided credentials.
+	loginResponse, loginResponseError := loginClient.LoginWithResponse(ctx, v3.LoginJSONRequestBody{
+		Username: authUser,
+		Password: authPass,
+	})
+	if loginResponseError != nil {
+		return "", "", loginResponseError
+	}
+
+	logErr := utils.LogHttpResponse(ctx, loginResponse.HTTPResponse)
+	if logErr != nil {
+		return "", "", logErr
+	}
+
+	// Extract the key information from the login response
+	if loginResponse.StatusCode() != 200 {
+		return "", "", fmt.Errorf(
+			"expected http 200 ok, got %s",
+			loginResponse.Status(),
+		)
+	}
+	if loginResponse.JSON200 == nil {
+		return "", "", fmt.Errorf(
+			"expected response to be parsed as json, found nil",
+		)
+	}
+	loginResponseJson := *loginResponse.JSON200
+	userInfo := *loginResponseJson.UserInfo
+
+	sessionId := *userInfo.SessionId
+	for _, product := range *loginResponse.JSON200.Products {
+		if *product.Name == "Integration Cloud" {
+			return *product.BaseApiUrl, sessionId, nil
+		}
+	}
+
+	// TODO: This should probably just return an error, or fall-back to other products.
+	return loginServerUrl, sessionId, nil
+
+}
+
 
 func (p *IdmcProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -11,10 +12,11 @@ import (
 	"terraform-provider-idmc/internal/idmc/admin/v3"
 
 	. "github.com/hashicorp/terraform-plugin-framework/datasource"
-	. "terraform-provider-idmc/internal/utils"
+	. "terraform-provider-idmc/internal/provider/utils"
 )
 
 var _ DataSource = &RolesDataSource{}
+var _ DataSourceWithConfigValidators = &RolesDataSource{}
 
 func NewRolesDataSource() DataSource {
 	return &RolesDataSource{}
@@ -164,6 +166,15 @@ func (d *RolesDataSource) Configure(_ context.Context, req ConfigureRequest, res
 	}
 	d.Client = data.Api.Admin.V3.Client
 
+}
+
+func (d *RolesDataSource) ConfigValidators(ctx context.Context) []ConfigValidator {
+	return []ConfigValidator{
+		datasourcevalidator.Conflicting(
+			path.MatchRoot("filter").AtName("role_id"),
+			path.MatchRoot("filter").AtName("role_name"),
+		),
+	}
 }
 
 func (d *RolesDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {

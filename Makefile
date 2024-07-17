@@ -1,10 +1,57 @@
-default: build
+
+# Settings
+.DEFAULT: help
+.DELETE_ON_ERROR:
+.EXPORT_ALL_VARIABLES:
+.ONESHELL:
+.ALWAYS:
+
+## CLEAR BUILT-INS #############################################################
+MAKEFLAGS += --no-builtin-rules
+MAKEFLAGS += --no-builtin-variables
+.SUFFIXES:
+
+## INCLUDE LOCAL FILES #########################################################
+MAKE_LOCALS := $(wildcard *local.mk)
+$(if ${MAKE_LOCALS},$(foreach local,${MAKE_LOCALS},$(eval include ${local})),)
+
+## HELP LISTS AVAILABLE TARGETS ################################################
+help:
+	@grep -E "^\s*include \S+$$" Makefile \
+		| cut -f2 -d" " \
+		| cat <(printf "%s\n" "Makefile") - \
+		| xargs grep --no-filename -B1 -E "^[a-zA-Z0-9_-]+\:([^\=]|$$)" \
+		| grep -v -- -- \
+		| sed "N;s|\n|###|" \
+		| sed -n "s|^#: \(.*\)###\(.*\):.*|\2###\1|p" \
+		| column -t  -s '###'
 
 .build/:
 	mkdir -p ${@}
 
-CMD_OAPI_CODEGEN ?= go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
-CMD_TFPLUGINDOCS ?= go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+#: Wipes out any and all untracked and ignored files.
+clobber:
+	git clean -dx \
+			--force
+
+# Binary commands in case they need to be overridden.
+CMD_OAPI_CODEGEN  ?= go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
+CMD_TFPLUGINDOCS  ?= go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+CMD_GOLANGCI_LINT ?= go run github.com/golangci/golangci-lint/cmd/golangci-lint
+
+################################################################################
+
+GO_SRC_FILES := $(shell find . -type f -name *.go -not -name *_test.go -not -name *.gen.go)
+GO_SRC_DIRS  := $(sort $(dir ${GO_SRC_FILES}))
+vpath %.go ${GO_SRC_DIRS}
+
+GO_TEST_FILES := $(shell find . -type f -name *_test.go)
+GO_TEST_DIRS  := $(sort $(dir ${GO_TEST_FILES}))
+vpath %_test.go ${GO_TEST_DIRS}
+
+TF_SRC_FILES := $(shell find . -type f -name *.tf -or -name *.tfvars)
+vpath %.tf     examples/
+vpath %.tfvars examples/
 
 ################################################################################
 #: Generate OpenAPI clients
@@ -14,36 +61,74 @@ codegen: \
 .PHONY: gen
 
 %.gen.go: VPATH = internal/idmc
-%.gen.go: %.yml
+%.gen.go: %.yml go.sum
 	${CMD_OAPI_CODEGEN} \
 			-generate types,client,spec \
-			-package $(lastword $(subst /, ,$(dir ${@}))) \
+			-package $(notdir ${@D}) \
 			-o ${@} \
 			${<}
 
 ################################################################################
 #: Format module sources.
-format:
-	go fmt
-	terraform fmt -recursive ./examples/
+format: \
+		.build/go-fmt.done \
+		.build/tf-fmt.done
+.PHONY: format
+
+.build/go-fmt.done: \
+		${GO_SRC_FILES} \
+		${GO_TEST_FILES}
+	go fmt $(foreach src_dir,${?D},./${src_dir}) \
+	&& touch ${@}
+
+.build/tf-fmt.done: \
+		${TF_SRC_FILES}
+	terraform fmt $(foreach src_dir,${?D},./${src_dir}) \
+		-diff \
+	&& touch ${@}
 
 ################################################################################
 #: Lint project
 lint:
-	go run github.com/golangci/golangci-lint/cmd/golangci-lint run
+	${CMD_GOLANGCI_LINT} run
+.PHONY: lint
+
+################################################################################
+#: Tidy module dependencies
+tidy: go.sum
+.PHONY: tidy
+
+# NOTE: touch needed at the end due to other files being manipulated.
+go.sum: \
+		go.mod
+	go mod tidy -v && \
+	touch ${@}
 
 ################################################################################
 #: Compile module.
-build: \
+install: ${GOPATH}/bin/terraform-provider-idmc.exe
+.PHONY: install
+
+${GOPATH}/bin/terraform-provider-idmc.exe: \
+		${GO_SRC_FILES} \
+		go.sum \
 		codegen
-	go mod tidy
 	go install
-.PHONY: build
 
 ################################################################################
 #: Run unit tests
-test:
-	go test
+test: .build/gotest.jsonl
+.PHONY: test
+
+.build/gotest.jsonl: \
+		${GO_TEST_FILES} \
+		| .build/
+	go test -v -json ${GO_TEST_DIRS} \
+		| tee ${@}
+
+%_test.go: %.go
+	touch ${@}
+.NOTINTERMEDIATE: %_test.go
 
 ################################################################################
 #: Generate documentation.
@@ -56,8 +141,8 @@ docs/*: \
 	docs/functions/*
 
 docs/data-sources/* docs/resources/* docs/functions/* &: \
-		*.go \
-		$(shell find examples/ -name *.tf) \
+		${GO_SRC_FILES} \
+		${TF_SRC_FILES} \
 		*.md \
 		| .build/
 	${CMD_TFPLUGINDOCS} \
@@ -65,6 +150,17 @@ docs/data-sources/* docs/resources/* docs/functions/* &: \
 		--provider-name idmc \
 		--website-temp-dir .build/tfplugindocs
 #		--providers-schema ??? (need to generate first)
+
+# Not really true, tbh, but somewhat related.
+examples/data-sources/idmc_%/data-source.tf: \
+		internal/provider/%_data.go
+	touch ${@}
+examples/resources/idmc_%/resource.tf: \
+		internal/provider/%.go
+	touch ${@}
+examples/provider/provider.tf: \
+		internal/provider/provider.go
+	touch ${@}
 
 ################################################################################
 #: Run acceptance tests.

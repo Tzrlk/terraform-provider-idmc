@@ -16,6 +16,7 @@ import (
 	v3 "terraform-provider-idmc/internal/idmc/admin/v3"
 
 	. "github.com/hashicorp/terraform-plugin-framework/resource"
+	. "terraform-provider-idmc/internal/provider/utils"
 	. "terraform-provider-idmc/internal/utils"
 )
 

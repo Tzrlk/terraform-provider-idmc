@@ -20,8 +20,16 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
-// LoginJSONBody defines parameters for Login.
-type LoginJSONBody struct {
+// GetAgentInstallerInfoResponseBody defines model for getAgentInstallerInfoResponseBody.
+type GetAgentInstallerInfoResponseBody struct {
+	Type                *string `json:"@type,omitempty"`
+	ChecksumDownloadUrl *string `json:"checksumDownloadUrl,omitempty"`
+	DownloadUrl         *string `json:"downloadUrl,omitempty"`
+	InstallToken        *string `json:"installToken,omitempty"`
+}
+
+// LoginRequestBody defines model for loginRequestBody.
+type LoginRequestBody struct {
 	Type *string `json:"@type,omitempty"`
 
 	// Password Informatica Intelligent Cloud Services password.
@@ -31,8 +39,110 @@ type LoginJSONBody struct {
 	Username string `json:"username"`
 }
 
+// LoginResponseBody defines model for loginResponseBody.
+type LoginResponseBody struct {
+	// CreateTime When the user account was created.
+	CreateTime *string `json:"createTime,omitempty"`
+
+	// CreatedBy Informatica Intelligent Cloud Services user who created the user account.
+	CreatedBy *string `json:"createdBy,omitempty"`
+
+	// Description Description of the user.
+	Description *string `json:"description,omitempty"`
+
+	// Emails Email address to be notified when the user changes the account password.
+	Emails *string `json:"emails,omitempty"`
+
+	// FirstName First name for the user account.
+	FirstName *string `json:"firstName,omitempty"`
+
+	// ForceChangePassword Determines if the user must reset the password after the user logs in for the first time. Includes the following values:
+	// True. The user must reset the password.
+	// False. The user is not forced to reset the password.
+	ForceChangePassword *bool `json:"forceChangePassword,omitempty"`
+
+	// IcSessionId Informatica Intelligent Cloud Services session ID for version 2 REST API session.
+	// Use in most version 2 REST API request headers.
+	IcSessionId *string `json:"icSessionId,omitempty"`
+
+	// Id User ID.
+	Id *string `json:"id,omitempty"`
+
+	// LastName Last name for the user account.
+	LastName *string `json:"lastName,omitempty"`
+
+	// Name Informatica Intelligent Cloud Services user name.
+	Name *string `json:"name,omitempty"`
+
+	// OrgId ID of the organization the user belongs to. 22 characters.
+	// NOTE: Organizations that were created in legacy Informatica Cloud might have an
+	// organization ID of 6 characters.
+	OrgId *string `json:"orgId,omitempty"`
+
+	// OrgUuid Unique identifier for the organization.
+	OrgUuid *string `json:"orgUuid,omitempty"`
+
+	// Password Salesforce user password. Included when user is configured to authenticate through Salesforce.
+	Password *string `json:"password,omitempty"`
+
+	// Phone Phone number for the user.
+	Phone *string `json:"phone,omitempty"`
+
+	// Roles Object that includes a role object for each role assigned to the user.
+	Roles *struct {
+		// Description Role description.
+		Description *string `json:"description,omitempty"`
+
+		// Name Role name. Returns one of the following codes:
+		// Service Consumer
+		// Designer
+		// Admin
+		Name *string `json:"name,omitempty"`
+	} `json:"roles,omitempty"`
+
+	// SecurityAnswer Answer to the security question.
+	SecurityAnswer *string `json:"securityAnswer,omitempty"`
+
+	// SecurityQuestion Security question. Returns one of the following codes:
+	// SPOUSE_MEETING_CITY
+	// FIRST_JOB_CITY
+	// CHILDHOOD_FRIEND
+	// MOTHER_MAIDEN_NAME
+	// PET_NAME
+	// CHILDHOOD_NICKNAME
+	// CUSTOM_QUESTION:"<question>"
+	SecurityQuestion *string `json:"securityQuestion,omitempty"`
+
+	// ServerUrl Informatica Intelligent Cloud Services URL for the organization the user belongs
+	// to. Use the serverUrl as a base for most version 2 REST API resource URIs.
+	ServerUrl *string `json:"serverUrl,omitempty"`
+
+	// SfUsername Salesforce user name. Included when user is configured to authenticate through Salesforce.
+	SfUsername *string `json:"sfUsername,omitempty"`
+
+	// SpiUrl This field is no longer applicable and has been deprecated.
+	// Deprecated:
+	SpiUrl *string `json:"spiUrl,omitempty"`
+
+	// Timezone Time zone of the user. Time zone honors Daylight Saving Time.
+	// For more information, see Time zone codes.
+	Timezone *string `json:"timezone,omitempty"`
+
+	// Title Title of the user.
+	Title *string `json:"title,omitempty"`
+
+	// UpdateTime When the user account was last updated.
+	UpdateTime *string `json:"updateTime,omitempty"`
+
+	// UpdatedBy Informatica Intelligent Cloud Services user who last updated the user account.
+	UpdatedBy *string `json:"updatedBy,omitempty"`
+
+	// UuId Unique identifier for the user.
+	UuId *string `json:"uuId,omitempty"`
+}
+
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
-type LoginJSONRequestBody LoginJSONBody
+type LoginJSONRequestBody = LoginRequestBody
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -281,12 +391,7 @@ type ClientWithResponsesInterface interface {
 type GetAgentInstallerInfoResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-		Type                *string `json:"@type,omitempty"`
-		ChecksumDownloadUrl *string `json:"checksumDownloadUrl,omitempty"`
-		DownloadUrl         *string `json:"downloadUrl,omitempty"`
-		InstallToken        *string `json:"installToken,omitempty"`
-	}
+	JSON200      *GetAgentInstallerInfoResponseBody
 }
 
 // Status returns HTTPResponse.Status
@@ -308,106 +413,7 @@ func (r GetAgentInstallerInfoResponse) StatusCode() int {
 type LoginResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-		// CreateTime When the user account was created.
-		CreateTime *string `json:"createTime,omitempty"`
-
-		// CreatedBy Informatica Intelligent Cloud Services user who created the user account.
-		CreatedBy *string `json:"createdBy,omitempty"`
-
-		// Description Description of the user.
-		Description *string `json:"description,omitempty"`
-
-		// Emails Email address to be notified when the user changes the account password.
-		Emails *string `json:"emails,omitempty"`
-
-		// FirstName First name for the user account.
-		FirstName *string `json:"firstName,omitempty"`
-
-		// ForceChangePassword Determines if the user must reset the password after the user logs in for the first time. Includes the following values:
-		// True. The user must reset the password.
-		// False. The user is not forced to reset the password.
-		ForceChangePassword *bool `json:"forceChangePassword,omitempty"`
-
-		// IcSessionId Informatica Intelligent Cloud Services session ID for version 2 REST API session.
-		// Use in most version 2 REST API request headers.
-		IcSessionId *string `json:"icSessionId,omitempty"`
-
-		// Id User ID.
-		Id *string `json:"id,omitempty"`
-
-		// LastName Last name for the user account.
-		LastName *string `json:"lastName,omitempty"`
-
-		// Name Informatica Intelligent Cloud Services user name.
-		Name *string `json:"name,omitempty"`
-
-		// OrgId ID of the organization the user belongs to. 22 characters.
-		// NOTE: Organizations that were created in legacy Informatica Cloud might have an
-		// organization ID of 6 characters.
-		OrgId *string `json:"orgId,omitempty"`
-
-		// OrgUuid Unique identifier for the organization.
-		OrgUuid *string `json:"orgUuid,omitempty"`
-
-		// Password Salesforce user password. Included when user is configured to authenticate through Salesforce.
-		Password *string `json:"password,omitempty"`
-
-		// Phone Phone number for the user.
-		Phone *string `json:"phone,omitempty"`
-
-		// Roles Object that includes a role object for each role assigned to the user.
-		Roles *struct {
-			// Description Role description.
-			Description *string `json:"description,omitempty"`
-
-			// Name Role name. Returns one of the following codes:
-			// Service Consumer
-			// Designer
-			// Admin
-			Name *string `json:"name,omitempty"`
-		} `json:"roles,omitempty"`
-
-		// SecurityAnswer Answer to the security question.
-		SecurityAnswer *string `json:"securityAnswer,omitempty"`
-
-		// SecurityQuestion Security question. Returns one of the following codes:
-		// SPOUSE_MEETING_CITY
-		// FIRST_JOB_CITY
-		// CHILDHOOD_FRIEND
-		// MOTHER_MAIDEN_NAME
-		// PET_NAME
-		// CHILDHOOD_NICKNAME
-		// CUSTOM_QUESTION:"<question>"
-		SecurityQuestion *string `json:"securityQuestion,omitempty"`
-
-		// ServerUrl Informatica Intelligent Cloud Services URL for the organization the user belongs
-		// to. Use the serverUrl as a base for most version 2 REST API resource URIs.
-		ServerUrl *string `json:"serverUrl,omitempty"`
-
-		// SfUsername Salesforce user name. Included when user is configured to authenticate through Salesforce.
-		SfUsername *string `json:"sfUsername,omitempty"`
-
-		// SpiUrl This field is no longer applicable and has been deprecated.
-		// Deprecated:
-		SpiUrl *string `json:"spiUrl,omitempty"`
-
-		// Timezone Time zone of the user. Time zone honors Daylight Saving Time.
-		// For more information, see Time zone codes.
-		Timezone *string `json:"timezone,omitempty"`
-
-		// Title Title of the user.
-		Title *string `json:"title,omitempty"`
-
-		// UpdateTime When the user account was last updated.
-		UpdateTime *string `json:"updateTime,omitempty"`
-
-		// UpdatedBy Informatica Intelligent Cloud Services user who last updated the user account.
-		UpdatedBy *string `json:"updatedBy,omitempty"`
-
-		// UuId Unique identifier for the user.
-		UuId *string `json:"uuId,omitempty"`
-	}
+	JSON200      *LoginResponseBody
 }
 
 // Status returns HTTPResponse.Status
@@ -467,12 +473,7 @@ func ParseGetAgentInstallerInfoResponse(rsp *http.Response) (*GetAgentInstallerI
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Type                *string `json:"@type,omitempty"`
-			ChecksumDownloadUrl *string `json:"checksumDownloadUrl,omitempty"`
-			DownloadUrl         *string `json:"downloadUrl,omitempty"`
-			InstallToken        *string `json:"installToken,omitempty"`
-		}
+		var dest GetAgentInstallerInfoResponseBody
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -498,106 +499,7 @@ func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// CreateTime When the user account was created.
-			CreateTime *string `json:"createTime,omitempty"`
-
-			// CreatedBy Informatica Intelligent Cloud Services user who created the user account.
-			CreatedBy *string `json:"createdBy,omitempty"`
-
-			// Description Description of the user.
-			Description *string `json:"description,omitempty"`
-
-			// Emails Email address to be notified when the user changes the account password.
-			Emails *string `json:"emails,omitempty"`
-
-			// FirstName First name for the user account.
-			FirstName *string `json:"firstName,omitempty"`
-
-			// ForceChangePassword Determines if the user must reset the password after the user logs in for the first time. Includes the following values:
-			// True. The user must reset the password.
-			// False. The user is not forced to reset the password.
-			ForceChangePassword *bool `json:"forceChangePassword,omitempty"`
-
-			// IcSessionId Informatica Intelligent Cloud Services session ID for version 2 REST API session.
-			// Use in most version 2 REST API request headers.
-			IcSessionId *string `json:"icSessionId,omitempty"`
-
-			// Id User ID.
-			Id *string `json:"id,omitempty"`
-
-			// LastName Last name for the user account.
-			LastName *string `json:"lastName,omitempty"`
-
-			// Name Informatica Intelligent Cloud Services user name.
-			Name *string `json:"name,omitempty"`
-
-			// OrgId ID of the organization the user belongs to. 22 characters.
-			// NOTE: Organizations that were created in legacy Informatica Cloud might have an
-			// organization ID of 6 characters.
-			OrgId *string `json:"orgId,omitempty"`
-
-			// OrgUuid Unique identifier for the organization.
-			OrgUuid *string `json:"orgUuid,omitempty"`
-
-			// Password Salesforce user password. Included when user is configured to authenticate through Salesforce.
-			Password *string `json:"password,omitempty"`
-
-			// Phone Phone number for the user.
-			Phone *string `json:"phone,omitempty"`
-
-			// Roles Object that includes a role object for each role assigned to the user.
-			Roles *struct {
-				// Description Role description.
-				Description *string `json:"description,omitempty"`
-
-				// Name Role name. Returns one of the following codes:
-				// Service Consumer
-				// Designer
-				// Admin
-				Name *string `json:"name,omitempty"`
-			} `json:"roles,omitempty"`
-
-			// SecurityAnswer Answer to the security question.
-			SecurityAnswer *string `json:"securityAnswer,omitempty"`
-
-			// SecurityQuestion Security question. Returns one of the following codes:
-			// SPOUSE_MEETING_CITY
-			// FIRST_JOB_CITY
-			// CHILDHOOD_FRIEND
-			// MOTHER_MAIDEN_NAME
-			// PET_NAME
-			// CHILDHOOD_NICKNAME
-			// CUSTOM_QUESTION:"<question>"
-			SecurityQuestion *string `json:"securityQuestion,omitempty"`
-
-			// ServerUrl Informatica Intelligent Cloud Services URL for the organization the user belongs
-			// to. Use the serverUrl as a base for most version 2 REST API resource URIs.
-			ServerUrl *string `json:"serverUrl,omitempty"`
-
-			// SfUsername Salesforce user name. Included when user is configured to authenticate through Salesforce.
-			SfUsername *string `json:"sfUsername,omitempty"`
-
-			// SpiUrl This field is no longer applicable and has been deprecated.
-			// Deprecated:
-			SpiUrl *string `json:"spiUrl,omitempty"`
-
-			// Timezone Time zone of the user. Time zone honors Daylight Saving Time.
-			// For more information, see Time zone codes.
-			Timezone *string `json:"timezone,omitempty"`
-
-			// Title Title of the user.
-			Title *string `json:"title,omitempty"`
-
-			// UpdateTime When the user account was last updated.
-			UpdateTime *string `json:"updateTime,omitempty"`
-
-			// UpdatedBy Informatica Intelligent Cloud Services user who last updated the user account.
-			UpdatedBy *string `json:"updatedBy,omitempty"`
-
-			// UuId Unique identifier for the user.
-			UuId *string `json:"uuId,omitempty"`
-		}
+		var dest LoginResponseBody
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -611,31 +513,32 @@ func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"iM0dtk0I0500BWy3278DAAD//5lmEs2jEwAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -20,6 +20,163 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+// CreateRoleRequestBody defines model for createRoleRequestBody.
+type CreateRoleRequestBody struct {
+	// Description Description of the role.
+	Description *string `json:"description,omitempty"`
+
+	// Name Name of the role.
+	Name *string `json:"name,omitempty"`
+
+	// Privileges IDs of the privileges to assign to the role.
+	// A role must have at least one privilege assigned to it.
+	Privileges *[]string `json:"privileges,omitempty"`
+}
+
+// CreateRoleResponseBody defines model for createRoleResponseBody.
+type CreateRoleResponseBody struct {
+	// CreateTime Date and time the role was created.
+	CreateTime *string `json:"createTime,omitempty"`
+
+	// CreatedBy User who created the role.
+	CreatedBy *string `json:"createdBy,omitempty"`
+
+	// Description Description of the role.
+	Description *string `json:"description,omitempty"`
+
+	// DisplayDescription Description displayed in the user interface.
+	DisplayDescription *string `json:"displayDescription,omitempty"`
+
+	// DisplayName Role name displayed in the user interface.
+	DisplayName *string `json:"displayName,omitempty"`
+
+	// Id Role ID.
+	Id *string `json:"id,omitempty"`
+
+	// OrgId ID of the organization the role belongs to.
+	OrgId      *string `json:"orgId,omitempty"`
+	Privileges *[]struct {
+		// Description Description of the privilege.
+		Description *string `json:"description,omitempty"`
+		Id          *string `json:"id,omitempty"`
+
+		// Name Name of the privilege.
+		Name    *string `json:"name,omitempty"`
+		Service *string `json:"service,omitempty"`
+		Status  *string `json:"status,omitempty"`
+	} `json:"privileges,omitempty"`
+
+	// RoleName Name of the role.
+	RoleName *string `json:"roleName,omitempty"`
+
+	// Status Whether the organization's license to use the role is valid or has expired.
+	Status *string `json:"status,omitempty"`
+
+	// SystemRole Whether the role is a system-defined role.
+	SystemRole *bool `json:"systemRole,omitempty"`
+
+	// UpdateTime Date and time the role was last updated.
+	UpdateTime *string `json:"updateTime,omitempty"`
+
+	// UpdatedBy User who last updated the role.
+	UpdatedBy *string `json:"updatedBy,omitempty"`
+}
+
+// GetRolesResponseBody defines model for getRolesResponseBody.
+type GetRolesResponseBody = []struct {
+	// CreateTime Date and time the role was created.
+	CreateTime *string `json:"createTime,omitempty"`
+
+	// CreatedBy User who created the role.
+	CreatedBy *string `json:"createdBy,omitempty"`
+
+	// Description Description of the role.
+	Description *string `json:"description,omitempty"`
+
+	// DisplayDescription Description displayed in the user interface.
+	DisplayDescription *string `json:"displayDescription,omitempty"`
+
+	// DisplayName Role name displayed in the user interface.
+	DisplayName *string `json:"displayName,omitempty"`
+
+	// Id Role ID.
+	Id *string `json:"id,omitempty"`
+
+	// OrgId ID of the organization the role belongs to.
+	OrgId      *string `json:"orgId,omitempty"`
+	Privileges *[]struct {
+		// Description Description of the privilege.
+		Description *string `json:"description,omitempty"`
+		Id          *string `json:"id,omitempty"`
+
+		// Name Name of the privilege.
+		Name    *string `json:"name,omitempty"`
+		Service *string `json:"service,omitempty"`
+		Status  *string `json:"status,omitempty"`
+	} `json:"privileges,omitempty"`
+
+	// RoleName Name of the role.
+	RoleName *string `json:"roleName,omitempty"`
+
+	// Status Whether the organization's license to use the role is valid or has expired.
+	Status *string `json:"status,omitempty"`
+
+	// SystemRole Whether the role is a system-defined role.
+	SystemRole *bool `json:"systemRole,omitempty"`
+
+	// UpdateTime Date and time the role was last updated.
+	UpdateTime *string `json:"updateTime,omitempty"`
+
+	// UpdatedBy User who last updated the role.
+	UpdatedBy *string `json:"updatedBy,omitempty"`
+}
+
+// LoginRequestBody defines model for loginRequestBody.
+type LoginRequestBody struct {
+	// Password Informatica Intelligent Cloud Services password.
+	Password string `json:"password"`
+
+	// Username Informatica Intelligent Cloud Services user name for the organization that you want to log in to.
+	Username string `json:"username"`
+}
+
+// LoginResponseBody defines model for loginResponseBody.
+type LoginResponseBody struct {
+	// Products Subscribed Informatica products.
+	Products *[]struct {
+		// BaseApiUrl Base API URL for the product. Use in REST API requests.
+		BaseApiUrl *string `json:"baseApiUrl,omitempty"`
+
+		// Name Product name.
+		Name *string `json:"name,omitempty"`
+	} `json:"products,omitempty"`
+	UserInfo *struct {
+		// Groups User group information for the user.
+		Groups *map[string]interface{} `json:"groups,omitempty"`
+
+		// Id User ID.
+		Id *string `json:"id,omitempty"`
+
+		// Name User name.
+		Name *string `json:"name,omitempty"`
+
+		// OrgId ID of the organization the user belongs to.
+		OrgId *string `json:"orgId,omitempty"`
+
+		// OrgName Organization name.
+		OrgName *string `json:"orgName,omitempty"`
+
+		// ParentOrgId Organization ID for the parent.
+		ParentOrgId *string `json:"parentOrgId,omitempty"`
+
+		// SessionId REST API session ID for the current session. Use in most REST API request headers.
+		SessionId *string `json:"sessionId,omitempty"`
+
+		// Status Status of the user.
+		Status *string `json:"status,omitempty"`
+	} `json:"userInfo,omitempty"`
+}
+
 // RoleInfo defines model for roleInfo.
 type RoleInfo struct {
 	// CreateTime Date and time the role was created.
@@ -89,15 +246,6 @@ type PathRole = string
 // RolePrivileges defines model for rolePrivileges.
 type RolePrivileges = WithPrivilegeRefs
 
-// LoginJSONBody defines parameters for Login.
-type LoginJSONBody struct {
-	// Password Informatica Intelligent Cloud Services password.
-	Password string `json:"password"`
-
-	// Username Informatica Intelligent Cloud Services user name for the organization that you want to log in to.
-	Username string `json:"username"`
-}
-
 // GetRolesParams defines parameters for GetRoles.
 type GetRolesParams struct {
 	// Q Query filter. You can filter using one of the following fields:
@@ -108,19 +256,6 @@ type GetRolesParams struct {
 	// Expand Returns the privileges associated with the role specified in the query filter.
 	Expand        *string       `form:"expand,omitempty" json:"expand,omitempty"`
 	INFASESSIONID HeaderSession `json:"INFA-SESSION-ID"`
-}
-
-// CreateRoleJSONBody defines parameters for CreateRole.
-type CreateRoleJSONBody struct {
-	// Description Description of the role.
-	Description *string `json:"description,omitempty"`
-
-	// Name Name of the role.
-	Name *string `json:"name,omitempty"`
-
-	// Privileges IDs of the privileges to assign to the role.
-	// A role must have at least one privilege assigned to it.
-	Privileges *[]string `json:"privileges,omitempty"`
 }
 
 // DeleteRoleParams defines parameters for DeleteRole.
@@ -139,10 +274,10 @@ type RemoveRolePrivilegesParams struct {
 }
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
-type LoginJSONRequestBody LoginJSONBody
+type LoginJSONRequestBody = LoginRequestBody
 
 // CreateRoleJSONRequestBody defines body for CreateRole for application/json ContentType.
-type CreateRoleJSONRequestBody CreateRoleJSONBody
+type CreateRoleJSONRequestBody = CreateRoleRequestBody
 
 // AddRolePrivilegesJSONRequestBody defines body for AddRolePrivileges for application/json ContentType.
 type AddRolePrivilegesJSONRequestBody = WithPrivilegeRefs
@@ -768,41 +903,7 @@ type ClientWithResponsesInterface interface {
 type LoginResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Products Subscribed Informatica products.
-		Products *[]struct {
-			// BaseApiUrl Base API URL for the product. Use in REST API requests.
-			BaseApiUrl *string `json:"baseApiUrl,omitempty"`
-
-			// Name Product name.
-			Name *string `json:"name,omitempty"`
-		} `json:"products,omitempty"`
-		UserInfo *struct {
-			// Groups User group information for the user.
-			Groups *map[string]interface{} `json:"groups,omitempty"`
-
-			// Id User ID.
-			Id *string `json:"id,omitempty"`
-
-			// Name User name.
-			Name *string `json:"name,omitempty"`
-
-			// OrgId ID of the organization the user belongs to.
-			OrgId *string `json:"orgId,omitempty"`
-
-			// OrgName Organization name.
-			OrgName *string `json:"orgName,omitempty"`
-
-			// ParentOrgId Organization ID for the parent.
-			ParentOrgId *string `json:"parentOrgId,omitempty"`
-
-			// SessionId REST API session ID for the current session. Use in most REST API request headers.
-			SessionId *string `json:"sessionId,omitempty"`
-
-			// Status Status of the user.
-			Status *string `json:"status,omitempty"`
-		} `json:"userInfo,omitempty"`
-	}
+	JSON200      *LoginResponseBody
 }
 
 // Status returns HTTPResponse.Status
@@ -824,53 +925,7 @@ func (r LoginResponse) StatusCode() int {
 type GetRolesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *[]struct {
-		// CreateTime Date and time the role was created.
-		CreateTime *string `json:"createTime,omitempty"`
-
-		// CreatedBy User who created the role.
-		CreatedBy *string `json:"createdBy,omitempty"`
-
-		// Description Description of the role.
-		Description *string `json:"description,omitempty"`
-
-		// DisplayDescription Description displayed in the user interface.
-		DisplayDescription *string `json:"displayDescription,omitempty"`
-
-		// DisplayName Role name displayed in the user interface.
-		DisplayName *string `json:"displayName,omitempty"`
-
-		// Id Role ID.
-		Id *string `json:"id,omitempty"`
-
-		// OrgId ID of the organization the role belongs to.
-		OrgId      *string `json:"orgId,omitempty"`
-		Privileges *[]struct {
-			// Description Description of the privilege.
-			Description *string `json:"description,omitempty"`
-			Id          *string `json:"id,omitempty"`
-
-			// Name Name of the privilege.
-			Name    *string `json:"name,omitempty"`
-			Service *string `json:"service,omitempty"`
-			Status  *string `json:"status,omitempty"`
-		} `json:"privileges,omitempty"`
-
-		// RoleName Name of the role.
-		RoleName *string `json:"roleName,omitempty"`
-
-		// Status Whether the organization's license to use the role is valid or has expired.
-		Status *string `json:"status,omitempty"`
-
-		// SystemRole Whether the role is a system-defined role.
-		SystemRole *bool `json:"systemRole,omitempty"`
-
-		// UpdateTime Date and time the role was last updated.
-		UpdateTime *string `json:"updateTime,omitempty"`
-
-		// UpdatedBy User who last updated the role.
-		UpdatedBy *string `json:"updatedBy,omitempty"`
-	}
+	JSON200      *GetRolesResponseBody
 }
 
 // Status returns HTTPResponse.Status
@@ -892,53 +947,7 @@ func (r GetRolesResponse) StatusCode() int {
 type CreateRoleResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-		// CreateTime Date and time the role was created.
-		CreateTime *string `json:"createTime,omitempty"`
-
-		// CreatedBy User who created the role.
-		CreatedBy *string `json:"createdBy,omitempty"`
-
-		// Description Description of the role.
-		Description *string `json:"description,omitempty"`
-
-		// DisplayDescription Description displayed in the user interface.
-		DisplayDescription *string `json:"displayDescription,omitempty"`
-
-		// DisplayName Role name displayed in the user interface.
-		DisplayName *string `json:"displayName,omitempty"`
-
-		// Id Role ID.
-		Id *string `json:"id,omitempty"`
-
-		// OrgId ID of the organization the role belongs to.
-		OrgId      *string `json:"orgId,omitempty"`
-		Privileges *[]struct {
-			// Description Description of the privilege.
-			Description *string `json:"description,omitempty"`
-			Id          *string `json:"id,omitempty"`
-
-			// Name Name of the privilege.
-			Name    *string `json:"name,omitempty"`
-			Service *string `json:"service,omitempty"`
-			Status  *string `json:"status,omitempty"`
-		} `json:"privileges,omitempty"`
-
-		// RoleName Name of the role.
-		RoleName *string `json:"roleName,omitempty"`
-
-		// Status Whether the organization's license to use the role is valid or has expired.
-		Status *string `json:"status,omitempty"`
-
-		// SystemRole Whether the role is a system-defined role.
-		SystemRole *bool `json:"systemRole,omitempty"`
-
-		// UpdateTime Date and time the role was last updated.
-		UpdateTime *string `json:"updateTime,omitempty"`
-
-		// UpdatedBy User who last updated the role.
-		UpdatedBy *string `json:"updatedBy,omitempty"`
-	}
+	JSON200      *CreateRoleResponseBody
 }
 
 // Status returns HTTPResponse.Status
@@ -1121,41 +1130,7 @@ func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Products Subscribed Informatica products.
-			Products *[]struct {
-				// BaseApiUrl Base API URL for the product. Use in REST API requests.
-				BaseApiUrl *string `json:"baseApiUrl,omitempty"`
-
-				// Name Product name.
-				Name *string `json:"name,omitempty"`
-			} `json:"products,omitempty"`
-			UserInfo *struct {
-				// Groups User group information for the user.
-				Groups *map[string]interface{} `json:"groups,omitempty"`
-
-				// Id User ID.
-				Id *string `json:"id,omitempty"`
-
-				// Name User name.
-				Name *string `json:"name,omitempty"`
-
-				// OrgId ID of the organization the user belongs to.
-				OrgId *string `json:"orgId,omitempty"`
-
-				// OrgName Organization name.
-				OrgName *string `json:"orgName,omitempty"`
-
-				// ParentOrgId Organization ID for the parent.
-				ParentOrgId *string `json:"parentOrgId,omitempty"`
-
-				// SessionId REST API session ID for the current session. Use in most REST API request headers.
-				SessionId *string `json:"sessionId,omitempty"`
-
-				// Status Status of the user.
-				Status *string `json:"status,omitempty"`
-			} `json:"userInfo,omitempty"`
-		}
+		var dest LoginResponseBody
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1181,53 +1156,7 @@ func ParseGetRolesResponse(rsp *http.Response) (*GetRolesResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []struct {
-			// CreateTime Date and time the role was created.
-			CreateTime *string `json:"createTime,omitempty"`
-
-			// CreatedBy User who created the role.
-			CreatedBy *string `json:"createdBy,omitempty"`
-
-			// Description Description of the role.
-			Description *string `json:"description,omitempty"`
-
-			// DisplayDescription Description displayed in the user interface.
-			DisplayDescription *string `json:"displayDescription,omitempty"`
-
-			// DisplayName Role name displayed in the user interface.
-			DisplayName *string `json:"displayName,omitempty"`
-
-			// Id Role ID.
-			Id *string `json:"id,omitempty"`
-
-			// OrgId ID of the organization the role belongs to.
-			OrgId      *string `json:"orgId,omitempty"`
-			Privileges *[]struct {
-				// Description Description of the privilege.
-				Description *string `json:"description,omitempty"`
-				Id          *string `json:"id,omitempty"`
-
-				// Name Name of the privilege.
-				Name    *string `json:"name,omitempty"`
-				Service *string `json:"service,omitempty"`
-				Status  *string `json:"status,omitempty"`
-			} `json:"privileges,omitempty"`
-
-			// RoleName Name of the role.
-			RoleName *string `json:"roleName,omitempty"`
-
-			// Status Whether the organization's license to use the role is valid or has expired.
-			Status *string `json:"status,omitempty"`
-
-			// SystemRole Whether the role is a system-defined role.
-			SystemRole *bool `json:"systemRole,omitempty"`
-
-			// UpdateTime Date and time the role was last updated.
-			UpdateTime *string `json:"updateTime,omitempty"`
-
-			// UpdatedBy User who last updated the role.
-			UpdatedBy *string `json:"updatedBy,omitempty"`
-		}
+		var dest GetRolesResponseBody
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1253,53 +1182,7 @@ func ParseCreateRoleResponse(rsp *http.Response) (*CreateRoleResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// CreateTime Date and time the role was created.
-			CreateTime *string `json:"createTime,omitempty"`
-
-			// CreatedBy User who created the role.
-			CreatedBy *string `json:"createdBy,omitempty"`
-
-			// Description Description of the role.
-			Description *string `json:"description,omitempty"`
-
-			// DisplayDescription Description displayed in the user interface.
-			DisplayDescription *string `json:"displayDescription,omitempty"`
-
-			// DisplayName Role name displayed in the user interface.
-			DisplayName *string `json:"displayName,omitempty"`
-
-			// Id Role ID.
-			Id *string `json:"id,omitempty"`
-
-			// OrgId ID of the organization the role belongs to.
-			OrgId      *string `json:"orgId,omitempty"`
-			Privileges *[]struct {
-				// Description Description of the privilege.
-				Description *string `json:"description,omitempty"`
-				Id          *string `json:"id,omitempty"`
-
-				// Name Name of the privilege.
-				Name    *string `json:"name,omitempty"`
-				Service *string `json:"service,omitempty"`
-				Status  *string `json:"status,omitempty"`
-			} `json:"privileges,omitempty"`
-
-			// RoleName Name of the role.
-			RoleName *string `json:"roleName,omitempty"`
-
-			// Status Whether the organization's license to use the role is valid or has expired.
-			Status *string `json:"status,omitempty"`
-
-			// SystemRole Whether the role is a system-defined role.
-			SystemRole *bool `json:"systemRole,omitempty"`
-
-			// UpdateTime Date and time the role was last updated.
-			UpdateTime *string `json:"updateTime,omitempty"`
-
-			// UpdatedBy User who last updated the role.
-			UpdatedBy *string `json:"updatedBy,omitempty"`
-		}
+		var dest CreateRoleResponseBody
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1361,38 +1244,39 @@ func ParseRemoveRolePrivilegesResponse(rsp *http.Response) (*RemoveRolePrivilege
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"1+8AucFv+9jd7f4XAAD//4Gl6bB5IQAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -3,6 +3,7 @@ info:
   title:   'Admin API for IDMC'
   version: '2.0.0'
 paths:
+
   /ma/api/v2/user/login:
     post:
       operationId: login
@@ -10,25 +11,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                '@type':
-                   type: string
-#                   enum:
-#                     - login
-                username:
-                  type: string
-                  description: |-
-                    Informatica Intelligent Cloud Services user name for the organization that you want to log in to.
-                  maxLength: 255
-                password:
-                  type: string
-                  description: |-
-                    Informatica Intelligent Cloud Services password.
-                  maxLength: 255
-              required:
-                - username
-                - password
+              $ref: '#/components/schemas/loginRequestBody'
       responses:
         200:
           description: |-
@@ -36,135 +19,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    description: |-
-                      User ID.
-                  orgId:
-                    type: string
-                    description: |-
-                      ID of the organization the user belongs to. 22 characters.
-                      NOTE: Organizations that were created in legacy Informatica Cloud might have an
-                      organization ID of 6 characters.
-                  orgUuid:
-                    type: string
-                    description: |-
-                      Unique identifier for the organization.
-                  name:
-                    type: string
-                    description: |-
-                      Informatica Intelligent Cloud Services user name.
-                  description:
-                    type: string
-                    description: |-
-                      Description of the user.
-                  createTime:
-                    type: string
-                    description: |-
-                      When the user account was created.
-                  updateTime:
-                    type: string
-                    description: |-
-                      When the user account was last updated.
-                  createdBy:
-                    type: string
-                    description: |-
-                      Informatica Intelligent Cloud Services user who created the user account.
-                  updatedBy:
-                    type: string
-                    description: |-
-                      Informatica Intelligent Cloud Services user who last updated the user account.
-                  sfUsername:
-                    type: string
-                    description: |-
-                      Salesforce user name. Included when user is configured to authenticate through Salesforce.
-                  password:
-                    type: string
-                    description: |-
-                      Salesforce user password. Included when user is configured to authenticate through Salesforce.
-                  firstName:
-                    type: string
-                    description: |-
-                      First name for the user account.
-                  lastName:
-                    type: string
-                    description: |-
-                      Last name for the user account.
-                  title:
-                    type: string
-                    description: |-
-                      Title of the user.
-                  phone:
-                    type: string
-                    description: |-
-                      Phone number for the user.
-                  securityQuestion:
-                    type: string
-                    description: |-
-                      Security question. Returns one of the following codes:
-                      SPOUSE_MEETING_CITY
-                      FIRST_JOB_CITY
-                      CHILDHOOD_FRIEND
-                      MOTHER_MAIDEN_NAME
-                      PET_NAME
-                      CHILDHOOD_NICKNAME
-                      CUSTOM_QUESTION:"<question>"
-                  securityAnswer:
-                    type: string
-                    description: |-
-                      Answer to the security question.
-                  roles:
-                    type: object
-                    properties:
-                      name:
-                        type: string
-                        description: |-
-                          Role name. Returns one of the following codes:
-                          Service Consumer
-                          Designer
-                          Admin
-                      description:
-                        type: string
-                        description: |-
-                          Role description.
-                    description: |-
-                      Object that includes a role object for each role assigned to the user.
-                  emails:
-                    type: string
-                    description: |-
-                      Email address to be notified when the user changes the account password.
-                  timezone:
-                    type: string
-                    description: |-
-                      Time zone of the user. Time zone honors Daylight Saving Time.
-                      For more information, see Time zone codes.
-                  serverUrl:
-                    type: string
-                    description: |-
-                      Informatica Intelligent Cloud Services URL for the organization the user belongs
-                      to. Use the serverUrl as a base for most version 2 REST API resource URIs.
-                  spiUrl:
-                    type: string
-                    deprecated: true
-                    description: |-
-                      This field is no longer applicable and has been deprecated.
-                  uuId:
-                    type: string
-                    description: |-
-                      Unique identifier for the user.
-                  icSessionId:
-                    type: string
-                    description: |-
-                      Informatica Intelligent Cloud Services session ID for version 2 REST API session.
-                      Use in most version 2 REST API request headers.
-                  forceChangePassword:
-                    type: boolean
-                    description: |-
-                      Determines if the user must reset the password after the user logs in for the first time. Includes the following values:
-                      True. The user must reset the password.
-                      False. The user is not forced to reset the password.
+                $ref: '#/components/schemas/loginResponseBody'
 
   /api/v2/agent/installerInfo/{platform}:
     get:
@@ -179,8 +34,8 @@ paths:
 #            enum:
 #              - linux64
 #              - win64
-            description: |-
-              The platform for the installation program.
+          description: |-
+            The platform for the installation program.
       responses:
         200:
           description: |-
@@ -188,17 +43,202 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  '@type':
-                    type:    string
-#                    enum:
-#                      - agentInstallerInfo
-                  downloadUrl:
-                    type: string
-                  installToken:
-                    type: string
-                  checksumDownloadUrl:
-                    type: string
+                $ref: '#/components/schemas/getAgentInstallerInfoResponseBody'
 
-components: {}
+components:
+
+  schemas:
+
+    apiErrorBody:
+      description: |-
+        When the REST API encounters an error, it returns a REST API error object.
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/informatica-intelligent-cloud-services-rest-api/error-object.html
+      type: object
+      properties:
+        '@type':
+          type: string
+          default: error
+#          enum:
+#            - error
+        code:
+          type: string
+        description:
+          type: string
+        statusCode:
+          type: integer
+      example: |-
+        {
+          "code": "UI_10000",
+          "description": "User name or password is not valid.",
+          "statusCode": 403,
+          "@type": "error"
+        }
+
+    loginRequestBody:
+      type: object
+      properties:
+        '@type':
+          type:    string
+          default: login
+#          enum:
+#            - login
+        username:
+          type: string
+          description: |-
+            Informatica Intelligent Cloud Services user name for the organization that you want to log in to.
+          maxLength: 255
+        password:
+          type: string
+          description: |-
+            Informatica Intelligent Cloud Services password.
+          maxLength: 255
+      required:
+        - username
+        - password
+
+    loginResponseBody:
+      type: object
+      properties:
+        id:
+          type: string
+          description: |-
+            User ID.
+        orgId:
+          type: string
+          description: |-
+            ID of the organization the user belongs to. 22 characters.
+            NOTE: Organizations that were created in legacy Informatica Cloud might have an
+            organization ID of 6 characters.
+        orgUuid:
+          type: string
+          description: |-
+            Unique identifier for the organization.
+        name:
+          type: string
+          description: |-
+            Informatica Intelligent Cloud Services user name.
+        description:
+          type: string
+          description: |-
+            Description of the user.
+        createTime:
+          type: string
+          description: |-
+            When the user account was created.
+        updateTime:
+          type: string
+          description: |-
+            When the user account was last updated.
+        createdBy:
+          type: string
+          description: |-
+            Informatica Intelligent Cloud Services user who created the user account.
+        updatedBy:
+          type: string
+          description: |-
+            Informatica Intelligent Cloud Services user who last updated the user account.
+        sfUsername:
+          type: string
+          description: |-
+            Salesforce user name. Included when user is configured to authenticate through Salesforce.
+        password:
+          type: string
+          description: |-
+            Salesforce user password. Included when user is configured to authenticate through Salesforce.
+        firstName:
+          type: string
+          description: |-
+            First name for the user account.
+        lastName:
+          type: string
+          description: |-
+            Last name for the user account.
+        title:
+          type: string
+          description: |-
+            Title of the user.
+        phone:
+          type: string
+          description: |-
+            Phone number for the user.
+        securityQuestion:
+          type: string
+          description: |-
+            Security question. Returns one of the following codes:
+            SPOUSE_MEETING_CITY
+            FIRST_JOB_CITY
+            CHILDHOOD_FRIEND
+            MOTHER_MAIDEN_NAME
+            PET_NAME
+            CHILDHOOD_NICKNAME
+            CUSTOM_QUESTION:"<question>"
+        securityAnswer:
+          type: string
+          description: |-
+            Answer to the security question.
+        roles:
+          type: object
+          properties:
+            name:
+              type: string
+              description: |-
+                Role name. Returns one of the following codes:
+                Service Consumer
+                Designer
+                Admin
+            description:
+              type: string
+              description: |-
+                Role description.
+          description: |-
+            Object that includes a role object for each role assigned to the user.
+        emails:
+          type: string
+          description: |-
+            Email address to be notified when the user changes the account password.
+        timezone:
+          type: string
+          description: |-
+            Time zone of the user. Time zone honors Daylight Saving Time.
+            For more information, see Time zone codes.
+        serverUrl:
+          type: string
+          description: |-
+            Informatica Intelligent Cloud Services URL for the organization the user belongs
+            to. Use the serverUrl as a base for most version 2 REST API resource URIs.
+        spiUrl:
+          type: string
+          deprecated: true
+          description: |-
+            This field is no longer applicable and has been deprecated.
+        uuId:
+          type: string
+          description: |-
+            Unique identifier for the user.
+        icSessionId:
+          type: string
+          description: |-
+            Informatica Intelligent Cloud Services session ID for version 2 REST API session.
+            Use in most version 2 REST API request headers.
+        forceChangePassword:
+          type: boolean
+          description: |-
+            Determines if the user must reset the password after the user logs in for the first time. Includes the following values:
+            True. The user must reset the password.
+            False. The user is not forced to reset the password.
+
+    getAgentInstallerInfoResponseBody:
+      type: object
+      properties:
+        '@type':
+          type:    string
+          default: agentInstallerInfo
+#          enum:
+#            - agentInstallerInfo
+        downloadUrl:
+          type: string
+        installToken:
+          type: string
+        checksumDownloadUrl:
+          type: string
