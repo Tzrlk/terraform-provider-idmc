@@ -8,6 +8,13 @@ func Val[T any](ptr *T) T {
 	return *ptr
 }
 
+func ValOr[T any](ptr *T, or T) T {
+	if ptr != nil {
+		return *ptr
+	}
+	return or
+}
+
 func OkVal[T any](val T) (T, error) {
 	return val, nil
 }

@@ -20,6 +20,19 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+// ApiErrorBody When the REST API encounters an error, it returns a REST API error object.
+type ApiErrorBody struct {
+	Error *ApiErrorBodyError `json:"error,omitempty"`
+}
+
+// ApiErrorBodyError defines model for apiErrorBodyError.
+type ApiErrorBodyError struct {
+	Code      *string      `json:"code,omitempty"`
+	Details   *interface{} `json:"details,omitempty"`
+	Message   *string      `json:"message,omitempty"`
+	RequestId *string      `json:"requestId,omitempty"`
+}
+
 // CreateRoleRequestBody defines model for createRoleRequestBody.
 type CreateRoleRequestBody struct {
 	// Description Description of the role.
@@ -83,7 +96,10 @@ type CreateRoleResponseBody struct {
 }
 
 // GetRolesResponseBody defines model for getRolesResponseBody.
-type GetRolesResponseBody = []struct {
+type GetRolesResponseBody = []GetRolesResponseBodyItem
+
+// GetRolesResponseBodyItem defines model for getRolesResponseBodyItem.
+type GetRolesResponseBodyItem struct {
 	// CreateTime Date and time the role was created.
 	CreateTime *string `json:"createTime,omitempty"`
 
@@ -143,38 +159,44 @@ type LoginRequestBody struct {
 // LoginResponseBody defines model for loginResponseBody.
 type LoginResponseBody struct {
 	// Products Subscribed Informatica products.
-	Products *[]struct {
-		// BaseApiUrl Base API URL for the product. Use in REST API requests.
-		BaseApiUrl *string `json:"baseApiUrl,omitempty"`
+	Products *[]LoginResponseBodyProduct `json:"products,omitempty"`
+	UserInfo *LoginResponseBodyUserInfo  `json:"userInfo,omitempty"`
+}
 
-		// Name Product name.
-		Name *string `json:"name,omitempty"`
-	} `json:"products,omitempty"`
-	UserInfo *struct {
-		// Groups User group information for the user.
-		Groups *map[string]interface{} `json:"groups,omitempty"`
+// LoginResponseBodyProduct defines model for loginResponseBodyProduct.
+type LoginResponseBodyProduct struct {
+	// BaseApiUrl Base API URL for the product. Use in REST API requests.
+	BaseApiUrl *string `json:"baseApiUrl,omitempty"`
 
-		// Id User ID.
-		Id *string `json:"id,omitempty"`
+	// Name Product name.
+	Name *string `json:"name,omitempty"`
+}
 
-		// Name User name.
-		Name *string `json:"name,omitempty"`
+// LoginResponseBodyUserInfo defines model for loginResponseBodyUserInfo.
+type LoginResponseBodyUserInfo struct {
+	// Groups User group information for the user.
+	Groups *map[string]interface{} `json:"groups,omitempty"`
 
-		// OrgId ID of the organization the user belongs to.
-		OrgId *string `json:"orgId,omitempty"`
+	// Id User ID.
+	Id *string `json:"id,omitempty"`
 
-		// OrgName Organization name.
-		OrgName *string `json:"orgName,omitempty"`
+	// Name User name.
+	Name *string `json:"name,omitempty"`
 
-		// ParentOrgId Organization ID for the parent.
-		ParentOrgId *string `json:"parentOrgId,omitempty"`
+	// OrgId ID of the organization the user belongs to.
+	OrgId *string `json:"orgId,omitempty"`
 
-		// SessionId REST API session ID for the current session. Use in most REST API request headers.
-		SessionId *string `json:"sessionId,omitempty"`
+	// OrgName Organization name.
+	OrgName *string `json:"orgName,omitempty"`
 
-		// Status Status of the user.
-		Status *string `json:"status,omitempty"`
-	} `json:"userInfo,omitempty"`
+	// ParentOrgId Organization ID for the parent.
+	ParentOrgId *string `json:"parentOrgId,omitempty"`
+
+	// SessionId REST API session ID for the current session. Use in most REST API request headers.
+	SessionId *string `json:"sessionId,omitempty"`
+
+	// Status Status of the user.
+	Status *string `json:"status,omitempty"`
 }
 
 // RoleInfo defines model for roleInfo.
@@ -242,6 +264,9 @@ type HeaderSession = string
 
 // PathRole defines model for pathRole.
 type PathRole = string
+
+// N400 When the REST API encounters an error, it returns a REST API error object.
+type N400 = ApiErrorBody
 
 // RolePrivileges defines model for rolePrivileges.
 type RolePrivileges = WithPrivilegeRefs
@@ -926,6 +951,7 @@ type GetRolesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *GetRolesResponseBody
+	JSON400      *N400
 }
 
 // Status returns HTTPResponse.Status
@@ -1162,6 +1188,13 @@ func ParseGetRolesResponse(rsp *http.Response) (*GetRolesResponse, error) {
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	}
 
 	return response, nil
@@ -1244,39 +1277,44 @@ func ParseRemoveRolePrivilegesResponse(rsp *http.Response) (*RemoveRolePrivilege
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"1+8AucFv+9jd7f4XAAD//4Gl6bB5IQAA",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

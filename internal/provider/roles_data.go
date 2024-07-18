@@ -213,6 +213,8 @@ var rolesDataRolesType = types.ObjectType{
 	},
 }
 
+// FIXME: Can only expand privileges on single result requests, not on full set. Full set doesn't return privileges at all. Maybe split into two data sources?
+
 func (d *RolesDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
 	diags := &resp.Diagnostics
 
@@ -253,16 +255,31 @@ func (d *RolesDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadR
 		)
 		return
 	}
+	_ = LogHttpResponse(ctx, res.HTTPResponse, &res.Body)
 
-	resLogErr := LogHttpResponse(ctx, res.HTTPResponse)
-	if resLogErr != nil {
-		diags.AddError(
-			"IDMC API bad response status",
-			fmt.Sprintf("IDMC API response 200 expected; got %s", res.Status()),
-		)
+	// Handle non-200 responses
+	if res.StatusCode() != 200 {
+		switch res.StatusCode() {
+		case 400:
+			apiErr := *utils.Val(res.JSON400).Error
+			diags.AddError(
+				"IDMC API bad response status",
+				fmt.Sprintf("Request: %s\nCode: %s\nMsg: %s",
+					utils.ValOr(apiErr.RequestId, "-"),
+					utils.ValOr(apiErr.Code, "-"),
+					utils.ValOr(apiErr.Message, "-"),
+				),
+			)
+		default:
+			diags.AddError(
+				"IDMC API bad response status",
+				fmt.Sprintf("IDMC API response 200 expected; got %s", res.Status()),
+			)
+		}
 		return
 	}
 
+	// Handle empty JSON responses
 	if res.JSON200 == nil {
 		diags.AddError(
 			"IDMC API bad response payload",

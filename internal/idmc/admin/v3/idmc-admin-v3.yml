@@ -60,6 +60,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/getRolesResponseBody'
+        400:
+          $ref: '#/components/responses/400'
     post:
       operationId: createRole
       description: You can create custom roles for your organization.
@@ -160,30 +162,58 @@ components:
     400:
       description: |-
         Bad request. Can be a field or format issue such as an invalid character or incorrect string length.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/apiErrorBody'
 
     401:
       description: |-
         Authentication issue. For example, invalid credentials or invalid session IDs.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/apiErrorBody'
 
     403:
       description: |-
         Generic error. For example, user doesn't have required permissions for a resource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/apiErrorBody'
 
     404:
       description: |-
         Resource can't be found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/apiErrorBody'
 
     500:
       description: |-
         Unexpected error. Generic error message that appears when an unexpected condition was encountered.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/apiErrorBody'
 
     502:
       description: |-
         Network issue.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/apiErrorBody'
 
     503:
       description: |-
         Service unavailable. The server cannot handle the request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/apiErrorBody'
 
   schemas:
 
@@ -195,15 +225,7 @@ components:
       type: object
       properties:
         error:
-          type: object
-          properties:
-            code:
-              type: string
-            message:
-              type: string
-            requestId:
-              type: string
-            details: {} # Unknown type.
+          $ref: '#/components/schemas/apiErrorBodyError'
       example: |-
         {
           "error": {
@@ -213,6 +235,16 @@ components:
             "details": null
           }
         }
+    apiErrorBodyError:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        requestId:
+          type: string
+        details: {} # Unknown type.
 
     loginRequestBody:
       type: object
@@ -239,67 +271,71 @@ components:
           description: |-
             Subscribed Informatica products.
           items:
-            type: object
-            properties:
-              name:
-                type: string
-                description: |-
-                  Product name.
-              baseApiUrl:
-                type: string
-                description: |-
-                  Base API URL for the product. Use in REST API requests.
+            $ref: '#/components/schemas/loginResponseBodyProduct'
         userInfo:
+          $ref: '#/components/schemas/loginResponseBodyUserInfo'
+    loginResponseBodyProduct:
+      type: object
+      properties:
+        name:
+          type: string
+          description: |-
+            Product name.
+        baseApiUrl:
+          type: string
+          description: |-
+            Base API URL for the product. Use in REST API requests.
+    loginResponseBodyUserInfo:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          description: |-
+            REST API session ID for the current session. Use in most REST API request headers.
+        id:
+          type: string
+          description: |-
+            User ID.
+        name:
+          type: string
+          description: |-
+            User name.
+        parentOrgId:
+          type: string
+          description: |-
+            Organization ID for the parent.
+          minLength: 22
+          maxLength: 22
+        orgId:
+          type: string
+          description: |-
+            ID of the organization the user belongs to.
+          minLength: 22
+          maxLength: 22
+        orgName:
+          type: string
+          description: |-
+            Organization name.
+        groups:
           type: object
-          properties:
-            sessionId:
-              type: string
-              description: |-
-                REST API session ID for the current session. Use in most REST API request headers.
-            id:
-              type: string
-              description: |-
-                User ID.
-            name:
-              type: string
-              description: |-
-                User name.
-            parentOrgId:
-              type: string
-              description: |-
-                Organization ID for the parent.
-              minLength: 22
-              maxLength: 22
-            orgId:
-              type: string
-              description: |-
-                ID of the organization the user belongs to.
-              minLength: 22
-              maxLength: 22
-            orgName:
-              type: string
-              description: |-
-                Organization name.
-            groups:
-              type: object
-              description: |-
-                User group information for the user.
-            status:
-              type: string
-              description: |-
-                Status of the user.
-#              enum:
-#                - Active
-#                - Inactive
-
-
+          description: |-
+            User group information for the user.
+        status:
+          type: string
+          description: |-
+            Status of the user.
+#           enum:
+#             - Active
+#             - Inactive
 
     getRolesResponseBody:
       type: array
       items:
-        allOf:
-          - $ref: '#/components/schemas/roleInfo'
-          - $ref: '#/components/schemas/withPrivilegeItems'
+        $ref: '#/components/schemas/getRolesResponseBodyItem'
+    getRolesResponseBodyItem:
+      allOf:
+        - $ref: '#/components/schemas/roleInfo'
+        - $ref: '#/components/schemas/withPrivilegeItems'
 
     createRoleRequestBody:
       allOf:

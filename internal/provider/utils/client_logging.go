@@ -7,14 +7,12 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"terraform-provider-idmc/internal/idmc/common"
 )
 
 func LogHttpRequest(ctx context.Context, req *http.Request) error {
-	ctx = tflog.SetField(ctx, "http.method", req.Method)
 	ctx = tflog.SetField(ctx, "http.url", req.URL.String())
-	ctx = tflog.SetField(ctx, "http.user_agent", req.UserAgent())
-	ctx = tflog.SetField(ctx, "http.header", req.Header)
+	ctx = tflog.SetField(ctx, "http.method", req.Method)
+	//ctx = tflog.SetField(ctx, "http.header", req.Header)
 
 	// Attempt to re-serialise the request body.
 	bodyReadCloser, bodyReadErr := req.GetBody()
@@ -31,22 +29,13 @@ func LogHttpRequest(ctx context.Context, req *http.Request) error {
 
 }
 
-func WithRequestLogger(tfCtx context.Context) common.RequestEditorFn {
-	return func(httpCtx context.Context, req *http.Request) error {
-		return LogHttpRequest(tfCtx, req)
-	}
-}
-
-func LogHttpResponse(ctx context.Context, res *http.Response) error {
+func LogHttpResponse(ctx context.Context, res *http.Response, body *[]byte) error {
+	ctx = tflog.SetField(ctx, "http.url", res.Request.URL.String())
+	ctx = tflog.SetField(ctx, "http.method", res.Request.Method)
 	ctx = tflog.SetField(ctx, "http.status_code", res.StatusCode)
-	ctx = tflog.SetField(ctx, "http.header", res.Header)
-
-	copyBuffer := new(strings.Builder)
-	_, copyErr := io.Copy(copyBuffer, res.Body)
-	if copyErr == nil {
-		ctx = tflog.SetField(ctx, "http.request.body", copyBuffer.String())
-	} else {
-		ctx = tflog.SetField(ctx, "http.request.body.err", copyErr)
+	//ctx = tflog.SetField(ctx, "http.header", res.Header)
+	if body != nil {
+		ctx = tflog.SetField(ctx, "http.request.body", string(*body))
 	}
 
 	tflog.Trace(ctx, "Receiving IDMC API response.")

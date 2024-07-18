@@ -187,7 +187,7 @@ func doLogin(ctx context.Context, authHost string, authUser string, authPass str
 		return "", "", loginResponseError
 	}
 
-	logErr := utils.LogHttpResponse(ctx, loginResponse.HTTPResponse)
+	logErr := utils.LogHttpResponse(ctx, loginResponse.HTTPResponse, &loginResponse.Body)
 	if logErr != nil {
 		return "", "", logErr
 	}
