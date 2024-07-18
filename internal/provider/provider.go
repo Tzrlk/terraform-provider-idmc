@@ -155,7 +155,7 @@ func (p *IdmcProvider) Configure(
 		return
 	}
 
-	idmcProviderData := IdmcProviderData{
+	idmcProviderData := &IdmcProviderData{
 		Api: idmcApi,
 	}
 	resp.DataSourceData = idmcProviderData
@@ -218,7 +218,6 @@ func doLogin(ctx context.Context, authHost string, authUser string, authPass str
 	return loginServerUrl, sessionId, nil
 
 }
-
 
 func (p *IdmcProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{

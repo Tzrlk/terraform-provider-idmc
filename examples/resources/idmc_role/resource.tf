@@ -1,4 +1,4 @@
-resource "idmc_rbac_role" "example" {
+resource "idmc_role" "example" {
   name        = var.role_name
   description = var.role_description
   privileges = [

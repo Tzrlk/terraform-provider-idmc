@@ -5,3 +5,6 @@ terraform {
     }
   }
 }
+
+provider "idmc" {
+}

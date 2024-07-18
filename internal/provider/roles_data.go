@@ -3,6 +3,10 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"terraform-provider-idmc/internal/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -27,10 +31,13 @@ type RolesDataSource struct {
 }
 
 type RolesDataSourceModel struct {
+	Filter types.Object `tfsdk:"filter"`
+	Roles  types.Map    `tfsdk:"roles"`
+}
+type RolesDataSourceModelFilter struct {
 	RoleId           types.String `tfsdk:"role_id"`
 	RoleName         types.String `tfsdk:"role_name"`
 	ExpandPrivileges types.Bool   `tfsdk:"expand_privileges"`
-	Roles            types.Map    `tfsdk:"roles"`
 }
 
 func (d *RolesDataSource) Metadata(_ context.Context, req MetadataRequest, resp *MetadataResponse) {
@@ -84,14 +91,16 @@ func (d *RolesDataSource) Schema(_ context.Context, _ SchemaRequest, resp *Schem
 							Computed:    true,
 						},
 						"created_time": schema.StringAttribute{
+							CustomType:  timetypes.RFC3339Type{},
 							Description: "Date and time the role was created.",
 							Computed:    true,
 						},
 						"updated_time": schema.StringAttribute{
+							CustomType:  timetypes.RFC3339Type{},
 							Description: "Date and time the role was last updated.",
 							Computed:    true,
 						},
-						"role_name": schema.StringAttribute{
+						"name": schema.StringAttribute{
 							Description: "Name of the role.",
 							Computed:    true,
 						},
@@ -107,7 +116,7 @@ func (d *RolesDataSource) Schema(_ context.Context, _ SchemaRequest, resp *Schem
 							Description: "Description displayed in the user interface.",
 							Computed:    true,
 						},
-						"system_role": schema.StringAttribute{
+						"system_role": schema.BoolAttribute{
 							Description: "Whether the role is a system-defined role.",
 							Computed:    true,
 						},
@@ -177,6 +186,33 @@ func (d *RolesDataSource) ConfigValidators(ctx context.Context) []ConfigValidato
 	}
 }
 
+var rolesDataRolesPrivilegeType = types.ObjectType{
+	AttrTypes: map[string]attr.Type{
+		"name":        types.StringType,
+		"description": types.StringType,
+		"service":     types.StringType,
+		"status":      types.StringType,
+	},
+}
+var rolesDataRolesType = types.ObjectType{
+	AttrTypes: map[string]attr.Type{
+		"name":                types.StringType,
+		"display_name":        types.StringType,
+		"org_id":              types.StringType,
+		"description":         types.StringType,
+		"display_description": types.StringType,
+		"system_role":         types.BoolType,
+		"status":              types.StringType,
+		"created_by":          types.StringType,
+		"updated_by":          types.StringType,
+		"created_time":        timetypes.RFC3339Type{},
+		"updated_time":        timetypes.RFC3339Type{},
+		"privileges": types.MapType{
+			ElemType: rolesDataRolesPrivilegeType,
+		},
+	},
+}
+
 func (d *RolesDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
 	diags := &resp.Diagnostics
 
@@ -189,75 +225,76 @@ func (d *RolesDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadR
 
 	// Obtain request parameters from config.
 	params := &v3.GetRolesParams{}
-	if !config.RoleId.IsNull() {
-		query := fmt.Sprintf("roleId==\"%s\"", config.RoleId.ValueString())
-		params.Q = &query
-	} else if !config.RoleName.IsNull() {
-		query := fmt.Sprintf("roleName==\"%s\"", config.RoleName.ValueString())
-		params.Q = &query
-	}
-	if config.ExpandPrivileges.ValueBool() {
-		expand := "privileges"
-		params.Expand = &expand
+	if !config.Filter.IsNull() {
+		filter := UnwrapDiag(diags, path.Root("filter"), func() (RolesDataSourceModelFilter, diag.Diagnostics) {
+			result := RolesDataSourceModelFilter{}
+			resultDiag := config.Filter.As(ctx, &result, basetypes.ObjectAsOptions{
+				UnhandledNullAsEmpty:    true,
+				UnhandledUnknownAsEmpty: true,
+			})
+			return result, resultDiag
+		})
+		if !filter.RoleId.IsNull() {
+			params.Q = utils.Ptr(fmt.Sprintf("roleId==\"%s\"", filter.RoleId.ValueString()))
+		} else if !filter.RoleName.IsNull() {
+			params.Q = utils.Ptr(fmt.Sprintf("roleName==\"%s\"", filter.RoleName.ValueString()))
+		}
+		if filter.ExpandPrivileges.ValueBool() {
+			params.Expand = utils.Ptr("privileges")
+		}
 	}
 
 	// Perform the API request.
-	response, err := d.Client.GetRolesWithResponse(ctx, params)
+	res, err := d.Client.GetRolesWithResponse(ctx, params)
 	if err != nil {
 		diags.AddError(
-			"Http Request Failure",
-			fmt.Sprintf("IDMC Api request failure: %s", err),
+			"IDMC API request failure",
+			fmt.Sprintf("IDMC API request failure: %s", err),
 		)
 		return
 	}
 
-	rolesPrivilegeType := types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"name":        types.StringType,
-			"description": types.StringType,
-			"service":     types.StringType,
-			"status":      types.StringType,
-		},
+	resLogErr := LogHttpResponse(ctx, res.HTTPResponse)
+	if resLogErr != nil {
+		diags.AddError(
+			"IDMC API bad response status",
+			fmt.Sprintf("IDMC API response 200 expected; got %s", res.Status()),
+		)
+		return
 	}
 
-	rolesPath := path.Root("roles")
-	rolesType := types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"name":                types.StringType,
-			"display_name":        types.StringType,
-			"org_id":              types.StringType,
-			"description":         types.StringType,
-			"display_description": types.StringType,
-			"system_role":         types.BoolType,
-			"status":              types.StringType,
-			"created_by":          types.StringType,
-			"updated_by":          types.StringType,
-			"created_time":        types.StringType,
-			"updated_time":        types.StringType,
-			"privileges": types.MapType{
-				ElemType: rolesPrivilegeType,
-			},
-		},
+	if res.JSON200 == nil {
+		diags.AddError(
+			"IDMC API bad response payload",
+			"Expected JSON payload, got nil.",
+		)
+		return
 	}
+	resBody := *res.JSON200
+
+	rolesPath := path.Root("roles")
 
 	// Convert response data into terraform types.
 	newRoles := make(map[string]attr.Value)
-	for _, responseRole := range *response.JSON200 {
-		rolePath := rolesPath.AtMapKey(*responseRole.Id)
+	for _, responseRole := range resBody {
+		roleId := *responseRole.Id
+		rolePath := rolesPath.AtMapKey(roleId)
 		rolePrivilegesPath := rolePath.AtName("privileges")
 
 		newRolePrivileges := make(map[string]attr.Value)
-		for _, responseRolePrivilege := range *responseRole.Privileges {
-			rolePrivilegePath := rolePrivilegesPath.AtMapKey(*responseRolePrivilege.Id)
-			newRolePrivileges[*responseRolePrivilege.Id] = UnwrapObjectValue(diags, rolePrivilegePath, rolesPrivilegeType.AttrTypes, map[string]attr.Value{
-				"name":        types.StringPointerValue(responseRolePrivilege.Name),
-				"description": types.StringPointerValue(responseRolePrivilege.Description),
-				"service":     types.StringPointerValue(responseRolePrivilege.Service),
-				"status":      types.StringPointerValue(responseRolePrivilege.Status),
-			})
+		if responseRole.Privileges != nil {
+			for _, responseRolePrivilege := range *responseRole.Privileges {
+				rolePrivilegePath := rolePrivilegesPath.AtMapKey(*responseRolePrivilege.Id)
+				newRolePrivileges[*responseRolePrivilege.Id] = UnwrapObjectValue(diags, rolePrivilegePath, rolesDataRolesPrivilegeType.AttrTypes, map[string]attr.Value{
+					"name":        types.StringPointerValue(responseRolePrivilege.Name),
+					"description": types.StringPointerValue(responseRolePrivilege.Description),
+					"service":     types.StringPointerValue(responseRolePrivilege.Service),
+					"status":      types.StringPointerValue(responseRolePrivilege.Status),
+				})
+			}
 		}
 
-		newRoles[*responseRole.Id] = UnwrapObjectValue(diags, rolePath, rolesType.AttrTypes, map[string]attr.Value{
+		newRoles[roleId] = UnwrapObjectValue(diags, rolePath, rolesDataRolesType.AttrTypes, map[string]attr.Value{
 			"name":                types.StringPointerValue(responseRole.RoleName),
 			"display_name":        types.StringPointerValue(responseRole.DisplayName),
 			"org_id":              types.StringPointerValue(responseRole.OrgId),
@@ -269,12 +306,12 @@ func (d *RolesDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadR
 			"updated_by":          types.StringPointerValue(responseRole.UpdatedBy),
 			"created_time":        UnwrapNewRFC3339PointerValue(diags, rolePath.AtName("created_time"), responseRole.CreateTime),
 			"updated_time":        UnwrapNewRFC3339PointerValue(diags, rolePath.AtName("updated_time"), responseRole.UpdateTime),
-			"privileges":          UnwrapMapValue(diags, rolePath.AtName("privileges"), rolesPrivilegeType, newRolePrivileges),
+			"privileges":          UnwrapMapValue(diags, rolePath.AtName("privileges"), rolesDataRolesPrivilegeType, newRolePrivileges),
 		})
 
 	}
 
-	config.Roles = UnwrapMapValue(diags, rolesPath, rolesType, newRoles)
+	config.Roles = UnwrapMapValue(diags, rolesPath, rolesDataRolesType, newRoles)
 
 	// Update the state and add the result
 	diags.Append(resp.State.Set(ctx, &config)...)

@@ -20,3 +20,6 @@ dist/
 # IntelliJ
 .idea/
 *.iml
+
+# Examples
+examples/**/*.tfvars
