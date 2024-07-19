@@ -3,6 +3,9 @@ package provider
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"os"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -11,11 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"net/http"
-	"os"
 	"terraform-provider-idmc/internal/idmc"
-	v3 "terraform-provider-idmc/internal/idmc/admin/v3"
 	"terraform-provider-idmc/internal/idmc/common"
+	"terraform-provider-idmc/internal/idmc/v3"
 	"terraform-provider-idmc/internal/provider/utils"
 )
 

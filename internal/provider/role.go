@@ -12,8 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"golang.org/x/exp/maps"
-
-	v3 "terraform-provider-idmc/internal/idmc/admin/v3"
+	"terraform-provider-idmc/internal/idmc/v3"
 
 	. "github.com/hashicorp/terraform-plugin-framework/resource"
 	. "terraform-provider-idmc/internal/provider/utils"

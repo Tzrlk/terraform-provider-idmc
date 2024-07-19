@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/oapi-codegen/oapi-codegen/HEAD/configuration-schema.json
+---
+output:  internal/idmc/v2/client.gen.go
+package: v2
+generate:
+  client: true
+  models: true
+compatibility:
+  always-prefix-enum-values: true
+additional-imports:
+  - alias:   common
+    package: terraform-provider-idmc/internal/idmc/common
+output-options:
+  nullable-type: true
+  user-templates: # https://github.com/oapi-codegen/oapi-codegen/tree/main/pkg/codegen/templates
+    client-with-responses.tmpl: internal/idmc/templates/client-with-responses.go.tmpl
+    client.tmpl:                internal/idmc/templates/client.go.tmpl
+    constants.tmpl:             internal/idmc/templates/constants.go.tmpl
+    param-types.tmpl:           internal/idmc/templates/param-types.go.tmpl
+    request-bodies.tmpl:        internal/idmc/templates/request-bodies.go.tmpl

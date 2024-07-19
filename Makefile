@@ -41,6 +41,9 @@ CMD_GOLANGCI_LINT ?= go run github.com/golangci/golangci-lint/cmd/golangci-lint
 
 ################################################################################
 
+API_SRC_FILES := $(wildcard internal/idmc/*/openapi.yml)
+API_SRC_DIRS  := $(sort $(dir ${API_SRC_FILES}))
+
 GO_SRC_FILES := $(shell find . -type f -name *.go -not -name *_test.go -not -name *.gen.go)
 GO_SRC_DIRS  := $(sort $(dir ${GO_SRC_FILES}))
 vpath %.go ${GO_SRC_DIRS}
@@ -49,23 +52,23 @@ GO_TEST_FILES := $(shell find . -type f -name *_test.go)
 GO_TEST_DIRS  := $(sort $(dir ${GO_TEST_FILES}))
 vpath %_test.go ${GO_TEST_DIRS}
 
-TF_SRC_FILES := $(shell find . -type f -name *.tf -or -name *.tfvars)
-vpath %.tf     examples/
-vpath %.tfvars examples/
+TF_SRC_FILES := $(shell find . -type f -name *.tf)
+vpath %.tf      examples/
+vpath %.tfvars  examples/
+vpath %.tfstate examples/
 
 ################################################################################
 #: Generate OpenAPI clients
-codegen: \
-		internal/idmc/admin/v2/idmc-admin-v2.gen.go \
-		internal/idmc/admin/v3/idmc-admin-v3.gen.go
+codegen: $(patsubst %/openapi.yml,%/client.gen.go,${API_SRC_FILES})
 .PHONY: gen
 
-%.gen.go: VPATH = internal/idmc
-%.gen.go: %.yml go.sum
+%/client.gen.go: VPATH = internal/idmc
+%/client.gen.go: \
+		%/openapi.yml \
+		%/codegen.yml \
+		go.sum
 	${CMD_OAPI_CODEGEN} \
-			-generate types,client,spec \
-			-package $(notdir ${@D}) \
-			-o ${@} \
+			-config $(word 2,${^}) \
 			${<}
 
 ################################################################################

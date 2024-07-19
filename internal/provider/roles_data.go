@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"terraform-provider-idmc/internal/idmc/admin/v3"
+	"terraform-provider-idmc/internal/idmc/v3"
 
 	. "github.com/hashicorp/terraform-plugin-framework/datasource"
 	. "terraform-provider-idmc/internal/provider/utils"
@@ -173,7 +173,7 @@ func (d *RolesDataSource) Configure(_ context.Context, req ConfigureRequest, res
 		)
 		return
 	}
-	d.Client = data.Api.Admin.V3.Client
+	d.Client = data.Api.V3.Client
 
 }
 

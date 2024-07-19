@@ -17,7 +17,7 @@ func NewIdmcAdminV3Api(baseUrl string, sessionId string, httpClient common.HttpR
 	apiClient, clientErr := NewClientWithResponses(baseUrl,
 		WithHTTPClient(httpClient),
 		WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
-			req.Header["Accept"]          = []string{"application/json"}
+			req.Header["Accept"] = []string{"application/json"}
 			req.Header["INFA-SESSION-ID"] = []string{sessionId}
 			return nil
 		}),

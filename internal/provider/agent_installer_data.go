@@ -6,8 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
-	v2 "terraform-provider-idmc/internal/idmc/admin/v2"
+	"terraform-provider-idmc/internal/idmc/v2"
 
 	. "github.com/hashicorp/terraform-plugin-framework/datasource"
 )
@@ -71,7 +70,7 @@ func (d *AgentInstallerDataSource) Configure(_ context.Context, req ConfigureReq
 		)
 		return
 	}
-	d.Client = data.Api.Admin.V2.Client
+	d.Client = data.Api.V2.Client
 
 }
 
