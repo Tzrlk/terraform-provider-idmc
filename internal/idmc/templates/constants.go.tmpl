@@ -1,3 +1,5 @@
+// <editor-fold desc="constants" defaultstate="collapsed"> /////////////////////
+
 {{- if gt (len .SecuritySchemeProviderNames) 0 }}
 const (
 {{range $ProviderName := .SecuritySchemeProviderNames}}
@@ -13,3 +15,5 @@ const (
 {{end}}
 )
 {{end}}
+
+// </editor-fold> //////////////////////////////////////////////////////////////

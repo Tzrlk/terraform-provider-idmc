@@ -13,8 +13,17 @@ import (
 	"net/url"
 	"strings"
 
+	common "terraform-provider-idmc/internal/idmc/common"
+
 	"github.com/oapi-codegen/runtime"
 )
+
+// <editor-fold desc="constants" defaultstate="collapsed"> /////////////////////
+
+// </editor-fold> //////////////////////////////////////////////////////////////
+// <editor-fold desc="constants" defaultstate="collapsed"> /////////////////////
+
+// </editor-fold> //////////////////////////////////////////////////////////////
 
 // GetAgentInstallerInfoResponseBody defines model for getAgentInstallerInfoResponseBody.
 type GetAgentInstallerInfoResponseBody struct {
@@ -137,122 +146,78 @@ type LoginResponseBody struct {
 	UuId *string `json:"uuId,omitempty"`
 }
 
+// <editor-fold desc="param-types" defaultstate="collapsed"> ///////////////////
+
+// </editor-fold> //////////////////////////////////////////////////////////////
+
+// <editor-fold desc="request-bodies" defaultstate="collapsed"> ////////////////
+
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequestBody
 
-// RequestEditorFn  is the function signature for the RequestEditor callback function
-type RequestEditorFn func(ctx context.Context, req *http.Request) error
+// </editor-fold> //////////////////////////////////////////////////////////////
 
-// Doer performs HTTP requests.
-//
-// The standard http.Client implements this interface.
-type HttpRequestDoer interface {
-	Do(req *http.Request) (*http.Response, error)
-}
+// <editor-fold desc="client" defaultstate="collapsed"> ////////////////////////
 
 // Client which conforms to the OpenAPI3 specification for this service.
 type Client struct {
-	// The endpoint of the server conforming to this interface, with scheme,
-	// https://api.deepmap.com for example. This can contain a path relative
-	// to the server, such as https://api.deepmap.com/dev-test, and all the
-	// paths in the swagger spec will be appended to the server.
-	Server string
-
-	// Doer for performing requests, typically a *http.Client with any
-	// customized settings, such as certificate chains.
-	Client HttpRequestDoer
-
-	// A list of callbacks for modifying requests which are generated before sending over
-	// the network.
-	RequestEditors []RequestEditorFn
+	common.ClientConfig
 }
-
-// ClientOption allows setting custom parameters during construction
-type ClientOption func(*Client) error
 
 // Creates a new Client, with reasonable defaults
-func NewClient(server string, opts ...ClientOption) (*Client, error) {
-	// create a client with sane default values
-	client := Client{
-		Server: server,
-	}
-	// mutate client and add all optional params
-	for _, o := range opts {
-		if err := o(&client); err != nil {
-			return nil, err
-		}
-	}
-	// ensure the server URL always has a trailing slash
-	if !strings.HasSuffix(client.Server, "/") {
-		client.Server += "/"
-	}
-	// create httpClient, if not already present
-	if client.Client == nil {
-		client.Client = &http.Client{}
-	}
-	return &client, nil
+func NewClient(server string, opts ...common.ClientOption) (*Client, error) {
+	config, err := common.NewClientConfig(server, opts...)
+	return &Client{*config}, err
 }
 
-// WithHTTPClient allows overriding the default Doer, which is
-// automatically created using http.Client. This is useful for tests.
-func WithHTTPClient(doer HttpRequestDoer) ClientOption {
-	return func(c *Client) error {
-		c.Client = doer
-		return nil
-	}
-}
+var _ common.Client = &Client{}
 
-// WithRequestEditorFn allows setting up a callback function, which will be
-// called right before sending the request. This can be used to mutate the request.
-func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
-	return func(c *Client) error {
-		c.RequestEditors = append(c.RequestEditors, fn)
-		return nil
-	}
+func (c *Client) Config() *common.ClientConfig {
+	return &c.ClientConfig
 }
 
 // The interface specification for the client above.
 type ClientInterface interface {
 	// GetAgentInstallerInfo request
-	GetAgentInstallerInfo(ctx context.Context, platform string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetAgentInstallerInfo(ctx context.Context, platform string, reqEditors ...common.RequestEditorFn) (*http.Response, error)
 
 	// LoginWithBody request with any body
-	LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*http.Response, error)
 
-	Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...common.RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) GetAgentInstallerInfo(ctx context.Context, platform string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) GetAgentInstallerInfo(ctx context.Context, platform string, reqEditors ...common.RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAgentInstallerInfoRequest(c.Server, platform)
 	if err != nil {
 		return nil, err
 	}
 	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+	if err := c.ApplyEditors(ctx, req, reqEditors); err != nil {
 		return nil, err
 	}
 	return c.Client.Do(req)
 }
 
-func (c *Client) LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*http.Response, error) {
 	req, err := NewLoginRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
 	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+	if err := c.ApplyEditors(ctx, req, reqEditors); err != nil {
 		return nil, err
 	}
 	return c.Client.Do(req)
 }
 
-func (c *Client) Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...common.RequestEditorFn) (*http.Response, error) {
 	req, err := NewLoginRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
 	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+	if err := c.ApplyEditors(ctx, req, reqEditors); err != nil {
 		return nil, err
 	}
 	return c.Client.Do(req)
@@ -332,26 +297,17 @@ func NewLoginRequestWithBody(server string, contentType string, body io.Reader) 
 	return req, nil
 }
 
-func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
-	for _, r := range c.RequestEditors {
-		if err := r(ctx, req); err != nil {
-			return err
-		}
-	}
-	for _, r := range additionalEditors {
-		if err := r(ctx, req); err != nil {
-			return err
-		}
-	}
-	return nil
-} // ClientWithResponses builds on ClientInterface to offer response payloads
+// </editor-fold> //////////////////////////////////////////////////////////////
+// <editor-fold desc="client-with-responses" defaultstate="collapsed"> /////////
+
+// ClientWithResponses builds on ClientInterface to offer response payloads
 type ClientWithResponses struct {
 	ClientInterface
 }
 
 // NewClientWithResponses creates a new ClientWithResponses, which wraps
 // Client with return type handling
-func NewClientWithResponses(server string, opts ...ClientOption) (*ClientWithResponses, error) {
+func NewClientWithResponses(server string, opts ...common.ClientOption) (*ClientWithResponses, error) {
 	client, err := NewClient(server, opts...)
 	if err != nil {
 		return nil, err
@@ -359,27 +315,15 @@ func NewClientWithResponses(server string, opts ...ClientOption) (*ClientWithRes
 	return &ClientWithResponses{client}, nil
 }
 
-// WithBaseURL overrides the baseURL.
-func WithBaseURL(baseURL string) ClientOption {
-	return func(c *Client) error {
-		newBaseURL, err := url.Parse(baseURL)
-		if err != nil {
-			return err
-		}
-		c.Server = newBaseURL.String()
-		return nil
-	}
-}
-
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
 	// GetAgentInstallerInfoWithResponse request
-	GetAgentInstallerInfoWithResponse(ctx context.Context, platform string, reqEditors ...RequestEditorFn) (*GetAgentInstallerInfoResponse, error)
+	GetAgentInstallerInfoWithResponse(ctx context.Context, platform string, reqEditors ...common.RequestEditorFn) (*GetAgentInstallerInfoResponse, error)
 
 	// LoginWithBodyWithResponse request with any body
-	LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginResponse, error)
+	LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*LoginResponse, error)
 
-	LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginResponse, error)
+	LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...common.RequestEditorFn) (*LoginResponse, error)
 }
 
 type GetAgentInstallerInfoResponse struct {
@@ -404,6 +348,16 @@ func (r GetAgentInstallerInfoResponse) StatusCode() int {
 	return 0
 }
 
+// HttpResponse returns HTTPResponse
+func (r GetAgentInstallerInfoResponse) HttpResponse() *http.Response {
+	return r.HTTPResponse
+}
+
+// StatusCode returns HTTPResponse.Body
+func (r GetAgentInstallerInfoResponse) BodyData() []byte {
+	return r.Body
+}
+
 type LoginResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -426,8 +380,18 @@ func (r LoginResponse) StatusCode() int {
 	return 0
 }
 
+// HttpResponse returns HTTPResponse
+func (r LoginResponse) HttpResponse() *http.Response {
+	return r.HTTPResponse
+}
+
+// StatusCode returns HTTPResponse.Body
+func (r LoginResponse) BodyData() []byte {
+	return r.Body
+}
+
 // GetAgentInstallerInfoWithResponse request returning *GetAgentInstallerInfoResponse
-func (c *ClientWithResponses) GetAgentInstallerInfoWithResponse(ctx context.Context, platform string, reqEditors ...RequestEditorFn) (*GetAgentInstallerInfoResponse, error) {
+func (c *ClientWithResponses) GetAgentInstallerInfoWithResponse(ctx context.Context, platform string, reqEditors ...common.RequestEditorFn) (*GetAgentInstallerInfoResponse, error) {
 	rsp, err := c.GetAgentInstallerInfo(ctx, platform, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -436,7 +400,7 @@ func (c *ClientWithResponses) GetAgentInstallerInfoWithResponse(ctx context.Cont
 }
 
 // LoginWithBodyWithResponse request with arbitrary body returning *LoginResponse
-func (c *ClientWithResponses) LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginResponse, error) {
+func (c *ClientWithResponses) LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*LoginResponse, error) {
 	rsp, err := c.LoginWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -444,7 +408,7 @@ func (c *ClientWithResponses) LoginWithBodyWithResponse(ctx context.Context, con
 	return ParseLoginResponse(rsp)
 }
 
-func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginResponse, error) {
+func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...common.RequestEditorFn) (*LoginResponse, error) {
 	rsp, err := c.Login(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -503,3 +467,5 @@ func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
 
 	return response, nil
 }
+
+// </editor-fold> //////////////////////////////////////////////////////////////

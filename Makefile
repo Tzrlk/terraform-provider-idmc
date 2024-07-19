@@ -71,6 +71,13 @@ codegen: $(patsubst %/openapi.yml,%/client.gen.go,${API_SRC_FILES})
 			-config $(word 2,${^}) \
 			${<}
 
+
+# Set up a dependency on the template files.
+%/codegen.yml: VPATH = internal/idmc
+%/codegen.yml: \
+		$(wildcard internal/idmc/templates/*.go.tmpl)
+	touch ${@}
+
 ################################################################################
 #: Format module sources.
 format: \

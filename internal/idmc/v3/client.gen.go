@@ -13,8 +13,17 @@ import (
 	"net/url"
 	"strings"
 
+	common "terraform-provider-idmc/internal/idmc/common"
+
 	"github.com/oapi-codegen/runtime"
 )
+
+// <editor-fold desc="constants" defaultstate="collapsed"> /////////////////////
+
+// </editor-fold> //////////////////////////////////////////////////////////////
+// <editor-fold desc="constants" defaultstate="collapsed"> /////////////////////
+
+// </editor-fold> //////////////////////////////////////////////////////////////
 
 // ApiErrorBody When the REST API encounters an error, it returns a REST API error object.
 type ApiErrorBody struct {
@@ -267,6 +276,8 @@ type N400 = ApiErrorBody
 // RolePrivileges defines model for rolePrivileges.
 type RolePrivileges = WithPrivilegeRefs
 
+// <editor-fold desc="param-types" defaultstate="collapsed"> ///////////////////
+
 // GetRolesParams defines parameters for GetRoles.
 type GetRolesParams struct {
 	// Q Query filter. You can filter using one of the following fields:
@@ -294,6 +305,10 @@ type RemoveRolePrivilegesParams struct {
 	INFASESSIONID HeaderSession `json:"INFA-SESSION-ID"`
 }
 
+// </editor-fold> //////////////////////////////////////////////////////////////
+
+// <editor-fold desc="request-bodies" defaultstate="collapsed"> ////////////////
+
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequestBody
 
@@ -306,221 +321,171 @@ type AddRolePrivilegesJSONRequestBody = WithPrivilegeRefs
 // RemoveRolePrivilegesJSONRequestBody defines body for RemoveRolePrivileges for application/json ContentType.
 type RemoveRolePrivilegesJSONRequestBody = WithPrivilegeRefs
 
-// RequestEditorFn  is the function signature for the RequestEditor callback function
-type RequestEditorFn func(ctx context.Context, req *http.Request) error
+// </editor-fold> //////////////////////////////////////////////////////////////
 
-// Doer performs HTTP requests.
-//
-// The standard http.Client implements this interface.
-type HttpRequestDoer interface {
-	Do(req *http.Request) (*http.Response, error)
-}
+// <editor-fold desc="client" defaultstate="collapsed"> ////////////////////////
 
 // Client which conforms to the OpenAPI3 specification for this service.
 type Client struct {
-	// The endpoint of the server conforming to this interface, with scheme,
-	// https://api.deepmap.com for example. This can contain a path relative
-	// to the server, such as https://api.deepmap.com/dev-test, and all the
-	// paths in the swagger spec will be appended to the server.
-	Server string
-
-	// Doer for performing requests, typically a *http.Client with any
-	// customized settings, such as certificate chains.
-	Client HttpRequestDoer
-
-	// A list of callbacks for modifying requests which are generated before sending over
-	// the network.
-	RequestEditors []RequestEditorFn
+	common.ClientConfig
 }
-
-// ClientOption allows setting custom parameters during construction
-type ClientOption func(*Client) error
 
 // Creates a new Client, with reasonable defaults
-func NewClient(server string, opts ...ClientOption) (*Client, error) {
-	// create a client with sane default values
-	client := Client{
-		Server: server,
-	}
-	// mutate client and add all optional params
-	for _, o := range opts {
-		if err := o(&client); err != nil {
-			return nil, err
-		}
-	}
-	// ensure the server URL always has a trailing slash
-	if !strings.HasSuffix(client.Server, "/") {
-		client.Server += "/"
-	}
-	// create httpClient, if not already present
-	if client.Client == nil {
-		client.Client = &http.Client{}
-	}
-	return &client, nil
+func NewClient(server string, opts ...common.ClientOption) (*Client, error) {
+	config, err := common.NewClientConfig(server, opts...)
+	return &Client{*config}, err
 }
 
-// WithHTTPClient allows overriding the default Doer, which is
-// automatically created using http.Client. This is useful for tests.
-func WithHTTPClient(doer HttpRequestDoer) ClientOption {
-	return func(c *Client) error {
-		c.Client = doer
-		return nil
-	}
-}
+var _ common.Client = &Client{}
 
-// WithRequestEditorFn allows setting up a callback function, which will be
-// called right before sending the request. This can be used to mutate the request.
-func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
-	return func(c *Client) error {
-		c.RequestEditors = append(c.RequestEditors, fn)
-		return nil
-	}
+func (c *Client) Config() *common.ClientConfig {
+	return &c.ClientConfig
 }
 
 // The interface specification for the client above.
 type ClientInterface interface {
 	// LoginWithBody request with any body
-	LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*http.Response, error)
 
-	Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...common.RequestEditorFn) (*http.Response, error)
 
 	// GetRoles request
-	GetRoles(ctx context.Context, params *GetRolesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetRoles(ctx context.Context, params *GetRolesParams, reqEditors ...common.RequestEditorFn) (*http.Response, error)
 
 	// CreateRoleWithBody request with any body
-	CreateRoleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	CreateRoleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*http.Response, error)
 
-	CreateRole(ctx context.Context, body CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	CreateRole(ctx context.Context, body CreateRoleJSONRequestBody, reqEditors ...common.RequestEditorFn) (*http.Response, error)
 
 	// DeleteRole request
-	DeleteRole(ctx context.Context, roleRef PathRole, params *DeleteRoleParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteRole(ctx context.Context, roleRef PathRole, params *DeleteRoleParams, reqEditors ...common.RequestEditorFn) (*http.Response, error)
 
 	// AddRolePrivilegesWithBody request with any body
-	AddRolePrivilegesWithBody(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	AddRolePrivilegesWithBody(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*http.Response, error)
 
-	AddRolePrivileges(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, body AddRolePrivilegesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	AddRolePrivileges(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, body AddRolePrivilegesJSONRequestBody, reqEditors ...common.RequestEditorFn) (*http.Response, error)
 
 	// RemoveRolePrivilegesWithBody request with any body
-	RemoveRolePrivilegesWithBody(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	RemoveRolePrivilegesWithBody(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*http.Response, error)
 
-	RemoveRolePrivileges(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	RemoveRolePrivileges(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody, reqEditors ...common.RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*http.Response, error) {
 	req, err := NewLoginRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
 	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+	if err := c.ApplyEditors(ctx, req, reqEditors); err != nil {
 		return nil, err
 	}
 	return c.Client.Do(req)
 }
 
-func (c *Client) Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...common.RequestEditorFn) (*http.Response, error) {
 	req, err := NewLoginRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
 	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+	if err := c.ApplyEditors(ctx, req, reqEditors); err != nil {
 		return nil, err
 	}
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetRoles(ctx context.Context, params *GetRolesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) GetRoles(ctx context.Context, params *GetRolesParams, reqEditors ...common.RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetRolesRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
 	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+	if err := c.ApplyEditors(ctx, req, reqEditors); err != nil {
 		return nil, err
 	}
 	return c.Client.Do(req)
 }
 
-func (c *Client) CreateRoleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) CreateRoleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*http.Response, error) {
 	req, err := NewCreateRoleRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
 	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+	if err := c.ApplyEditors(ctx, req, reqEditors); err != nil {
 		return nil, err
 	}
 	return c.Client.Do(req)
 }
 
-func (c *Client) CreateRole(ctx context.Context, body CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) CreateRole(ctx context.Context, body CreateRoleJSONRequestBody, reqEditors ...common.RequestEditorFn) (*http.Response, error) {
 	req, err := NewCreateRoleRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
 	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+	if err := c.ApplyEditors(ctx, req, reqEditors); err != nil {
 		return nil, err
 	}
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteRole(ctx context.Context, roleRef PathRole, params *DeleteRoleParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) DeleteRole(ctx context.Context, roleRef PathRole, params *DeleteRoleParams, reqEditors ...common.RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteRoleRequest(c.Server, roleRef, params)
 	if err != nil {
 		return nil, err
 	}
 	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+	if err := c.ApplyEditors(ctx, req, reqEditors); err != nil {
 		return nil, err
 	}
 	return c.Client.Do(req)
 }
 
-func (c *Client) AddRolePrivilegesWithBody(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) AddRolePrivilegesWithBody(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*http.Response, error) {
 	req, err := NewAddRolePrivilegesRequestWithBody(c.Server, roleRef, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
 	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+	if err := c.ApplyEditors(ctx, req, reqEditors); err != nil {
 		return nil, err
 	}
 	return c.Client.Do(req)
 }
 
-func (c *Client) AddRolePrivileges(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, body AddRolePrivilegesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) AddRolePrivileges(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, body AddRolePrivilegesJSONRequestBody, reqEditors ...common.RequestEditorFn) (*http.Response, error) {
 	req, err := NewAddRolePrivilegesRequest(c.Server, roleRef, params, body)
 	if err != nil {
 		return nil, err
 	}
 	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+	if err := c.ApplyEditors(ctx, req, reqEditors); err != nil {
 		return nil, err
 	}
 	return c.Client.Do(req)
 }
 
-func (c *Client) RemoveRolePrivilegesWithBody(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) RemoveRolePrivilegesWithBody(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*http.Response, error) {
 	req, err := NewRemoveRolePrivilegesRequestWithBody(c.Server, roleRef, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
 	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+	if err := c.ApplyEditors(ctx, req, reqEditors); err != nil {
 		return nil, err
 	}
 	return c.Client.Do(req)
 }
 
-func (c *Client) RemoveRolePrivileges(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) RemoveRolePrivileges(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody, reqEditors ...common.RequestEditorFn) (*http.Response, error) {
 	req, err := NewRemoveRolePrivilegesRequest(c.Server, roleRef, params, body)
 	if err != nil {
 		return nil, err
 	}
 	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+	if err := c.ApplyEditors(ctx, req, reqEditors); err != nil {
 		return nil, err
 	}
 	return c.Client.Do(req)
@@ -851,26 +816,17 @@ func NewRemoveRolePrivilegesRequestWithBody(server string, roleRef PathRole, par
 	return req, nil
 }
 
-func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
-	for _, r := range c.RequestEditors {
-		if err := r(ctx, req); err != nil {
-			return err
-		}
-	}
-	for _, r := range additionalEditors {
-		if err := r(ctx, req); err != nil {
-			return err
-		}
-	}
-	return nil
-} // ClientWithResponses builds on ClientInterface to offer response payloads
+// </editor-fold> //////////////////////////////////////////////////////////////
+// <editor-fold desc="client-with-responses" defaultstate="collapsed"> /////////
+
+// ClientWithResponses builds on ClientInterface to offer response payloads
 type ClientWithResponses struct {
 	ClientInterface
 }
 
 // NewClientWithResponses creates a new ClientWithResponses, which wraps
 // Client with return type handling
-func NewClientWithResponses(server string, opts ...ClientOption) (*ClientWithResponses, error) {
+func NewClientWithResponses(server string, opts ...common.ClientOption) (*ClientWithResponses, error) {
 	client, err := NewClient(server, opts...)
 	if err != nil {
 		return nil, err
@@ -878,45 +834,33 @@ func NewClientWithResponses(server string, opts ...ClientOption) (*ClientWithRes
 	return &ClientWithResponses{client}, nil
 }
 
-// WithBaseURL overrides the baseURL.
-func WithBaseURL(baseURL string) ClientOption {
-	return func(c *Client) error {
-		newBaseURL, err := url.Parse(baseURL)
-		if err != nil {
-			return err
-		}
-		c.Server = newBaseURL.String()
-		return nil
-	}
-}
-
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
 	// LoginWithBodyWithResponse request with any body
-	LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginResponse, error)
+	LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*LoginResponse, error)
 
-	LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginResponse, error)
+	LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...common.RequestEditorFn) (*LoginResponse, error)
 
 	// GetRolesWithResponse request
-	GetRolesWithResponse(ctx context.Context, params *GetRolesParams, reqEditors ...RequestEditorFn) (*GetRolesResponse, error)
+	GetRolesWithResponse(ctx context.Context, params *GetRolesParams, reqEditors ...common.RequestEditorFn) (*GetRolesResponse, error)
 
 	// CreateRoleWithBodyWithResponse request with any body
-	CreateRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateRoleResponse, error)
+	CreateRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*CreateRoleResponse, error)
 
-	CreateRoleWithResponse(ctx context.Context, body CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateRoleResponse, error)
+	CreateRoleWithResponse(ctx context.Context, body CreateRoleJSONRequestBody, reqEditors ...common.RequestEditorFn) (*CreateRoleResponse, error)
 
 	// DeleteRoleWithResponse request
-	DeleteRoleWithResponse(ctx context.Context, roleRef PathRole, params *DeleteRoleParams, reqEditors ...RequestEditorFn) (*DeleteRoleResponse, error)
+	DeleteRoleWithResponse(ctx context.Context, roleRef PathRole, params *DeleteRoleParams, reqEditors ...common.RequestEditorFn) (*DeleteRoleResponse, error)
 
 	// AddRolePrivilegesWithBodyWithResponse request with any body
-	AddRolePrivilegesWithBodyWithResponse(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AddRolePrivilegesResponse, error)
+	AddRolePrivilegesWithBodyWithResponse(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*AddRolePrivilegesResponse, error)
 
-	AddRolePrivilegesWithResponse(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, body AddRolePrivilegesJSONRequestBody, reqEditors ...RequestEditorFn) (*AddRolePrivilegesResponse, error)
+	AddRolePrivilegesWithResponse(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, body AddRolePrivilegesJSONRequestBody, reqEditors ...common.RequestEditorFn) (*AddRolePrivilegesResponse, error)
 
 	// RemoveRolePrivilegesWithBodyWithResponse request with any body
-	RemoveRolePrivilegesWithBodyWithResponse(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RemoveRolePrivilegesResponse, error)
+	RemoveRolePrivilegesWithBodyWithResponse(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*RemoveRolePrivilegesResponse, error)
 
-	RemoveRolePrivilegesWithResponse(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody, reqEditors ...RequestEditorFn) (*RemoveRolePrivilegesResponse, error)
+	RemoveRolePrivilegesWithResponse(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody, reqEditors ...common.RequestEditorFn) (*RemoveRolePrivilegesResponse, error)
 }
 
 type LoginResponse struct {
@@ -939,6 +883,16 @@ func (r LoginResponse) StatusCode() int {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
+}
+
+// HttpResponse returns HTTPResponse
+func (r LoginResponse) HttpResponse() *http.Response {
+	return r.HTTPResponse
+}
+
+// StatusCode returns HTTPResponse.Body
+func (r LoginResponse) BodyData() []byte {
+	return r.Body
 }
 
 type GetRolesResponse struct {
@@ -964,6 +918,16 @@ func (r GetRolesResponse) StatusCode() int {
 	return 0
 }
 
+// HttpResponse returns HTTPResponse
+func (r GetRolesResponse) HttpResponse() *http.Response {
+	return r.HTTPResponse
+}
+
+// StatusCode returns HTTPResponse.Body
+func (r GetRolesResponse) BodyData() []byte {
+	return r.Body
+}
+
 type CreateRoleResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -984,6 +948,16 @@ func (r CreateRoleResponse) StatusCode() int {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
+}
+
+// HttpResponse returns HTTPResponse
+func (r CreateRoleResponse) HttpResponse() *http.Response {
+	return r.HTTPResponse
+}
+
+// StatusCode returns HTTPResponse.Body
+func (r CreateRoleResponse) BodyData() []byte {
+	return r.Body
 }
 
 type DeleteRoleResponse struct {
@@ -1007,6 +981,16 @@ func (r DeleteRoleResponse) StatusCode() int {
 	return 0
 }
 
+// HttpResponse returns HTTPResponse
+func (r DeleteRoleResponse) HttpResponse() *http.Response {
+	return r.HTTPResponse
+}
+
+// StatusCode returns HTTPResponse.Body
+func (r DeleteRoleResponse) BodyData() []byte {
+	return r.Body
+}
+
 type AddRolePrivilegesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -1026,6 +1010,16 @@ func (r AddRolePrivilegesResponse) StatusCode() int {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
+}
+
+// HttpResponse returns HTTPResponse
+func (r AddRolePrivilegesResponse) HttpResponse() *http.Response {
+	return r.HTTPResponse
+}
+
+// StatusCode returns HTTPResponse.Body
+func (r AddRolePrivilegesResponse) BodyData() []byte {
+	return r.Body
 }
 
 type RemoveRolePrivilegesResponse struct {
@@ -1049,8 +1043,18 @@ func (r RemoveRolePrivilegesResponse) StatusCode() int {
 	return 0
 }
 
+// HttpResponse returns HTTPResponse
+func (r RemoveRolePrivilegesResponse) HttpResponse() *http.Response {
+	return r.HTTPResponse
+}
+
+// StatusCode returns HTTPResponse.Body
+func (r RemoveRolePrivilegesResponse) BodyData() []byte {
+	return r.Body
+}
+
 // LoginWithBodyWithResponse request with arbitrary body returning *LoginResponse
-func (c *ClientWithResponses) LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginResponse, error) {
+func (c *ClientWithResponses) LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*LoginResponse, error) {
 	rsp, err := c.LoginWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -1058,7 +1062,7 @@ func (c *ClientWithResponses) LoginWithBodyWithResponse(ctx context.Context, con
 	return ParseLoginResponse(rsp)
 }
 
-func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginResponse, error) {
+func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...common.RequestEditorFn) (*LoginResponse, error) {
 	rsp, err := c.Login(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -1067,7 +1071,7 @@ func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJ
 }
 
 // GetRolesWithResponse request returning *GetRolesResponse
-func (c *ClientWithResponses) GetRolesWithResponse(ctx context.Context, params *GetRolesParams, reqEditors ...RequestEditorFn) (*GetRolesResponse, error) {
+func (c *ClientWithResponses) GetRolesWithResponse(ctx context.Context, params *GetRolesParams, reqEditors ...common.RequestEditorFn) (*GetRolesResponse, error) {
 	rsp, err := c.GetRoles(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -1076,7 +1080,7 @@ func (c *ClientWithResponses) GetRolesWithResponse(ctx context.Context, params *
 }
 
 // CreateRoleWithBodyWithResponse request with arbitrary body returning *CreateRoleResponse
-func (c *ClientWithResponses) CreateRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateRoleResponse, error) {
+func (c *ClientWithResponses) CreateRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*CreateRoleResponse, error) {
 	rsp, err := c.CreateRoleWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -1084,7 +1088,7 @@ func (c *ClientWithResponses) CreateRoleWithBodyWithResponse(ctx context.Context
 	return ParseCreateRoleResponse(rsp)
 }
 
-func (c *ClientWithResponses) CreateRoleWithResponse(ctx context.Context, body CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateRoleResponse, error) {
+func (c *ClientWithResponses) CreateRoleWithResponse(ctx context.Context, body CreateRoleJSONRequestBody, reqEditors ...common.RequestEditorFn) (*CreateRoleResponse, error) {
 	rsp, err := c.CreateRole(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -1093,7 +1097,7 @@ func (c *ClientWithResponses) CreateRoleWithResponse(ctx context.Context, body C
 }
 
 // DeleteRoleWithResponse request returning *DeleteRoleResponse
-func (c *ClientWithResponses) DeleteRoleWithResponse(ctx context.Context, roleRef PathRole, params *DeleteRoleParams, reqEditors ...RequestEditorFn) (*DeleteRoleResponse, error) {
+func (c *ClientWithResponses) DeleteRoleWithResponse(ctx context.Context, roleRef PathRole, params *DeleteRoleParams, reqEditors ...common.RequestEditorFn) (*DeleteRoleResponse, error) {
 	rsp, err := c.DeleteRole(ctx, roleRef, params, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -1102,7 +1106,7 @@ func (c *ClientWithResponses) DeleteRoleWithResponse(ctx context.Context, roleRe
 }
 
 // AddRolePrivilegesWithBodyWithResponse request with arbitrary body returning *AddRolePrivilegesResponse
-func (c *ClientWithResponses) AddRolePrivilegesWithBodyWithResponse(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AddRolePrivilegesResponse, error) {
+func (c *ClientWithResponses) AddRolePrivilegesWithBodyWithResponse(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*AddRolePrivilegesResponse, error) {
 	rsp, err := c.AddRolePrivilegesWithBody(ctx, roleRef, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -1110,7 +1114,7 @@ func (c *ClientWithResponses) AddRolePrivilegesWithBodyWithResponse(ctx context.
 	return ParseAddRolePrivilegesResponse(rsp)
 }
 
-func (c *ClientWithResponses) AddRolePrivilegesWithResponse(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, body AddRolePrivilegesJSONRequestBody, reqEditors ...RequestEditorFn) (*AddRolePrivilegesResponse, error) {
+func (c *ClientWithResponses) AddRolePrivilegesWithResponse(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, body AddRolePrivilegesJSONRequestBody, reqEditors ...common.RequestEditorFn) (*AddRolePrivilegesResponse, error) {
 	rsp, err := c.AddRolePrivileges(ctx, roleRef, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -1119,7 +1123,7 @@ func (c *ClientWithResponses) AddRolePrivilegesWithResponse(ctx context.Context,
 }
 
 // RemoveRolePrivilegesWithBodyWithResponse request with arbitrary body returning *RemoveRolePrivilegesResponse
-func (c *ClientWithResponses) RemoveRolePrivilegesWithBodyWithResponse(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RemoveRolePrivilegesResponse, error) {
+func (c *ClientWithResponses) RemoveRolePrivilegesWithBodyWithResponse(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*RemoveRolePrivilegesResponse, error) {
 	rsp, err := c.RemoveRolePrivilegesWithBody(ctx, roleRef, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -1127,7 +1131,7 @@ func (c *ClientWithResponses) RemoveRolePrivilegesWithBodyWithResponse(ctx conte
 	return ParseRemoveRolePrivilegesResponse(rsp)
 }
 
-func (c *ClientWithResponses) RemoveRolePrivilegesWithResponse(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody, reqEditors ...RequestEditorFn) (*RemoveRolePrivilegesResponse, error) {
+func (c *ClientWithResponses) RemoveRolePrivilegesWithResponse(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody, reqEditors ...common.RequestEditorFn) (*RemoveRolePrivilegesResponse, error) {
 	rsp, err := c.RemoveRolePrivileges(ctx, roleRef, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -1267,3 +1271,5 @@ func ParseRemoveRolePrivilegesResponse(rsp *http.Response) (*RemoveRolePrivilege
 
 	return response, nil
 }
+
+// </editor-fold> //////////////////////////////////////////////////////////////

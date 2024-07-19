@@ -1,3 +1,5 @@
+// <editor-fold desc="request-bodies" defaultstate="collapsed"> ////////////////
+
 {{range .}}{{$opid := .OperationId}}
 {{range .Bodies}}
 {{if .IsSupported -}}
@@ -9,3 +11,5 @@ type {{.TypeName}} {{if .IsAlias}}={{end}} {{.Schema.TypeDecl}}
 {{end}}
 {{end}}
 {{end}}
+
+// </editor-fold> //////////////////////////////////////////////////////////////

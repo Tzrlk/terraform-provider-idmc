@@ -3,11 +3,15 @@ package common
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
+
+// ResponseEditorFn  is the function signature for the RequestEditor callback function
+type ResponseEditorFn func(ctx context.Context, req *http.Response) error
 
 // HttpRequestDoer performs HTTP requests.
 //
@@ -16,8 +20,15 @@ type HttpRequestDoer interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-// Client which conforms to the OpenAPI3 specification for this service.
-type Client struct {
+type ApiResponse interface {
+	Status() string
+	StatusCode() int
+	HttpResponse() *http.Response
+	BodyData() []byte
+}
+
+type ClientConfig struct {
+
 	// The endpoint of the server conforming to this interface, with scheme,
 	// https://api.deepmap.com for example. This can contain a path relative
 	// to the server, such as https://api.deepmap.com/dev-test, and all the
@@ -33,37 +44,46 @@ type Client struct {
 	RequestEditors []RequestEditorFn
 }
 
-// ClientOption allows setting custom parameters during construction
-type ClientOption func(*Client) error
+// Client provides access to client configuration.
+type Client interface {
+	Config() *ClientConfig
+}
 
-// NewClient Creates a new Client, with reasonable defaults
-func NewClient(server string, opts ...ClientOption) (*Client, error) {
-	// create a client with sane default values
-	client := Client{
-		Server: server,
+// ClientOption allows setting custom parameters during construction
+type ClientOption func(*ClientConfig) error
+
+// NewClientConfig sets up a new ClientConfig with reasonable defaults
+func NewClientConfig(server string, opts ...ClientOption) (*ClientConfig, error) {
+	config := ClientConfig{
+		Server:         server,
+		RequestEditors: make([]RequestEditorFn, 0),
 	}
+
 	// mutate client and add all optional params
-	for _, o := range opts {
-		if err := o(&client); err != nil {
+	for _, opt := range opts {
+		if err := opt(&config); err != nil {
 			return nil, err
 		}
 	}
+
 	// ensure the server URL always has a trailing slash
-	if !strings.HasSuffix(client.Server, "/") {
-		client.Server += "/"
+	if !strings.HasSuffix(config.Server, "/") {
+		config.Server += "/"
 	}
+
 	// create httpClient, if not already present
-	if client.Client == nil {
-		client.Client = &http.Client{}
+	if config.Client == nil {
+		config.Client = &http.Client{}
 	}
-	return &client, nil
+
+	return &config, nil
 }
 
 // WithHTTPClient allows overriding the default Doer, which is
 // automatically created using http.Client. This is useful for tests.
 func WithHTTPClient(doer HttpRequestDoer) ClientOption {
-	return func(c *Client) error {
-		c.Client = doer
+	return func(config *ClientConfig) error {
+		config.Client = doer
 		return nil
 	}
 }
@@ -71,8 +91,33 @@ func WithHTTPClient(doer HttpRequestDoer) ClientOption {
 // WithRequestEditorFn allows setting up a callback function, which will be
 // called right before sending the request. This can be used to mutate the request.
 func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
-	return func(c *Client) error {
-		c.RequestEditors = append(c.RequestEditors, fn)
+	return func(config *ClientConfig) error {
+		config.RequestEditors = append(config.RequestEditors, fn)
 		return nil
 	}
+}
+
+// WithBaseURL overrides the baseURL.
+func WithBaseURL(baseURL string) ClientOption {
+	return func(config *ClientConfig) error {
+		newBaseURL, err := url.Parse(baseURL)
+		if err == nil {
+			config.Server = newBaseURL.String()
+		}
+		return err
+	}
+}
+
+func (c *ClientConfig) ApplyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
+	for _, r := range c.RequestEditors {
+		if err := r(ctx, req); err != nil {
+			return err
+		}
+	}
+	for _, r := range additionalEditors {
+		if err := r(ctx, req); err != nil {
+			return err
+		}
+	}
+	return nil
 }

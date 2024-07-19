@@ -169,8 +169,8 @@ func doLogin(ctx context.Context, authHost string, authUser string, authPass str
 	// First set up a client configured for api login.
 	loginServerUrl := fmt.Sprintf("https://%s/saas", authHost)
 	loginClient, loginClientError := v3.NewClientWithResponses(loginServerUrl,
-		v3.WithHTTPClient(httpClient),
-		v3.WithRequestEditorFn(func(httpCtx context.Context, req *http.Request) error {
+		common.WithHTTPClient(httpClient),
+		common.WithRequestEditorFn(func(httpCtx context.Context, req *http.Request) error {
 			req.Header["Accept"] = []string{"application/json"}
 			return utils.LogHttpRequest(ctx, req)
 		}),
