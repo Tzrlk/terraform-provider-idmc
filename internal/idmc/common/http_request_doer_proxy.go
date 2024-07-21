@@ -6,6 +6,7 @@ import (
 )
 
 var _ HttpRequestDoer = &HttpRequestDoerProxy{}
+
 //var _ v2.HttpRequestDoer = &HttpRequestDoerProxy{}
 //var _ v3.HttpRequestDoer = &HttpRequestDoerProxy{}
 
@@ -49,4 +50,3 @@ func (h HttpRequestDoerProxy) Do(req *http.Request) (*http.Response, error) {
 	return resp, nil
 
 }
-

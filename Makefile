@@ -1,3 +1,4 @@
+SHELL = /bin/sh
 
 # Settings
 .DEFAULT: help
@@ -71,7 +72,6 @@ codegen: $(patsubst %/openapi.yml,%/client.gen.go,${API_SRC_FILES})
 			-config $(word 2,${^}) \
 			${<}
 
-
 # Set up a dependency on the template files.
 %/codegen.yml: VPATH = internal/idmc
 %/codegen.yml: \
@@ -99,9 +99,19 @@ format: \
 
 ################################################################################
 #: Lint project
-lint:
-	${CMD_GOLANGCI_LINT} run
+lint: .build/checkstyle.xml
 .PHONY: lint
+
+.build/checkstyle.xml: \
+		.golangci.yml \
+		${GO_SRC_FILES} \
+		${GO_TEST_FILES}
+	${CMD_GOLANGCI_LINT} run \
+		--config ${<} \
+		--issues-exit-code 2 \
+		--allow-parallel-runners \
+		--out-format checkstyle \
+	| tee ${@}
 
 ################################################################################
 #: Tidy module dependencies

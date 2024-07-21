@@ -14,25 +14,25 @@ https://docs.informatica.com/integration-cloud/data-integration/current-version/
 
 ```terraform
 # Full role list
-data "idmc_rbac_roles" "full" {
+data "idmc_roles" "full" {
 }
 
 # Full role list with expanded privileges
-data "idmc_rbac_roles" "full_expanded" {
+data "idmc_roles" "full_expanded" {
   filter {
     expand_privileges = true
   }
 }
 
 # Specific role by id
-data "idmc_rbac_roles" "role_id" {
+data "idmc_roles" "role_id" {
   filter {
     role_id = var.role_id
   }
 }
 
 # Specific role by id with expanded privileges
-data "idmc_rbac_roles" "role_id_expanded" {
+data "idmc_roles" "role_id_expanded" {
   filter {
     role_id           = var.role_id
     expand_privileges = true
@@ -40,14 +40,14 @@ data "idmc_rbac_roles" "role_id_expanded" {
 }
 
 # Specific role by name
-data "idmc_rbac_roles" "role_name" {
+data "idmc_roles" "role_name" {
   filter {
     role_name = var.role_name
   }
 }
 
 # Specific role by name with expanded privileges
-data "idmc_rbac_roles" "role_name_expanded" {
+data "idmc_roles" "role_name_expanded" {
   filter {
     role_name         = var.role_name
     expand_privileges = true
@@ -86,11 +86,11 @@ Read-Only:
 - `description` (String) Description of the role.
 - `display_description` (String) Description displayed in the user interface.
 - `display_name` (String) Role name displayed in the user interface.
+- `name` (String) Name of the role.
 - `org_id` (String) ID of the organization the role belongs to.
 - `privileges` (Attributes Map) The privileges assigned to the role. (see [below for nested schema](#nestedatt--roles--privileges))
-- `role_name` (String) Name of the role.
 - `status` (String) Whether the organization's license to use the role is valid or has expired.
-- `system_role` (String) Whether the role is a system-defined role.
+- `system_role` (Boolean) Whether the role is a system-defined role.
 - `updated_by` (String) User who last updated the role.
 - `updated_time` (String) Date and time the role was last updated.
 

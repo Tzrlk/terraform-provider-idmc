@@ -5,6 +5,7 @@ import (
 )
 
 var _ HttpRequestDoer = &HttpRequestDoerSimple{}
+
 //var _ v2.HttpRequestDoer = &HttpRequestDoerSimple{}
 //var _ v3.HttpRequestDoer = &HttpRequestDoerSimple{}
 

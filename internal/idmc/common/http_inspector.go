@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-type OnRequestHandler  = func(r *http.Request) error
+type OnRequestHandler = func(r *http.Request) error
 type OnResponseHandler = func(r *http.Response) error
 
 type HttpInspector struct {
@@ -32,5 +32,3 @@ func (h *HttpInspector) OnResponse(handlers ...OnResponseHandler) *HttpInspector
 	h.onResponse = append(h.onResponse, handlers...)
 	return h
 }
-
-

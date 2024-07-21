@@ -7,10 +7,10 @@ import (
 	"strings"
 )
 
-// RequestEditorFn  is the function signature for the RequestEditor callback function
+// RequestEditorFn  is the function signature for the RequestEditor callback function.
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
 
-// ResponseEditorFn  is the function signature for the RequestEditor callback function
+// ResponseEditorFn  is the function signature for the RequestEditor callback function.
 type ResponseEditorFn func(ctx context.Context, req *http.Response) error
 
 // HttpRequestDoer performs HTTP requests.
@@ -49,10 +49,10 @@ type Client interface {
 	Config() *ClientConfig
 }
 
-// ClientOption allows setting custom parameters during construction
+// ClientOption allows setting custom parameters during construction.
 type ClientOption func(*ClientConfig) error
 
-// NewClientConfig sets up a new ClientConfig with reasonable defaults
+// NewClientConfig sets up a new ClientConfig with reasonable defaults.
 func NewClientConfig(server string, opts ...ClientOption) (*ClientConfig, error) {
 	config := ClientConfig{
 		Server:         server,
