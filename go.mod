@@ -73,7 +73,7 @@ require (
 	github.com/firefart/nonamedreturns v1.0.5 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/fzipp/gocyclo v0.6.0 // indirect
-	github.com/getkin/kin-openapi v0.125.0 // indirect
+	github.com/getkin/kin-openapi v0.126.0 // indirect
 	github.com/ghostiam/protogetter v0.3.6 // indirect
 	github.com/go-critic/go-critic v0.11.4 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
