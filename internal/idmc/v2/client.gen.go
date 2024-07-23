@@ -146,11 +146,80 @@ type LoginResponseBody struct {
 	UuId *string `json:"uuId,omitempty"`
 }
 
+// RuntimeEnvironment defines model for runtimeEnvironment.
+type RuntimeEnvironment struct {
+	Agents      *[]interface{} `json:"agents,omitempty"`
+	CreateTime  *string        `json:"createTime,omitempty"`
+	CreatedBy   *string        `json:"createdBy,omitempty"`
+	Description *string        `json:"description,omitempty"`
+	FederatedId *string        `json:"federatedId,omitempty"`
+	Id          *string        `json:"id,omitempty"`
+
+	// IsShared Whether the Secure Agent group can be shared with sub-organizations.
+	IsShared         *bool                   `json:"isShared,omitempty"`
+	Name             string                  `json:"name"`
+	OrgId            *string                 `json:"orgId,omitempty"`
+	ServerlessConfig *map[string]interface{} `json:"serverlessConfig,omitempty"`
+	UpdateTime       *string                 `json:"updateTime,omitempty"`
+	UpdatedBy        *string                 `json:"updatedBy,omitempty"`
+}
+
+// RuntimeEnvironmentDataBulk defines model for runtimeEnvironmentDataBulk.
+type RuntimeEnvironmentDataBulk struct {
+	Agents           *[]interface{}          `json:"agents,omitempty"`
+	CreateTime       *string                 `json:"createTime,omitempty"`
+	CreatedBy        *string                 `json:"createdBy,omitempty"`
+	Description      *string                 `json:"description,omitempty"`
+	FederatedId      *string                 `json:"federatedId,omitempty"`
+	Id               *string                 `json:"id,omitempty"`
+	Name             *string                 `json:"name,omitempty"`
+	OrgId            *string                 `json:"orgId,omitempty"`
+	ServerlessConfig *map[string]interface{} `json:"serverlessConfig,omitempty"`
+	UpdateTime       *string                 `json:"updateTime,omitempty"`
+	UpdatedBy        *string                 `json:"updatedBy,omitempty"`
+}
+
+// RuntimeEnvironmentDataMinimal defines model for runtimeEnvironmentDataMinimal.
+type RuntimeEnvironmentDataMinimal struct {
+	// IsShared Whether the Secure Agent group can be shared with sub-organizations.
+	IsShared *bool `json:"isShared,omitempty"`
+
+	// Name Name of the Secure Agent group.
+	Name string `json:"name"`
+}
+
+// UpdateRuntimeEnvironmentRequestBody defines model for updateRuntimeEnvironmentRequestBody.
+type UpdateRuntimeEnvironmentRequestBody struct {
+	// Agents Agents assigned to the Secure Agent group.
+	Agents *[]UpdateRuntimeEnvironmentRequestBodyAgents `json:"agents,omitempty"`
+
+	// IsShared Whether the Secure Agent group can be shared with sub-organizations.
+	IsShared *bool `json:"isShared,omitempty"`
+
+	// Name Name of the Secure Agent group.
+	Name string `json:"name"`
+}
+
+// UpdateRuntimeEnvironmentRequestBodyAgents defines model for updateRuntimeEnvironmentRequestBodyAgents.
+type UpdateRuntimeEnvironmentRequestBodyAgents struct {
+	// Id Agent ID.
+	Id *string `json:"id,omitempty"`
+
+	// OrgId Organization ID.
+	OrgId *string `json:"orgId,omitempty"`
+}
+
 // <editor-fold desc="param-types" defaultstate="collapsed"> ///////////////////
 
 // </editor-fold> //////////////////////////////////////////////////////////////
 
 // <editor-fold desc="request-bodies" defaultstate="collapsed"> ////////////////
+
+// CreateRuntimeEnvironmentJSONRequestBody defines body for CreateRuntimeEnvironment for application/json ContentType.
+type CreateRuntimeEnvironmentJSONRequestBody = RuntimeEnvironmentDataMinimal
+
+// UpdateRuntimeEnvironmentJSONRequestBody defines body for UpdateRuntimeEnvironment for application/json ContentType.
+type UpdateRuntimeEnvironmentJSONRequestBody = UpdateRuntimeEnvironmentRequestBody
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequestBody
@@ -179,48 +248,91 @@ func (c *Client) Config() *common.ClientConfig {
 // The interface specification for the client above.
 type ClientInterface interface {
 	// GetAgentInstallerInfo request
-	GetAgentInstallerInfo(ctx context.Context, platform string, reqEditors ...common.RequestEditorFn) (*http.Response, error)
+	GetAgentInstallerInfo(ctx context.Context, platform string, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	// ListRuntimeEnvironments request
+	ListRuntimeEnvironments(ctx context.Context, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	// CreateRuntimeEnvironmentWithBody request with any body
+	CreateRuntimeEnvironmentWithBody(ctx context.Context, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	CreateRuntimeEnvironment(ctx context.Context, body CreateRuntimeEnvironmentJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	// DeleteRuntimeEnvironment request
+	DeleteRuntimeEnvironment(ctx context.Context, id string, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	// GetRuntimeEnvironment request
+	GetRuntimeEnvironment(ctx context.Context, id string, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	// UpdateRuntimeEnvironmentWithBody request with any body
+	UpdateRuntimeEnvironmentWithBody(ctx context.Context, id string, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	UpdateRuntimeEnvironment(ctx context.Context, id string, body UpdateRuntimeEnvironmentJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error)
 
 	// LoginWithBody request with any body
-	LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*http.Response, error)
+	LoginWithBody(ctx context.Context, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error)
 
-	Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...common.RequestEditorFn) (*http.Response, error)
+	Login(ctx context.Context, body LoginJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error)
 }
 
-func (c *Client) GetAgentInstallerInfo(ctx context.Context, platform string, reqEditors ...common.RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetAgentInstallerInfoRequest(c.Server, platform)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.ApplyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
+func (c *Client) GetAgentInstallerInfo(ctx context.Context, platform string, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+		return NewGetAgentInstallerInfoRequest(c.Server, platform)
+	})
 }
 
-func (c *Client) LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*http.Response, error) {
-	req, err := NewLoginRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.ApplyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
+func (c *Client) ListRuntimeEnvironments(ctx context.Context, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+		return NewListRuntimeEnvironmentsRequest(c.Server)
+	})
 }
 
-func (c *Client) Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...common.RequestEditorFn) (*http.Response, error) {
-	req, err := NewLoginRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.ApplyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
+func (c *Client) CreateRuntimeEnvironmentWithBody(ctx context.Context, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+		return NewCreateRuntimeEnvironmentRequestWithBody(c.Server, contentType, body)
+	})
+}
+
+func (c *Client) CreateRuntimeEnvironment(ctx context.Context, body CreateRuntimeEnvironmentJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+		return NewCreateRuntimeEnvironmentRequest(c.Server, body)
+	})
+}
+
+func (c *Client) DeleteRuntimeEnvironment(ctx context.Context, id string, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+		return NewDeleteRuntimeEnvironmentRequest(c.Server, id)
+	})
+}
+
+func (c *Client) GetRuntimeEnvironment(ctx context.Context, id string, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+		return NewGetRuntimeEnvironmentRequest(c.Server, id)
+	})
+}
+
+func (c *Client) UpdateRuntimeEnvironmentWithBody(ctx context.Context, id string, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+		return NewUpdateRuntimeEnvironmentRequestWithBody(c.Server, id, contentType, body)
+	})
+}
+
+func (c *Client) UpdateRuntimeEnvironment(ctx context.Context, id string, body UpdateRuntimeEnvironmentJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+		return NewUpdateRuntimeEnvironmentRequest(c.Server, id, body)
+	})
+}
+
+func (c *Client) LoginWithBody(ctx context.Context, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+		return NewLoginRequestWithBody(c.Server, contentType, body)
+	})
+}
+
+func (c *Client) Login(ctx context.Context, body LoginJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+		return NewLoginRequest(c.Server, body)
+	})
 }
 
 // NewGetAgentInstallerInfoRequest generates requests for GetAgentInstallerInfo
@@ -253,6 +365,188 @@ func NewGetAgentInstallerInfoRequest(server string, platform string) (*http.Requ
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewListRuntimeEnvironmentsRequest generates requests for ListRuntimeEnvironments
+func NewListRuntimeEnvironmentsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/runtimeEnvironment")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateRuntimeEnvironmentRequest calls the generic CreateRuntimeEnvironment builder with application/json body
+func NewCreateRuntimeEnvironmentRequest(server string, body CreateRuntimeEnvironmentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateRuntimeEnvironmentRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateRuntimeEnvironmentRequestWithBody generates requests for CreateRuntimeEnvironment with any type of body
+func NewCreateRuntimeEnvironmentRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/runtimeEnvironment")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteRuntimeEnvironmentRequest generates requests for DeleteRuntimeEnvironment
+func NewDeleteRuntimeEnvironmentRequest(server string, id string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/runtimeEnvironment/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetRuntimeEnvironmentRequest generates requests for GetRuntimeEnvironment
+func NewGetRuntimeEnvironmentRequest(server string, id string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/runtimeEnvironment/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateRuntimeEnvironmentRequest calls the generic UpdateRuntimeEnvironment builder with application/json body
+func NewUpdateRuntimeEnvironmentRequest(server string, id string, body UpdateRuntimeEnvironmentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateRuntimeEnvironmentRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewUpdateRuntimeEnvironmentRequestWithBody generates requests for UpdateRuntimeEnvironment with any type of body
+func NewUpdateRuntimeEnvironmentRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/runtimeEnvironment/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -300,9 +594,9 @@ func NewLoginRequestWithBody(server string, contentType string, body io.Reader) 
 // </editor-fold> //////////////////////////////////////////////////////////////
 // <editor-fold desc="client-with-responses" defaultstate="collapsed"> /////////
 
-// ClientWithResponses builds on ClientInterface to offer response payloads
+// ClientWithResponses builds on Client to offer response payloads
 type ClientWithResponses struct {
-	ClientInterface
+	*Client
 }
 
 // NewClientWithResponses creates a new ClientWithResponses, which wraps
@@ -318,12 +612,31 @@ func NewClientWithResponses(server string, opts ...common.ClientOption) (*Client
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
 	// GetAgentInstallerInfoWithResponse request
-	GetAgentInstallerInfoWithResponse(ctx context.Context, platform string, reqEditors ...common.RequestEditorFn) (*GetAgentInstallerInfoResponse, error)
+	GetAgentInstallerInfoWithResponse(ctx context.Context, platform string, editors ...common.ClientConfigEditor) (*GetAgentInstallerInfoResponse, error)
+
+	// ListRuntimeEnvironmentsWithResponse request
+	ListRuntimeEnvironmentsWithResponse(ctx context.Context, editors ...common.ClientConfigEditor) (*ListRuntimeEnvironmentsResponse, error)
+
+	// CreateRuntimeEnvironmentWithBodyWithResponse request with any body
+	CreateRuntimeEnvironmentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*CreateRuntimeEnvironmentResponse, error)
+
+	CreateRuntimeEnvironmentWithResponse(ctx context.Context, body CreateRuntimeEnvironmentJSONRequestBody, editors ...common.ClientConfigEditor) (*CreateRuntimeEnvironmentResponse, error)
+
+	// DeleteRuntimeEnvironmentWithResponse request
+	DeleteRuntimeEnvironmentWithResponse(ctx context.Context, id string, editors ...common.ClientConfigEditor) (*DeleteRuntimeEnvironmentResponse, error)
+
+	// GetRuntimeEnvironmentWithResponse request
+	GetRuntimeEnvironmentWithResponse(ctx context.Context, id string, editors ...common.ClientConfigEditor) (*GetRuntimeEnvironmentResponse, error)
+
+	// UpdateRuntimeEnvironmentWithBodyWithResponse request with any body
+	UpdateRuntimeEnvironmentWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*UpdateRuntimeEnvironmentResponse, error)
+
+	UpdateRuntimeEnvironmentWithResponse(ctx context.Context, id string, body UpdateRuntimeEnvironmentJSONRequestBody, editors ...common.ClientConfigEditor) (*UpdateRuntimeEnvironmentResponse, error)
 
 	// LoginWithBodyWithResponse request with any body
-	LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*LoginResponse, error)
+	LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*LoginResponse, error)
 
-	LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...common.RequestEditorFn) (*LoginResponse, error)
+	LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, editors ...common.ClientConfigEditor) (*LoginResponse, error)
 }
 
 type GetAgentInstallerInfoResponse struct {
@@ -353,8 +666,166 @@ func (r GetAgentInstallerInfoResponse) HttpResponse() *http.Response {
 	return r.HTTPResponse
 }
 
-// StatusCode returns HTTPResponse.Body
+// BodyData returns HTTPResponse.Body
 func (r GetAgentInstallerInfoResponse) BodyData() []byte {
+	return r.Body
+}
+
+type ListRuntimeEnvironmentsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r ListRuntimeEnvironmentsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListRuntimeEnvironmentsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// HttpResponse returns HTTPResponse
+func (r ListRuntimeEnvironmentsResponse) HttpResponse() *http.Response {
+	return r.HTTPResponse
+}
+
+// BodyData returns HTTPResponse.Body
+func (r ListRuntimeEnvironmentsResponse) BodyData() []byte {
+	return r.Body
+}
+
+type CreateRuntimeEnvironmentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *RuntimeEnvironment
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateRuntimeEnvironmentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateRuntimeEnvironmentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// HttpResponse returns HTTPResponse
+func (r CreateRuntimeEnvironmentResponse) HttpResponse() *http.Response {
+	return r.HTTPResponse
+}
+
+// BodyData returns HTTPResponse.Body
+func (r CreateRuntimeEnvironmentResponse) BodyData() []byte {
+	return r.Body
+}
+
+type DeleteRuntimeEnvironmentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteRuntimeEnvironmentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteRuntimeEnvironmentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// HttpResponse returns HTTPResponse
+func (r DeleteRuntimeEnvironmentResponse) HttpResponse() *http.Response {
+	return r.HTTPResponse
+}
+
+// BodyData returns HTTPResponse.Body
+func (r DeleteRuntimeEnvironmentResponse) BodyData() []byte {
+	return r.Body
+}
+
+type GetRuntimeEnvironmentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *RuntimeEnvironment
+}
+
+// Status returns HTTPResponse.Status
+func (r GetRuntimeEnvironmentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetRuntimeEnvironmentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// HttpResponse returns HTTPResponse
+func (r GetRuntimeEnvironmentResponse) HttpResponse() *http.Response {
+	return r.HTTPResponse
+}
+
+// BodyData returns HTTPResponse.Body
+func (r GetRuntimeEnvironmentResponse) BodyData() []byte {
+	return r.Body
+}
+
+type UpdateRuntimeEnvironmentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *RuntimeEnvironment
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateRuntimeEnvironmentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateRuntimeEnvironmentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// HttpResponse returns HTTPResponse
+func (r UpdateRuntimeEnvironmentResponse) HttpResponse() *http.Response {
+	return r.HTTPResponse
+}
+
+// BodyData returns HTTPResponse.Body
+func (r UpdateRuntimeEnvironmentResponse) BodyData() []byte {
 	return r.Body
 }
 
@@ -385,35 +856,176 @@ func (r LoginResponse) HttpResponse() *http.Response {
 	return r.HTTPResponse
 }
 
-// StatusCode returns HTTPResponse.Body
+// BodyData returns HTTPResponse.Body
 func (r LoginResponse) BodyData() []byte {
 	return r.Body
 }
 
 // GetAgentInstallerInfoWithResponse request returning *GetAgentInstallerInfoResponse
-func (c *ClientWithResponses) GetAgentInstallerInfoWithResponse(ctx context.Context, platform string, reqEditors ...common.RequestEditorFn) (*GetAgentInstallerInfoResponse, error) {
-	rsp, err := c.GetAgentInstallerInfo(ctx, platform, reqEditors...)
+func (c *ClientWithResponses) GetAgentInstallerInfoWithResponse(ctx context.Context, platform string, editors ...common.ClientConfigEditor) (*GetAgentInstallerInfoResponse, error) {
+	rsp, err := c.GetAgentInstallerInfo(ctx, platform, editors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetAgentInstallerInfoResponse(rsp)
+	apiRes, err := ParseGetAgentInstallerInfoResponse(rsp)
+	if err != nil {
+		return nil, err
+	}
+	editor := c.Editors.Merge(editors...)
+	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+		return nil, err
+	}
+	return apiRes, nil
+}
+
+// ListRuntimeEnvironmentsWithResponse request returning *ListRuntimeEnvironmentsResponse
+func (c *ClientWithResponses) ListRuntimeEnvironmentsWithResponse(ctx context.Context, editors ...common.ClientConfigEditor) (*ListRuntimeEnvironmentsResponse, error) {
+	rsp, err := c.ListRuntimeEnvironments(ctx, editors...)
+	if err != nil {
+		return nil, err
+	}
+	apiRes, err := ParseListRuntimeEnvironmentsResponse(rsp)
+	if err != nil {
+		return nil, err
+	}
+	editor := c.Editors.Merge(editors...)
+	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+		return nil, err
+	}
+	return apiRes, nil
+}
+
+// CreateRuntimeEnvironmentWithBodyWithResponse request with arbitrary body returning *CreateRuntimeEnvironmentResponse
+func (c *ClientWithResponses) CreateRuntimeEnvironmentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*CreateRuntimeEnvironmentResponse, error) {
+	rsp, err := c.CreateRuntimeEnvironmentWithBody(ctx, contentType, body, editors...)
+	if err != nil {
+		return nil, err
+	}
+	apiRes, err := ParseCreateRuntimeEnvironmentResponse(rsp)
+	if err != nil {
+		return nil, err
+	}
+	editor := c.Editors.Merge(editors...)
+	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+		return nil, err
+	}
+	return apiRes, nil
+}
+
+func (c *ClientWithResponses) CreateRuntimeEnvironmentWithResponse(ctx context.Context, body CreateRuntimeEnvironmentJSONRequestBody, editors ...common.ClientConfigEditor) (*CreateRuntimeEnvironmentResponse, error) {
+	rsp, err := c.CreateRuntimeEnvironment(ctx, body, editors...)
+	if err != nil {
+		return nil, err
+	}
+	apiRes, err := ParseCreateRuntimeEnvironmentResponse(rsp)
+	if err != nil {
+		return nil, err
+	}
+	editor := c.Editors.Merge(editors...)
+	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+		return nil, err
+	}
+	return apiRes, nil
+}
+
+// DeleteRuntimeEnvironmentWithResponse request returning *DeleteRuntimeEnvironmentResponse
+func (c *ClientWithResponses) DeleteRuntimeEnvironmentWithResponse(ctx context.Context, id string, editors ...common.ClientConfigEditor) (*DeleteRuntimeEnvironmentResponse, error) {
+	rsp, err := c.DeleteRuntimeEnvironment(ctx, id, editors...)
+	if err != nil {
+		return nil, err
+	}
+	apiRes, err := ParseDeleteRuntimeEnvironmentResponse(rsp)
+	if err != nil {
+		return nil, err
+	}
+	editor := c.Editors.Merge(editors...)
+	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+		return nil, err
+	}
+	return apiRes, nil
+}
+
+// GetRuntimeEnvironmentWithResponse request returning *GetRuntimeEnvironmentResponse
+func (c *ClientWithResponses) GetRuntimeEnvironmentWithResponse(ctx context.Context, id string, editors ...common.ClientConfigEditor) (*GetRuntimeEnvironmentResponse, error) {
+	rsp, err := c.GetRuntimeEnvironment(ctx, id, editors...)
+	if err != nil {
+		return nil, err
+	}
+	apiRes, err := ParseGetRuntimeEnvironmentResponse(rsp)
+	if err != nil {
+		return nil, err
+	}
+	editor := c.Editors.Merge(editors...)
+	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+		return nil, err
+	}
+	return apiRes, nil
+}
+
+// UpdateRuntimeEnvironmentWithBodyWithResponse request with arbitrary body returning *UpdateRuntimeEnvironmentResponse
+func (c *ClientWithResponses) UpdateRuntimeEnvironmentWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*UpdateRuntimeEnvironmentResponse, error) {
+	rsp, err := c.UpdateRuntimeEnvironmentWithBody(ctx, id, contentType, body, editors...)
+	if err != nil {
+		return nil, err
+	}
+	apiRes, err := ParseUpdateRuntimeEnvironmentResponse(rsp)
+	if err != nil {
+		return nil, err
+	}
+	editor := c.Editors.Merge(editors...)
+	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+		return nil, err
+	}
+	return apiRes, nil
+}
+
+func (c *ClientWithResponses) UpdateRuntimeEnvironmentWithResponse(ctx context.Context, id string, body UpdateRuntimeEnvironmentJSONRequestBody, editors ...common.ClientConfigEditor) (*UpdateRuntimeEnvironmentResponse, error) {
+	rsp, err := c.UpdateRuntimeEnvironment(ctx, id, body, editors...)
+	if err != nil {
+		return nil, err
+	}
+	apiRes, err := ParseUpdateRuntimeEnvironmentResponse(rsp)
+	if err != nil {
+		return nil, err
+	}
+	editor := c.Editors.Merge(editors...)
+	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+		return nil, err
+	}
+	return apiRes, nil
 }
 
 // LoginWithBodyWithResponse request with arbitrary body returning *LoginResponse
-func (c *ClientWithResponses) LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...common.RequestEditorFn) (*LoginResponse, error) {
-	rsp, err := c.LoginWithBody(ctx, contentType, body, reqEditors...)
+func (c *ClientWithResponses) LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*LoginResponse, error) {
+	rsp, err := c.LoginWithBody(ctx, contentType, body, editors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseLoginResponse(rsp)
+	apiRes, err := ParseLoginResponse(rsp)
+	if err != nil {
+		return nil, err
+	}
+	editor := c.Editors.Merge(editors...)
+	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+		return nil, err
+	}
+	return apiRes, nil
 }
 
-func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...common.RequestEditorFn) (*LoginResponse, error) {
-	rsp, err := c.Login(ctx, body, reqEditors...)
+func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, editors ...common.ClientConfigEditor) (*LoginResponse, error) {
+	rsp, err := c.Login(ctx, body, editors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseLoginResponse(rsp)
+	apiRes, err := ParseLoginResponse(rsp)
+	if err != nil {
+		return nil, err
+	}
+	editor := c.Editors.Merge(editors...)
+	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+		return nil, err
+	}
+	return apiRes, nil
 }
 
 // ParseGetAgentInstallerInfoResponse parses an HTTP response from a GetAgentInstallerInfoWithResponse call
@@ -432,6 +1044,116 @@ func ParseGetAgentInstallerInfoResponse(rsp *http.Response) (*GetAgentInstallerI
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest GetAgentInstallerInfoResponseBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListRuntimeEnvironmentsResponse parses an HTTP response from a ListRuntimeEnvironmentsWithResponse call
+func ParseListRuntimeEnvironmentsResponse(rsp *http.Response) (*ListRuntimeEnvironmentsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListRuntimeEnvironmentsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseCreateRuntimeEnvironmentResponse parses an HTTP response from a CreateRuntimeEnvironmentWithResponse call
+func ParseCreateRuntimeEnvironmentResponse(rsp *http.Response) (*CreateRuntimeEnvironmentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateRuntimeEnvironmentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RuntimeEnvironment
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteRuntimeEnvironmentResponse parses an HTTP response from a DeleteRuntimeEnvironmentWithResponse call
+func ParseDeleteRuntimeEnvironmentResponse(rsp *http.Response) (*DeleteRuntimeEnvironmentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteRuntimeEnvironmentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseGetRuntimeEnvironmentResponse parses an HTTP response from a GetRuntimeEnvironmentWithResponse call
+func ParseGetRuntimeEnvironmentResponse(rsp *http.Response) (*GetRuntimeEnvironmentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetRuntimeEnvironmentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RuntimeEnvironment
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateRuntimeEnvironmentResponse parses an HTTP response from a UpdateRuntimeEnvironmentWithResponse call
+func ParseUpdateRuntimeEnvironmentResponse(rsp *http.Response) (*UpdateRuntimeEnvironmentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateRuntimeEnvironmentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RuntimeEnvironment
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

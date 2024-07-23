@@ -8,7 +8,7 @@ type {{ $clientTypeName }} struct {
 }
 
 // Creates a new {{ $clientTypeName }}, with reasonable defaults
-func NewClient(server string, opts ...common.ClientOption) (*{{ $clientTypeName }}, error) {
+func New{{ $clientTypeName }}(server string, opts ...common.ClientOption) (*{{ $clientTypeName }}, error) {
 	config, err := common.NewClientConfig(server, opts...)
 	return &{{ $clientTypeName }}{*config}, err
 }
@@ -25,10 +25,10 @@ type ClientInterface interface {
 {{$pathParams := .PathParams -}}
 {{$opid := .OperationId -}}
 	// {{$opid}}{{if .HasBody}}WithBody{{end}} request{{if .HasBody}} with any body{{end}}
-	{{$opid}}{{if .HasBody}}WithBody{{end}}(ctx context.Context{{genParamArgs $pathParams}}{{if $hasParams}}, params *{{$opid}}Params{{end}}{{if .HasBody}}, contentType string, body io.Reader{{end}}, reqEditors... common.RequestEditorFn) (*http.Response, error)
+	{{$opid}}{{if .HasBody}}WithBody{{end}}(ctx context.Context{{genParamArgs $pathParams}}{{if $hasParams}}, params *{{$opid}}Params{{end}}{{if .HasBody}}, contentType string, body io.Reader{{end}}, editors ...common.ClientConfigEditor) (*http.Response, error)
 {{range .Bodies}}
 	{{if .IsSupportedByClient -}}
-	{{$opid}}{{.Suffix}}(ctx context.Context{{genParamArgs $pathParams}}{{if $hasParams}}, params *{{$opid}}Params{{end}}, body {{$opid}}{{.NameTag}}RequestBody, reqEditors... common.RequestEditorFn) (*http.Response, error)
+	{{$opid}}{{.Suffix}}(ctx context.Context{{genParamArgs $pathParams}}{{if $hasParams}}, params *{{$opid}}Params{{end}}, body {{$opid}}{{.NameTag}}RequestBody, editors ...common.ClientConfigEditor) (*http.Response, error)
 	{{end -}}
 {{end}}{{/* range .Bodies */}}
 {{end}}{{/* range . $opid := .OperationId */}}
@@ -41,30 +41,18 @@ type ClientInterface interface {
 {{$pathParams := .PathParams -}}
 {{$opid := .OperationId -}}
 
-func (c *{{ $clientTypeName }}) {{$opid}}{{if .HasBody}}WithBody{{end}}(ctx context.Context{{genParamArgs $pathParams}}{{if $hasParams}}, params *{{$opid}}Params{{end}}{{if .HasBody}}, contentType string, body io.Reader{{end}}, reqEditors... common.RequestEditorFn) (*http.Response, error) {
-	req, err := New{{$opid}}Request{{if .HasBody}}WithBody{{end}}(c.Server{{genParamNames .PathParams}}{{if $hasParams}}, params{{end}}{{if .HasBody}}, contentType, body{{end}})
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.ApplyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
+func (c *{{ $clientTypeName }}) {{$opid}}{{if .HasBody}}WithBody{{end}}(ctx context.Context{{genParamArgs $pathParams}}{{if $hasParams}}, params *{{$opid}}Params{{end}}{{if .HasBody}}, contentType string, body io.Reader{{end}}, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+		return New{{$opid}}Request{{if .HasBody}}WithBody{{end}}(c.Server{{genParamNames .PathParams}}{{if $hasParams}}, params{{end}}{{if .HasBody}}, contentType, body{{end}})
+	})
 }
 
 {{range .Bodies}}
 {{if .IsSupportedByClient -}}
-func (c *{{ $clientTypeName }}) {{$opid}}{{.Suffix}}(ctx context.Context{{genParamArgs $pathParams}}{{if $hasParams}}, params *{{$opid}}Params{{end}}, body {{$opid}}{{.NameTag}}RequestBody, reqEditors... common.RequestEditorFn) (*http.Response, error) {
-	req, err := New{{$opid}}Request{{.Suffix}}(c.Server{{genParamNames $pathParams}}{{if $hasParams}}, params{{end}}, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.ApplyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
+func (c *{{ $clientTypeName }}) {{$opid}}{{.Suffix}}(ctx context.Context{{genParamArgs $pathParams}}{{if $hasParams}}, params *{{$opid}}Params{{end}}, body {{$opid}}{{.NameTag}}RequestBody, editors... common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+		return New{{$opid}}Request{{.Suffix}}(c.Server{{genParamNames $pathParams}}{{if $hasParams}}, params{{end}}, body)
+	})
 }
 {{end -}}{{/* if .IsSupported */}}
 {{end}}{{/* range .Bodies */}}

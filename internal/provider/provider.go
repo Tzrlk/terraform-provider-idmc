@@ -83,6 +83,7 @@ func (p *IdmcProvider) Configure(
 	resp *provider.ConfigureResponse,
 ) {
 	diags := &resp.Diagnostics
+	errHandler := utils.DiagsErrHandler(diags, "Unable to initialise provider")
 
 	var config IdmcProviderModel
 	diags.Append(req.Config.Get(ctx, &config)...)
@@ -140,19 +141,17 @@ func (p *IdmcProvider) Configure(
 	httpClient := &http.Client{}
 	baseApiUrl, sessionId, loginErr := doLogin(ctx, authHost, authUser, authPass, httpClient)
 	if loginErr != nil {
-		diags.AddError(
-			"IDMC API login failed",
-			fmt.Sprintf("Login to IDMC api failed: %s", loginErr),
-		)
+		errHandler(loginErr)
 		return
 	}
 
-	idmcApi, idmcApiErr := idmc.NewIdmcApi(baseApiUrl, sessionId, httpClient)
+	idmcApi, idmcApiErr := idmc.NewIdmcApi(baseApiUrl, sessionId,
+		common.WithHTTPClient(httpClient),
+		common.WithRequestEditorFn(utils.LogHttpRequest),
+		common.WithApiResponseEditorFn(utils.LogApiResponse),
+	)
 	if idmcApiErr != nil {
-		diags.AddError(
-			"Api Initialisation Error",
-			fmt.Sprintf("Unable to initialise the IDMC api: %s", idmcApiErr),
-		)
+		errHandler(idmcApiErr)
 		return
 	}
 
@@ -165,58 +164,64 @@ func (p *IdmcProvider) Configure(
 }
 
 func doLogin(ctx context.Context, authHost string, authUser string, authPass string, httpClient common.HttpRequestDoer) (string, string, error) {
+	var apiUrl = fmt.Sprintf("https://%s/saas", authHost)
 
-	// First set up a client configured for api login.
-	loginServerUrl := fmt.Sprintf("https://%s/saas", authHost)
-	loginClient, loginClientError := v3.NewClientWithResponses(loginServerUrl,
+	// First set up a client configured for api login (without logging requests).
+	client, clientErr := v3.NewClientWithResponses(apiUrl,
 		common.WithHTTPClient(httpClient),
 		common.WithRequestEditorFn(func(httpCtx context.Context, req *http.Request) error {
 			req.Header["Accept"] = []string{"application/json"}
-			return utils.LogHttpRequest(ctx, req)
+			return nil
 		}),
+		common.WithApiResponseEditorFn(utils.LogApiResponse),
 	)
-	if loginClientError != nil {
-		return "", "", loginClientError
+	if clientErr != nil {
+		return apiUrl, "", clientErr
 	}
 
 	// Perform the login operation with the provided credentials.
-	loginResponse, loginResponseError := loginClient.LoginWithResponse(ctx, v3.LoginJSONRequestBody{
+	res, resErr := client.LoginWithResponse(ctx, v3.LoginJSONRequestBody{
 		Username: authUser,
 		Password: authPass,
 	})
-	if loginResponseError != nil {
-		return "", "", loginResponseError
+	if resErr != nil {
+		return apiUrl, "", resErr
 	}
 
-	logErr := utils.LogHttpResponse(ctx, loginResponse.HTTPResponse, &loginResponse.Body)
-	if logErr != nil {
-		return "", "", logErr
+	// We only want 200 responses.
+	if err := utils.RequireHttpStatus(200, res); err != nil {
+		return apiUrl, "", err
 	}
 
 	// Extract the key information from the login response
-	if loginResponse.StatusCode() != 200 {
-		return "", "", fmt.Errorf(
-			"expected http 200 ok, got %s",
-			loginResponse.Status(),
-		)
+	if res.JSON200 == nil {
+		return apiUrl, "", fmt.Errorf("response data has not been parsed")
 	}
-	if loginResponse.JSON200 == nil {
-		return "", "", fmt.Errorf(
-			"expected response to be parsed as json, found nil",
-		)
-	}
-	loginResponseJson := *loginResponse.JSON200
-	userInfo := *loginResponseJson.UserInfo
+	resData := *res.JSON200
 
-	sessionId := *userInfo.SessionId
-	for _, product := range *loginResponse.JSON200.Products {
-		if *product.Name == "Integration Cloud" {
-			return *product.BaseApiUrl, sessionId, nil
+	if resData.UserInfo == nil {
+		return apiUrl, "", fmt.Errorf("no user data found in response")
+	}
+	userData := *resData.UserInfo
+
+	if userData.SessionId == nil {
+		return apiUrl, "", fmt.Errorf("no sessionId found in response")
+	}
+	sessionId := *userData.SessionId
+
+	if resData.Products == nil {
+		return apiUrl, sessionId, fmt.Errorf("no products found in response")
+	}
+	products := *resData.Products
+
+	for _, product := range products {
+		if product.Name != nil && *product.Name == "Integration Cloud" {
+			apiUrl = *product.BaseApiUrl
+			return apiUrl, sessionId, nil
 		}
 	}
 
-	// TODO: This should probably just return an error, or fall-back to other products.
-	return loginServerUrl, sessionId, nil
+	return apiUrl, sessionId, fmt.Errorf("no api url found in response")
 
 }
 

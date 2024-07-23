@@ -45,6 +45,85 @@ paths:
               schema:
                 $ref: '#/components/schemas/getAgentInstallerInfoResponseBody'
 
+  /api/v2/runtimeEnvironment:
+    get:
+      operationId: listRuntimeEnvironments
+      description: |-
+        Request runtime environment information for an organization.
+      responses:
+        200:
+          description: |-
+            Returns all the runtime environments for the organization.
+    post:
+      operationId: createRuntimeEnvironment
+      description: |-
+        You can use the runtimeEnvironment resource to create, update, and delete Secure Agent groups.
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-2-resources/runtime_environments/creating_updating_and_deleting_secure_agent_groups.html
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/runtimeEnvironmentDataMinimal'
+      responses:
+        200:
+          description: |-
+            Successfully created the runtime environment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/runtimeEnvironment'
+
+  /api/v2/runtimeEnvironment/{id}:
+    parameters:
+      - name: id
+        in:   path
+        description: |-
+          The system-allocated id of the runtime environment.
+        schema:
+          type: string
+    get:
+      operationId: getRuntimeEnvironment
+      description: |-
+        Request the details of a particular runtime environment.
+      responses:
+        200:
+          description: |-
+            Successfully retrieved runtime environment information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/runtimeEnvironment'
+    post:
+      operationId: updateRuntimeEnvironment
+      description: |-
+        You can add or remove agents and rename Secure Agent groups. To move an agent from one Secure Agent group to another group, send a request to remove the agent from its current group and then send a request to add the agent to the new group.
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-2-resources/runtime_environments/creating_updating_and_deleting_secure_agent_groups.html
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateRuntimeEnvironmentRequestBody'
+      responses:
+        200:
+          description: |-
+            The runtime environment was successfully updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/runtimeEnvironment'
+    delete:
+      operationId: deleteRuntimeEnvironment
+      description: |-
+        Deletes a secure agent group.
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-2-resources/runtime_environments/creating_updating_and_deleting_secure_agent_groups.html
+      responses:
+        200:
+          description: |-
+            Successfully deleted the runtime environment.
+
 components:
 
   schemas:
@@ -242,3 +321,89 @@ components:
           type: string
         checksumDownloadUrl:
           type: string
+
+    updateRuntimeEnvironmentRequestBody:
+      allOf:
+        - $ref: '#/components/schemas/runtimeEnvironmentDataMinimal'
+        - type: object
+          properties:
+            agents:
+              type: array
+              items:
+                $ref: '#/components/schemas/updateRuntimeEnvironmentRequestBodyAgents'
+              description: |-
+                Agents assigned to the Secure Agent group.
+    updateRuntimeEnvironmentRequestBodyAgents:
+      type: object
+      properties:
+        orgId:
+          type: string
+          description: |-
+            Organization ID.
+        id:
+          type: string
+          description: |-
+            Agent ID.
+      example: |-
+        {
+          "@type": "runtimeEnvironment",
+          "name": "14401",
+          "agents": [
+            {
+              "@type": "agent",
+              "id": "01000308000000000003",
+              "orgId": "010003"
+            }
+          ],
+          "isShared": false
+        }
+
+    runtimeEnvironment:
+      allOf:
+        - $ref: '#/components/schemas/runtimeEnvironmentDataMinimal'
+        - $ref: '#/components/schemas/runtimeEnvironmentDataBulk'
+
+    runtimeEnvironmentDataMinimal:
+      type: object
+      properties:
+        name:
+          type: string
+          description: |-
+            Name of the Secure Agent group.
+        isShared:
+          type: boolean
+          description: |-
+            Whether the Secure Agent group can be shared with sub-organizations.
+      required:
+        - name
+      example: |-
+        {
+          "@type": "runtimeEnvironment",
+          "name": "14402",
+          "isShared": true
+        }
+
+    runtimeEnvironmentDataBulk:
+      properties:
+        id:
+          type: string
+        orgId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        createTime:
+          type: string
+        updateTime:
+          type: string
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        agents:
+          type: array
+        federatedId:
+          type: string
+        serverlessConfig:
+          type: object

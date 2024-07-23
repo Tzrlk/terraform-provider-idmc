@@ -66,3 +66,18 @@ func UnwrapSetValue(
 		return types.SetValue(elementType, elements)
 	})
 }
+
+func DiagsErrHandler(diags *diag.Diagnostics, title string) func(error) {
+	return func(err error) {
+		if err != nil {
+			diags.AddError(title, err.Error())
+		}
+	}
+}
+
+func DiagsValHandler[T any](errHandler func(error)) func(T, error) T {
+	return func(val T, err error) T {
+		errHandler(err)
+		return val
+	}
+}

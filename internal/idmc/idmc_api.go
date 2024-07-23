@@ -12,14 +12,14 @@ type IdmcApi struct {
 	V3 *v3.IdmcAdminV3Api
 }
 
-func NewIdmcApi(baseUrl string, sessionId string, httpClient common.HttpRequestDoer) (*IdmcApi, error) {
+func NewIdmcApi(baseUrl string, sessionId string, opts ...common.ClientOption) (*IdmcApi, error) {
 
-	idmcAdminV2Api, idmcAdminV2ApiErr := v2.NewIdmcAdminV2Api(baseUrl, sessionId, httpClient)
+	idmcAdminV2Api, idmcAdminV2ApiErr := v2.NewIdmcAdminV2Api(baseUrl, &sessionId, opts...)
 	if idmcAdminV2ApiErr != nil {
 		return nil, idmcAdminV2ApiErr
 	}
 
-	idmcAdminV3Api, idmcAdminV3ApiErr := v3.NewIdmcAdminV3Api(baseUrl, sessionId, httpClient)
+	idmcAdminV3Api, idmcAdminV3ApiErr := v3.NewIdmcAdminV3Api(baseUrl, &sessionId, opts...)
 	if idmcAdminV3ApiErr != nil {
 		return nil, idmcAdminV3ApiErr
 	}

@@ -87,12 +87,14 @@ format: \
 
 .build/go-fmt.done: \
 		${GO_SRC_FILES} \
-		${GO_TEST_FILES}
+		${GO_TEST_FILES} \
+		| .build/
 	go fmt $(foreach src_dir,${?D},./${src_dir}) \
 	&& touch ${@}
 
 .build/tf-fmt.done: \
-		${TF_SRC_FILES}
+		${TF_SRC_FILES} \
+		| .build/
 	terraform fmt $(foreach src_dir,${?D},./${src_dir}) \
 		-diff \
 	&& touch ${@}
@@ -105,7 +107,8 @@ lint: .build/checkstyle.xml
 .build/checkstyle.xml: \
 		.golangci.yml \
 		${GO_SRC_FILES} \
-		${GO_TEST_FILES}
+		${GO_TEST_FILES} \
+		| .build/
 	${CMD_GOLANGCI_LINT} run \
 		--config ${<} \
 		--issues-exit-code 2 \

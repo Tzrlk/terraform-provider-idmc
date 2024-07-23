@@ -9,6 +9,7 @@ import (
 	"terraform-provider-idmc/internal/idmc/v2"
 
 	. "github.com/hashicorp/terraform-plugin-framework/datasource"
+	. "terraform-provider-idmc/internal/provider/utils"
 )
 
 var _ DataSource = &AgentInstallerDataSource{}
@@ -74,8 +75,11 @@ func (d *AgentInstallerDataSource) Configure(_ context.Context, req ConfigureReq
 
 }
 
+const AgentInstallerInfoDataSourceBadRead = "Unable to read data source"
+
 func (d *AgentInstallerDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
 	diags := &resp.Diagnostics
+	errHandler := DiagsErrHandler(diags, AgentInstallerInfoDataSourceBadRead)
 
 	// Load the previous state if present.
 	var config AgentInstallerDataSourceModel
@@ -85,20 +89,22 @@ func (d *AgentInstallerDataSource) Read(ctx context.Context, req ReadRequest, re
 	}
 
 	// Perform the API request.
-	response, err := d.Client.GetAgentInstallerInfoWithResponse(ctx, config.Platform.ValueString())
-	if err != nil {
-		diags.AddError(
-			"Http Request Failure",
-			fmt.Sprintf("IDMC Api request failure: %s", err),
-		)
+	apiRes, apiErr := d.Client.GetAgentInstallerInfoWithResponse(ctx, config.Platform.ValueString())
+	if errHandler(apiErr); diags.HasError() {
+		return
+	}
+
+	errHandler(RequireHttpStatus(200, apiRes))
+	if diags.HasError() {
 		return
 	}
 
 	// Convert response data into terraform types.
-	config.DownloadUrl = types.StringPointerValue(response.JSON200.DownloadUrl)
-	config.InstallToken = types.StringPointerValue(response.JSON200.InstallToken)
-	config.ChecksumDownloadUrl = types.StringPointerValue(response.JSON200.ChecksumDownloadUrl)
+	config.DownloadUrl = types.StringPointerValue(apiRes.JSON200.DownloadUrl)
+	config.InstallToken = types.StringPointerValue(apiRes.JSON200.InstallToken)
+	config.ChecksumDownloadUrl = types.StringPointerValue(apiRes.JSON200.ChecksumDownloadUrl)
 
+	// Save result back to state.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 
 }

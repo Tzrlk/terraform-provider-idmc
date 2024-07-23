@@ -1,33 +1,33 @@
 // <editor-fold desc="client-with-responses" defaultstate="collapsed"> /////////
 
-// ClientWithResponses builds on ClientInterface to offer response payloads
-type ClientWithResponses struct {
-	ClientInterface
+{{$clientTypeName := opts.OutputOptions.ClientTypeName -}}
+
+// {{ $clientTypeName }}WithResponses builds on {{ $clientTypeName }} to offer response payloads
+type {{ $clientTypeName }}WithResponses struct {
+	*{{ $clientTypeName }}
 }
 
-// NewClientWithResponses creates a new ClientWithResponses, which wraps
+// New{{ $clientTypeName }}WithResponses creates a new {{ $clientTypeName }}WithResponses, which wraps
 // Client with return type handling
-func NewClientWithResponses(server string, opts ...common.ClientOption) (*ClientWithResponses, error) {
-	client, err := NewClient(server, opts...)
+func New{{ $clientTypeName }}WithResponses(server string, opts ...common.ClientOption) (*{{ $clientTypeName }}WithResponses, error) {
+	client, err := New{{ $clientTypeName }}(server, opts...)
 	if err != nil {
 		return nil, err
 	}
-	return &ClientWithResponses{client}, nil
+	return &{{ $clientTypeName }}WithResponses{client}, nil
 }
 
-{{$clientTypeName := opts.OutputOptions.ClientTypeName -}}
-
-// ClientWithResponsesInterface is the interface specification for the client with responses above.
-type ClientWithResponsesInterface interface {
+// {{ $clientTypeName }}WithResponsesInterface is the interface specification for the client with responses above.
+type {{ $clientTypeName }}WithResponsesInterface interface {
 {{range . -}}
 {{$hasParams := .RequiresParamObject -}}
 {{$pathParams := .PathParams -}}
 {{$opid := .OperationId -}}
 	// {{$opid}}{{if .HasBody}}WithBody{{end}}WithResponse request{{if .HasBody}} with any body{{end}}
-	{{$opid}}{{if .HasBody}}WithBody{{end}}WithResponse(ctx context.Context{{genParamArgs .PathParams}}{{if .RequiresParamObject}}, params *{{$opid}}Params{{end}}{{if .HasBody}}, contentType string, body io.Reader{{end}}, reqEditors... common.RequestEditorFn) (*{{genResponseTypeName $opid}}, error)
+	{{$opid}}{{if .HasBody}}WithBody{{end}}WithResponse(ctx context.Context{{genParamArgs .PathParams}}{{if .RequiresParamObject}}, params *{{$opid}}Params{{end}}{{if .HasBody}}, contentType string, body io.Reader{{end}}, editors ...common.ClientConfigEditor) (*{{genResponseTypeName $opid}}, error)
 {{range .Bodies}}
 	{{if .IsSupportedByClient -}}
-		{{$opid}}{{.Suffix}}WithResponse(ctx context.Context{{genParamArgs $pathParams}}{{if $hasParams}}, params *{{$opid}}Params{{end}}, body {{$opid}}{{.NameTag}}RequestBody, reqEditors... common.RequestEditorFn) (*{{genResponseTypeName $opid}}, error)
+		{{$opid}}{{.Suffix}}WithResponse(ctx context.Context{{genParamArgs $pathParams}}{{if $hasParams}}, params *{{$opid}}Params{{end}}, body {{$opid}}{{.NameTag}}RequestBody, editors ...common.ClientConfigEditor) (*{{genResponseTypeName $opid}}, error)
 	{{end -}}
 {{end}}{{/* range .Bodies */}}
 {{end}}{{/* range . $opid := .OperationId */}}
@@ -63,7 +63,7 @@ func (r {{genResponseTypeName $opid | ucFirst}}) HttpResponse() *http.Response {
 	return r.HTTPResponse
 }
 
-// StatusCode returns HTTPResponse.Body
+// BodyData returns HTTPResponse.Body
 func (r {{genResponseTypeName $opid | ucFirst}}) BodyData() []byte {
 	return r.Body
 }
@@ -76,12 +76,20 @@ func (r {{genResponseTypeName $opid | ucFirst}}) BodyData() []byte {
 {{/* Generate client methods (with responses)*/}}
 
 // {{$opid}}{{if .HasBody}}WithBody{{end}}WithResponse request{{if .HasBody}} with arbitrary body{{end}} returning *{{genResponseTypeName $opid}}
-func (c *ClientWithResponses) {{$opid}}{{if .HasBody}}WithBody{{end}}WithResponse(ctx context.Context{{genParamArgs .PathParams}}{{if .RequiresParamObject}}, params *{{$opid}}Params{{end}}{{if .HasBody}}, contentType string, body io.Reader{{end}}, reqEditors... common.RequestEditorFn) (*{{genResponseTypeName $opid}}, error){
-	rsp, err := c.{{$opid}}{{if .HasBody}}WithBody{{end}}(ctx{{genParamNames .PathParams}}{{if .RequiresParamObject}}, params{{end}}{{if .HasBody}}, contentType, body{{end}}, reqEditors...)
+func (c *{{ $clientTypeName }}WithResponses) {{$opid}}{{if .HasBody}}WithBody{{end}}WithResponse(ctx context.Context{{genParamArgs .PathParams}}{{if .RequiresParamObject}}, params *{{$opid}}Params{{end}}{{if .HasBody}}, contentType string, body io.Reader{{end}}, editors... common.ClientConfigEditor) (*{{genResponseTypeName $opid}}, error){
+	rsp, err := c.{{$opid}}{{if .HasBody}}WithBody{{end}}(ctx{{genParamNames .PathParams}}{{if .RequiresParamObject}}, params{{end}}{{if .HasBody}}, contentType, body{{end}}, editors...)
 	if err != nil {
 		return nil, err
 	}
-	return Parse{{genResponseTypeName $opid | ucFirst}}(rsp)
+	apiRes, err := Parse{{genResponseTypeName $opid | ucFirst}}(rsp)
+	if err != nil {
+		return nil, err
+	}
+	editor := c.Editors.Merge(editors...)
+	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+		return nil, err
+	}
+	return apiRes, nil
 }
 
 {{$hasParams := .RequiresParamObject -}}
@@ -89,12 +97,20 @@ func (c *ClientWithResponses) {{$opid}}{{if .HasBody}}WithBody{{end}}WithRespons
 {{$bodyRequired := .BodyRequired -}}
 {{range .Bodies}}
 {{if .IsSupportedByClient -}}
-func (c *ClientWithResponses) {{$opid}}{{.Suffix}}WithResponse(ctx context.Context{{genParamArgs $pathParams}}{{if $hasParams}}, params *{{$opid}}Params{{end}}, body {{$opid}}{{.NameTag}}RequestBody, reqEditors... common.RequestEditorFn) (*{{genResponseTypeName $opid}}, error) {
-	rsp, err := c.{{$opid}}{{.Suffix}}(ctx{{genParamNames $pathParams}}{{if $hasParams}}, params{{end}}, body, reqEditors...)
+func (c *{{ $clientTypeName }}WithResponses) {{$opid}}{{.Suffix}}WithResponse(ctx context.Context{{genParamArgs $pathParams}}{{if $hasParams}}, params *{{$opid}}Params{{end}}, body {{$opid}}{{.NameTag}}RequestBody, editors ...common.ClientConfigEditor) (*{{genResponseTypeName $opid}}, error) {
+	rsp, err := c.{{$opid}}{{.Suffix}}(ctx{{genParamNames $pathParams}}{{if $hasParams}}, params{{end}}, body, editors...)
 	if err != nil {
 		return nil, err
 	}
-	return Parse{{genResponseTypeName $opid | ucFirst}}(rsp)
+	apiRes, err := Parse{{genResponseTypeName $opid | ucFirst}}(rsp)
+	if err != nil {
+		return nil, err
+	}
+	editor := c.Editors.Merge(editors...)
+	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+		return nil, err
+	}
+	return apiRes, nil
 }
 {{end}}
 {{end}}

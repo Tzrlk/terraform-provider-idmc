@@ -255,7 +255,6 @@ func (d *RolesDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadR
 		)
 		return
 	}
-	_ = LogHttpResponse(ctx, res.HTTPResponse, &res.Body)
 
 	// Handle non-200 responses
 	if res.StatusCode() != 200 {
