@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -62,16 +61,10 @@ func (r RuntimeEnvironmentResource) Schema(ctx context.Context, req SchemaReques
 			"name": schema.StringAttribute{
 				Description: "Runtime environment name.",
 				Required:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			"description": schema.StringAttribute{
 				Description: "Description of the runtime environment.",
-				Optional:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Computed:    true,
 			},
 			"shared": schema.BoolAttribute{
 				Description: "Indicates whether the Secure Agent group is shared.",
@@ -97,11 +90,9 @@ func (r RuntimeEnvironmentResource) Schema(ctx context.Context, req SchemaReques
 	}
 }
 
-const RuntimeEnvironmentResourceBadCreate = "Unable to create resource"
-
 func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateRequest, resp *CreateResponse) {
 	diags := &resp.Diagnostics
-	errHandler := DiagsErrHandler(diags, RuntimeEnvironmentResourceBadCreate)
+	errHandler := DiagsErrHandler(diags, MsgResourceBadCreate)
 
 	// Load configuration from plan.
 	var data RuntimeEnvironmentResourceModel
@@ -135,11 +126,9 @@ func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReques
 
 }
 
-const RuntimeEnvironmentResourceBadRead = "Unable to read resource"
-
 func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
 	diags := &resp.Diagnostics
-	errHandler := DiagsErrHandler(diags, RuntimeEnvironmentResourceBadRead)
+	errHandler := DiagsErrHandler(diags, MsgResourceBadRead)
 
 	// Load configuration from plan.
 	var data RuntimeEnvironmentResourceModel
@@ -151,7 +140,7 @@ func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, r
 	if data.Id.IsNull() {
 		diags.AddAttributeError(
 			path.Root("id"),
-			RuntimeEnvironmentResourceBadRead,
+			MsgResourceBadRead,
 			"Resource id is missing.",
 		)
 		return
@@ -178,11 +167,9 @@ func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, r
 
 }
 
-const RuntimeEnvironmentResourceBadUpdate = "Unable to read resource"
-
 func (r RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateRequest, resp *UpdateResponse) {
 	diags := &resp.Diagnostics
-	errHandler := DiagsErrHandler(diags, RuntimeEnvironmentResourceBadUpdate)
+	errHandler := DiagsErrHandler(diags, MsgResourceBadUpdate)
 
 	// Load config from state for comparison.
 	var state RuntimeEnvironmentResourceModel
@@ -224,11 +211,9 @@ func (r RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateReques
 
 }
 
-const RuntimeEnvironmentResourceBadDelete = "Unable to delete resource"
-
 func (r RuntimeEnvironmentResource) Delete(ctx context.Context, req DeleteRequest, resp *DeleteResponse) {
 	diags := &resp.Diagnostics
-	errHandler := DiagsErrHandler(diags, RuntimeEnvironmentResourceBadDelete)
+	errHandler := DiagsErrHandler(diags, MsgResourceBadDelete)
 
 	// Load configuration from plan.
 	var data RuntimeEnvironmentResourceModel

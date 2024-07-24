@@ -217,6 +217,7 @@ var rolesDataRolesType = types.ObjectType{
 
 func (d *RolesDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
 	diags := &resp.Diagnostics
+	errHandler := DiagsErrHandler(diags, MsgDataSourceBadRead)
 
 	// Load the previous state if present.
 	var config RolesDataSourceModel
@@ -247,20 +248,16 @@ func (d *RolesDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadR
 	}
 
 	// Perform the API request.
-	res, err := d.Client.GetRolesWithResponse(ctx, params)
-	if err != nil {
-		diags.AddError(
-			"IDMC API request failure",
-			fmt.Sprintf("IDMC API request failure: %s", err),
-		)
+	apiRes, apiErr := d.Client.GetRolesWithResponse(ctx, params)
+	if errHandler(apiErr); diags.HasError() {
 		return
 	}
 
 	// Handle non-200 responses
-	if res.StatusCode() != 200 {
-		switch res.StatusCode() {
+	if apiRes.StatusCode() != 200 {
+		switch apiRes.StatusCode() {
 		case 400:
-			apiErr := *utils.Val(res.JSON400).Error
+			apiErr := *utils.Val(apiRes.JSON400).Error
 			diags.AddError(
 				"IDMC API bad response status",
 				fmt.Sprintf("Request: %s\nCode: %s\nMsg: %s",
@@ -272,21 +269,21 @@ func (d *RolesDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadR
 		default:
 			diags.AddError(
 				"IDMC API bad response status",
-				fmt.Sprintf("IDMC API response 200 expected; got %s", res.Status()),
+				fmt.Sprintf("IDMC API response 200 expected; got %s", apiRes.Status()),
 			)
 		}
 		return
 	}
 
 	// Handle empty JSON responses
-	if res.JSON200 == nil {
+	if apiRes.JSON200 == nil {
 		diags.AddError(
 			"IDMC API bad response payload",
 			"Expected JSON payload, got nil.",
 		)
 		return
 	}
-	resBody := *res.JSON200
+	resBody := *apiRes.JSON200
 
 	rolesPath := path.Root("roles")
 

@@ -22,5 +22,5 @@ dist/
 *.iml
 
 # Testing
-examples/**/*.tfvars
+*.auto.tfvars
 *.jsonl

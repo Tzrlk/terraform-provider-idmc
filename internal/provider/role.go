@@ -121,6 +121,7 @@ func (r RoleResource) Schema(ctx context.Context, req SchemaRequest, resp *Schem
 
 func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *CreateResponse) {
 	diags := &resp.Diagnostics
+	errHandler := DiagsErrHandler(diags, MsgResourceBadCreate)
 
 	// Load configuration from plan.
 	var data RoleResourceModel
@@ -147,25 +148,26 @@ func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *Creat
 		return
 	}
 
-	apiResp, apiErr := r.Client.CreateRoleWithResponse(ctx, v3.CreateRoleJSONRequestBody{
+	apiRes, apiErr := r.Client.CreateRoleWithResponse(ctx, v3.CreateRoleJSONRequestBody{
 		Name:        data.Name.ValueStringPointer(),
 		Description: data.Description.ValueStringPointer(),
 		Privileges:  &rolePrivilegeValues,
 	})
-	if apiErr != nil {
-		diags.AddError(
-			"Unable to create resource",
-			fmt.Sprintf("Encountered an error communicating with the api: %s", apiErr),
-		)
+	if errHandler(apiErr); diags.HasError() {
+		return
+	}
+
+	errHandler(RequireHttpStatus(200, apiRes))
+	if diags.HasError() {
 		return
 	}
 
 	// Update the configured state so instabilities can be detected.
-	data.Id = types.StringPointerValue(apiResp.JSON200.Id)
-	data.Name = types.StringPointerValue(apiResp.JSON200.RoleName)
-	data.Description = types.StringPointerValue(apiResp.JSON200.Description)
+	data.Id = types.StringPointerValue(apiRes.JSON200.Id)
+	data.Name = types.StringPointerValue(apiRes.JSON200.RoleName)
+	data.Description = types.StringPointerValue(apiRes.JSON200.Description)
 	data.Privileges = UnwrapDiag(diags, path.Root("privileges"), func() (types.Set, diag.Diagnostics) {
-		apiRolePrivilegeItems := *apiResp.JSON200.Privileges
+		apiRolePrivilegeItems := *apiRes.JSON200.Privileges
 		apiRolePrivilegeAttrs := make([]attr.Value, len(apiRolePrivilegeItems))
 		for index, apiRolePrivilegeItem := range apiRolePrivilegeItems {
 			apiRolePrivilegeAttrs[index] = types.StringPointerValue(apiRolePrivilegeItem.Id)
@@ -174,15 +176,15 @@ func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *Creat
 	})
 
 	// Update derived values
-	data.OrgId = types.StringPointerValue(apiResp.JSON200.OrgId)
-	data.DisplayName = types.StringPointerValue(apiResp.JSON200.DisplayName)
-	data.DisplayDescription = types.StringPointerValue(apiResp.JSON200.DisplayDescription)
-	data.SystemRole = types.BoolPointerValue(apiResp.JSON200.SystemRole)
-	data.Status = types.StringPointerValue(apiResp.JSON200.Status)
-	data.CreatedBy = types.StringPointerValue(apiResp.JSON200.CreatedBy)
-	data.UpdatedBy = types.StringPointerValue(apiResp.JSON200.UpdatedBy)
-	data.CreatedTime = types.StringPointerValue(apiResp.JSON200.CreateTime)
-	data.UpdatedTime = types.StringPointerValue(apiResp.JSON200.UpdateTime)
+	data.OrgId = types.StringPointerValue(apiRes.JSON200.OrgId)
+	data.DisplayName = types.StringPointerValue(apiRes.JSON200.DisplayName)
+	data.DisplayDescription = types.StringPointerValue(apiRes.JSON200.DisplayDescription)
+	data.SystemRole = types.BoolPointerValue(apiRes.JSON200.SystemRole)
+	data.Status = types.StringPointerValue(apiRes.JSON200.Status)
+	data.CreatedBy = types.StringPointerValue(apiRes.JSON200.CreatedBy)
+	data.UpdatedBy = types.StringPointerValue(apiRes.JSON200.UpdatedBy)
+	data.CreatedTime = types.StringPointerValue(apiRes.JSON200.CreateTime)
+	data.UpdatedTime = types.StringPointerValue(apiRes.JSON200.UpdateTime)
 
 	// Save creation result back to state.
 	diags.Append(resp.State.Set(ctx, &data)...)
@@ -191,6 +193,7 @@ func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *Creat
 
 func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
 	diags := &resp.Diagnostics
+	errHandler := DiagsErrHandler(diags, MsgResourceBadRead)
 
 	// Load configuration from plan.
 	var data RoleResourceModel
@@ -223,16 +226,17 @@ func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadRespo
 	}
 
 	// Perform the API request.
-	apiResp, apiErr := r.Client.GetRolesWithResponse(ctx, params)
-	if apiErr != nil {
-		diags.AddError(
-			"Http Request Failure",
-			fmt.Sprintf("IDMC Api request failure: %s", apiErr),
-		)
+	apiRes, apiErr := r.Client.GetRolesWithResponse(ctx, params)
+	if errHandler(apiErr); diags.HasError() {
 		return
 	}
 
-	apiItems := *apiResp.JSON200
+	errHandler(RequireHttpStatus(200, apiRes))
+	if diags.HasError() {
+		return
+	}
+
+	apiItems := *apiRes.JSON200
 	if len(apiItems) == 0 {
 		// No matching resources, so junk it.
 		resp.State.RemoveResource(ctx)
@@ -279,6 +283,7 @@ func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadRespo
 
 func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *UpdateResponse) {
 	diags := &resp.Diagnostics
+	errHandler := DiagsErrHandler(diags, MsgResourceBadUpdate)
 
 	// Load config from state for comparison.
 	var state RoleResourceModel
@@ -349,7 +354,7 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 	}
 
 	// Add all the privileges that need to be added
-	_, addErr := r.Client.AddRolePrivileges(
+	addApiRes, addApiErr := r.Client.AddRolePrivilegesWithResponse(
 		ctx,
 		plan.Id.ValueString(),
 		&v3.AddRolePrivilegesParams{},
@@ -357,21 +362,26 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 			Privileges: Ptr(maps.Keys(privilegesToAdd)),
 		},
 	)
-	if addErr != nil {
+	if addApiErr != nil {
 		diags.AddAttributeError(
 			rolePrivilegesPath,
 			"Unable to add privileges to role",
 			fmt.Sprintf(
 				"Api error encountered updating %s: %s",
 				plan.Id.ValueString(),
-				addErr,
+				addApiErr,
 			),
 		)
 		return
 	}
 
+	errHandler(RequireHttpStatus(200, addApiRes))
+	if diags.HasError() {
+		return
+	}
+
 	// Remove all the privileges that need to be removed
-	_, removeErr := r.Client.RemoveRolePrivileges(
+	remApiRes, remApiErr := r.Client.RemoveRolePrivilegesWithResponse(
 		ctx,
 		plan.Id.ValueString(),
 		&v3.RemoveRolePrivilegesParams{},
@@ -379,16 +389,21 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 			Privileges: Ptr(maps.Keys(privilegesToRemove)),
 		},
 	)
-	if removeErr != nil {
+	if remApiErr != nil {
 		diags.AddAttributeError(
 			rolePrivilegesPath,
 			"Unable to remove privileges from role",
 			fmt.Sprintf(
 				"Api error encountered updating %s: %s",
 				plan.Id.ValueString(),
-				addErr,
+				remApiErr,
 			),
 		)
+		return
+	}
+
+	errHandler(RequireHttpStatus(200, remApiRes))
+	if diags.HasError() {
 		return
 	}
 
@@ -399,6 +414,7 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 
 func (r RoleResource) Delete(ctx context.Context, req DeleteRequest, resp *DeleteResponse) {
 	diags := &resp.Diagnostics
+	errHandler := DiagsErrHandler(diags, MsgResourceBadDelete)
 
 	// Load configuration from plan.
 	var data RoleResourceModel
@@ -407,12 +423,13 @@ func (r RoleResource) Delete(ctx context.Context, req DeleteRequest, resp *Delet
 		return
 	}
 
-	_, apiErr := r.Client.DeleteRoleWithResponse(ctx, data.Id.ValueString(), &v3.DeleteRoleParams{})
-	if apiErr != nil {
-		diags.AddError(
-			"Http Request Failure",
-			fmt.Sprintf("IDMC Api request failure: %s", apiErr),
-		)
+	apiRes, apiErr := r.Client.DeleteRoleWithResponse(ctx, data.Id.ValueString(), &v3.DeleteRoleParams{})
+	if errHandler(apiErr); diags.HasError() {
+		return
+	}
+
+	errHandler(RequireHttpStatus(200, apiRes))
+	if diags.HasError() {
 		return
 	}
 
