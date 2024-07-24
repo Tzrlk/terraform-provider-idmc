@@ -18,7 +18,6 @@ func ReformatHeaders(header http.Header) map[string]string {
 }
 
 func GetHttpRequestCtx(ctx context.Context, req *http.Request) (context.Context, error) {
-	var err error
 	if req == nil {
 		return ctx, fmt.Errorf("unable to get context for nil http request")
 	}
@@ -28,20 +27,24 @@ func GetHttpRequestCtx(ctx context.Context, req *http.Request) (context.Context,
 	ctx = tflog.SetField(ctx, "http.method", req.Method)
 	ctx = tflog.SetField(ctx, "http.request.headers", ReformatHeaders(req.Header))
 
+	// Without a body, no further processing is required.
+	if req.Body == nil {
+		return ctx, nil
+	}
+
 	// Attempt to get a copy of the request body.
-	var bodyReadCloser io.ReadCloser
-	bodyReadCloser, err = req.GetBody()
+	bodyReadCloser, err := req.GetBody()
 	if err != nil {
 		return ctx, err
 	}
 
 	// Attempt to re-serialise the request body copy.
 	copyBuffer := new(strings.Builder)
-	if _, err = io.Copy(copyBuffer, bodyReadCloser); err != nil {
+	if _, err := io.Copy(copyBuffer, bodyReadCloser); err != nil {
 		return ctx, err
 	}
 
-	// Finally enrich the context with the body info and return.
+	// Finally enrich the context with the body info.
 	ctx = tflog.SetField(ctx, "http.request.body", copyBuffer.String())
 	return ctx, nil
 }
