@@ -59,6 +59,16 @@ func NewSliceFrom[T any](slice ...[]T) []T {
 	return result
 }
 
+// Coalesce returns the first non-nil pointer in the inputs, or nil.
+func Coalesce[T any](items ...*T) *T {
+	for _, item := range items {
+		if item != nil {
+			return item
+		}
+	}
+	return nil
+}
+
 func Handle0(handler func(error), target func() error) func() {
 	return func() { handler(target()) }
 }

@@ -25,6 +25,14 @@ import (
 
 // </editor-fold> //////////////////////////////////////////////////////////////
 
+// ApiErrorBody When the REST API encounters an error, it returns a REST API error object.
+type ApiErrorBody struct {
+	Type        *string `json:"@type,omitempty"`
+	Code        *string `json:"code,omitempty"`
+	Description *string `json:"description,omitempty"`
+	StatusCode  *int    `json:"statusCode,omitempty"`
+}
+
 // GetAgentInstallerInfoResponseBody defines model for getAgentInstallerInfoResponseBody.
 type GetAgentInstallerInfoResponseBody struct {
 	Type                *string `json:"@type,omitempty"`
@@ -148,35 +156,86 @@ type LoginResponseBody struct {
 
 // RuntimeEnvironment defines model for runtimeEnvironment.
 type RuntimeEnvironment struct {
-	Agents      *[]interface{} `json:"agents,omitempty"`
-	CreateTime  *string        `json:"createTime,omitempty"`
-	CreatedBy   *string        `json:"createdBy,omitempty"`
-	Description *string        `json:"description,omitempty"`
-	FederatedId *string        `json:"federatedId,omitempty"`
-	Id          *string        `json:"id,omitempty"`
+	// Agents Agents assigned to the Secure Agent group.
+	Agents *[]RuntimeEnvironmentAgent `json:"agents,omitempty"`
+
+	// CreateTime Date and time the Secure Agent group was created.
+	CreateTime *string `json:"createTime,omitempty"`
+
+	// CreatedBy User who created the Secure Agent group.
+	CreatedBy *string `json:"createdBy,omitempty"`
+
+	// Description Description of the Secure Agent group.
+	Description *string `json:"description,omitempty"`
+
+	// FederatedId Global unique identifier.
+	FederatedId *string `json:"federatedId,omitempty"`
+
+	// Id Secure Agent group ID.
+	Id *string `json:"id,omitempty"`
 
 	// IsShared Whether the Secure Agent group can be shared with sub-organizations.
-	IsShared         *bool                   `json:"isShared,omitempty"`
-	Name             string                  `json:"name"`
-	OrgId            *string                 `json:"orgId,omitempty"`
+	IsShared *bool `json:"isShared,omitempty"`
+
+	// Name Secure Agent group name.
+	Name string `json:"name"`
+
+	// OrgId Organization ID.
+	OrgId *string `json:"orgId,omitempty"`
+
+	// ServerlessConfig Attribute that defines serverless runtime environment properties.
 	ServerlessConfig *map[string]interface{} `json:"serverlessConfig,omitempty"`
-	UpdateTime       *string                 `json:"updateTime,omitempty"`
-	UpdatedBy        *string                 `json:"updatedBy,omitempty"`
+
+	// UpdateTime Date and time that the Secure Agent group was last updated.
+	UpdateTime *string `json:"updateTime,omitempty"`
+
+	// UpdatedBy User who last updated the Secure Agent group.
+	UpdatedBy *string `json:"updatedBy,omitempty"`
+}
+
+// RuntimeEnvironmentAgent An agent assigned to a Secure Agent group.
+type RuntimeEnvironmentAgent struct {
+	// Id Agent ID.
+	Id *string `json:"id,omitempty"`
+
+	// OrgId Organization ID.
+	OrgId *string `json:"orgId,omitempty"`
 }
 
 // RuntimeEnvironmentDataBulk defines model for runtimeEnvironmentDataBulk.
 type RuntimeEnvironmentDataBulk struct {
-	Agents           *[]interface{}          `json:"agents,omitempty"`
-	CreateTime       *string                 `json:"createTime,omitempty"`
-	CreatedBy        *string                 `json:"createdBy,omitempty"`
-	Description      *string                 `json:"description,omitempty"`
-	FederatedId      *string                 `json:"federatedId,omitempty"`
-	Id               *string                 `json:"id,omitempty"`
-	Name             *string                 `json:"name,omitempty"`
-	OrgId            *string                 `json:"orgId,omitempty"`
+	// Agents Agents assigned to the Secure Agent group.
+	Agents *[]RuntimeEnvironmentAgent `json:"agents,omitempty"`
+
+	// CreateTime Date and time the Secure Agent group was created.
+	CreateTime *string `json:"createTime,omitempty"`
+
+	// CreatedBy User who created the Secure Agent group.
+	CreatedBy *string `json:"createdBy,omitempty"`
+
+	// Description Description of the Secure Agent group.
+	Description *string `json:"description,omitempty"`
+
+	// FederatedId Global unique identifier.
+	FederatedId *string `json:"federatedId,omitempty"`
+
+	// Id Secure Agent group ID.
+	Id *string `json:"id,omitempty"`
+
+	// Name Secure Agent group name.
+	Name *string `json:"name,omitempty"`
+
+	// OrgId Organization ID.
+	OrgId *string `json:"orgId,omitempty"`
+
+	// ServerlessConfig Attribute that defines serverless runtime environment properties.
 	ServerlessConfig *map[string]interface{} `json:"serverlessConfig,omitempty"`
-	UpdateTime       *string                 `json:"updateTime,omitempty"`
-	UpdatedBy        *string                 `json:"updatedBy,omitempty"`
+
+	// UpdateTime Date and time that the Secure Agent group was last updated.
+	UpdateTime *string `json:"updateTime,omitempty"`
+
+	// UpdatedBy User who last updated the Secure Agent group.
+	UpdatedBy *string `json:"updatedBy,omitempty"`
 }
 
 // RuntimeEnvironmentDataMinimal defines model for runtimeEnvironmentDataMinimal.
@@ -191,7 +250,7 @@ type RuntimeEnvironmentDataMinimal struct {
 // UpdateRuntimeEnvironmentRequestBody defines model for updateRuntimeEnvironmentRequestBody.
 type UpdateRuntimeEnvironmentRequestBody struct {
 	// Agents Agents assigned to the Secure Agent group.
-	Agents *[]UpdateRuntimeEnvironmentRequestBodyAgents `json:"agents,omitempty"`
+	Agents *[]RuntimeEnvironmentAgent `json:"agents,omitempty"`
 
 	// IsShared Whether the Secure Agent group can be shared with sub-organizations.
 	IsShared *bool `json:"isShared,omitempty"`
@@ -200,14 +259,26 @@ type UpdateRuntimeEnvironmentRequestBody struct {
 	Name string `json:"name"`
 }
 
-// UpdateRuntimeEnvironmentRequestBodyAgents defines model for updateRuntimeEnvironmentRequestBodyAgents.
-type UpdateRuntimeEnvironmentRequestBodyAgents struct {
-	// Id Agent ID.
-	Id *string `json:"id,omitempty"`
+// N400 When the REST API encounters an error, it returns a REST API error object.
+type N400 = ApiErrorBody
 
-	// OrgId Organization ID.
-	OrgId *string `json:"orgId,omitempty"`
-}
+// N401 When the REST API encounters an error, it returns a REST API error object.
+type N401 = ApiErrorBody
+
+// N403 When the REST API encounters an error, it returns a REST API error object.
+type N403 = ApiErrorBody
+
+// N404 When the REST API encounters an error, it returns a REST API error object.
+type N404 = ApiErrorBody
+
+// N500 When the REST API encounters an error, it returns a REST API error object.
+type N500 = ApiErrorBody
+
+// N502 When the REST API encounters an error, it returns a REST API error object.
+type N502 = ApiErrorBody
+
+// N503 When the REST API encounters an error, it returns a REST API error object.
+type N503 = ApiErrorBody
 
 // <editor-fold desc="param-types" defaultstate="collapsed"> ///////////////////
 
@@ -596,7 +667,7 @@ func NewLoginRequestWithBody(server string, contentType string, body io.Reader) 
 
 // ClientWithResponses builds on Client to offer response payloads
 type ClientWithResponses struct {
-	*Client
+	Client
 }
 
 // NewClientWithResponses creates a new ClientWithResponses, which wraps
@@ -606,7 +677,7 @@ func NewClientWithResponses(server string, opts ...common.ClientOption) (*Client
 	if err != nil {
 		return nil, err
 	}
-	return &ClientWithResponses{client}, nil
+	return &ClientWithResponses{*client}, nil
 }
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
@@ -643,6 +714,13 @@ type GetAgentInstallerInfoResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *GetAgentInstallerInfoResponseBody
+	JSON400      *N400
+	JSON401      *N401
+	JSON403      *N403
+	JSON404      *N404
+	JSON500      *N500
+	JSON502      *N502
+	JSON503      *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -674,6 +752,13 @@ func (r GetAgentInstallerInfoResponse) BodyData() []byte {
 type ListRuntimeEnvironmentsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
+	JSON400      *N400
+	JSON401      *N401
+	JSON403      *N403
+	JSON404      *N404
+	JSON500      *N500
+	JSON502      *N502
+	JSON503      *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -706,6 +791,13 @@ type CreateRuntimeEnvironmentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *RuntimeEnvironment
+	JSON400      *N400
+	JSON401      *N401
+	JSON403      *N403
+	JSON404      *N404
+	JSON500      *N500
+	JSON502      *N502
+	JSON503      *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -737,6 +829,13 @@ func (r CreateRuntimeEnvironmentResponse) BodyData() []byte {
 type DeleteRuntimeEnvironmentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
+	JSON400      *N400
+	JSON401      *N401
+	JSON403      *N403
+	JSON404      *N404
+	JSON500      *N500
+	JSON502      *N502
+	JSON503      *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -769,6 +868,13 @@ type GetRuntimeEnvironmentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *RuntimeEnvironment
+	JSON400      *N400
+	JSON401      *N401
+	JSON403      *N403
+	JSON404      *N404
+	JSON500      *N500
+	JSON502      *N502
+	JSON503      *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -801,6 +907,13 @@ type UpdateRuntimeEnvironmentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *RuntimeEnvironment
+	JSON400      *N400
+	JSON401      *N401
+	JSON403      *N403
+	JSON404      *N404
+	JSON500      *N500
+	JSON502      *N502
+	JSON503      *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -833,6 +946,13 @@ type LoginResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *LoginResponseBody
+	JSON400      *N400
+	JSON401      *N401
+	JSON403      *N403
+	JSON404      *N404
+	JSON500      *N500
+	JSON502      *N502
+	JSON503      *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -1049,6 +1169,55 @@ func ParseGetAgentInstallerInfoResponse(rsp *http.Response) (*GetAgentInstallerI
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest N502
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
 	}
 
 	return response, nil
@@ -1065,6 +1234,58 @@ func ParseListRuntimeEnvironmentsResponse(rsp *http.Response) (*ListRuntimeEnvir
 	response := &ListRuntimeEnvironmentsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest N502
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
 	}
 
 	return response, nil
@@ -1091,6 +1312,55 @@ func ParseCreateRuntimeEnvironmentResponse(rsp *http.Response) (*CreateRuntimeEn
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest N502
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
 	}
 
 	return response, nil
@@ -1107,6 +1377,58 @@ func ParseDeleteRuntimeEnvironmentResponse(rsp *http.Response) (*DeleteRuntimeEn
 	response := &DeleteRuntimeEnvironmentResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest N502
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
 	}
 
 	return response, nil
@@ -1132,6 +1454,55 @@ func ParseGetRuntimeEnvironmentResponse(rsp *http.Response) (*GetRuntimeEnvironm
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest N502
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
 
 	}
 
@@ -1159,6 +1530,55 @@ func ParseUpdateRuntimeEnvironmentResponse(rsp *http.Response) (*UpdateRuntimeEn
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest N502
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
 	}
 
 	return response, nil
@@ -1184,6 +1604,55 @@ func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest N502
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
 
 	}
 

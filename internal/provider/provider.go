@@ -3,10 +3,8 @@ package provider
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"os"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -14,8 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"net/http"
+	"os"
 	"terraform-provider-idmc/internal/idmc"
 	"terraform-provider-idmc/internal/idmc/common"
+	v2 "terraform-provider-idmc/internal/idmc/v2"
 	"terraform-provider-idmc/internal/idmc/v3"
 	"terraform-provider-idmc/internal/provider/utils"
 )
@@ -49,6 +50,61 @@ type IdmcProviderModel struct {
 
 type IdmcProviderData struct {
 	Api *idmc.IdmcApi
+}
+
+func (r *IdmcProviderData) GetApi(diags *diag.Diagnostics) *idmc.IdmcApi {
+	if r != nil {
+		return r.Api
+	}
+	diags.AddError(
+		"Unconfigured Provider",
+		"The provider (and therefore IDMC api client) has not been configured yet.",
+	)
+	return nil
+}
+
+func (r *IdmcProviderData) GetApiClientV2(diags *diag.Diagnostics) *v2.ClientWithResponses {
+	api := r.GetApi(diags)
+	if api == nil {
+		return nil
+	}
+	if api.V2 == nil {
+		diags.AddError(
+			"Malconfigured Provider",
+			"The V2 api client wrapper has not been initialised.",
+		)
+		return nil
+	}
+	if api.V2.Client == nil {
+		diags.AddError(
+			"Malconfigured Provider",
+			"The V2 api client has not been initialised.",
+		)
+		return nil
+	}
+	return api.V2.Client
+}
+
+func (r *IdmcProviderData) GetApiClientV3(diags *diag.Diagnostics) *v3.ClientWithResponses {
+	api := r.GetApi(diags)
+	if api == nil {
+		return nil
+	}
+	if api.V3 == nil {
+		diags.AddError(
+			"Malconfigured Provider",
+			"The V3 api client wrapper has not been initialised.",
+		)
+		return nil
+	}
+	if api.V3.Client == nil {
+		diags.AddError(
+			"Malconfigured Provider",
+			"The V3 api client has not been initialised.",
+		)
+		return nil
+	}
+	return api.V3.Client
 }
 
 func (p *IdmcProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -192,6 +248,7 @@ func doLogin(ctx context.Context, authHost string, authUser string, authPass str
 	if err := utils.RequireHttpStatus(200, res); err != nil {
 		return apiUrl, "", err
 	}
+	// TODO: Handle other responses.
 
 	// Extract the key information from the login response
 	if res.JSON200 == nil {
@@ -228,6 +285,7 @@ func doLogin(ctx context.Context, authHost string, authUser string, authPass str
 func (p *IdmcProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewRoleResource,
+		NewRuntimeEnvironmentResource,
 	}
 }
 
@@ -240,4 +298,25 @@ func (p *IdmcProvider) DataSources(_ context.Context) []func() datasource.DataSo
 
 func (p *IdmcProvider) Functions(_ context.Context) []func() function.Function {
 	return []func() function.Function{}
+}
+
+func GetProviderData(diags *diag.Diagnostics, data any) *IdmcProviderData {
+
+	// Provider hasn't been configured yet.
+	if data == nil {
+		return nil
+	}
+
+	// Attempt to cast the data.
+	if data, ok := data.(*IdmcProviderData); ok {
+		return data
+	}
+
+	// Really, this should never happen.
+	diags.AddError(
+		"Unexpected Provider Configuration Type",
+		fmt.Sprintf("Expected *IdmcProviderData, got: %T. Please report this issue to the provider developers.", data),
+	)
+	return nil
+
 }

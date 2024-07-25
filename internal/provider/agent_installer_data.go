@@ -2,24 +2,22 @@ package provider
 
 import (
 	"context"
-	"fmt"
-
+	. "github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"terraform-provider-idmc/internal/idmc/v2"
-
-	. "github.com/hashicorp/terraform-plugin-framework/datasource"
 	. "terraform-provider-idmc/internal/provider/utils"
 )
 
-var _ DataSource = &AgentInstallerDataSource{}
-
-func NewAgentInstallerDataSource() DataSource {
-	return &AgentInstallerDataSource{}
-}
+var _ DataSourceWithConfigure = &AgentInstallerDataSource{}
 
 type AgentInstallerDataSource struct {
-	Client *v2.ClientWithResponses
+	IdmcProviderDataSource
+}
+
+func NewAgentInstallerDataSource() DataSource {
+	return &AgentInstallerDataSource{
+		IdmcProviderDataSource{},
+	}
 }
 
 type AgentInstallerDataSourceModel struct {
@@ -57,29 +55,16 @@ func (d *AgentInstallerDataSource) Schema(_ context.Context, _ SchemaRequest, re
 	}
 }
 
-func (d *AgentInstallerDataSource) Configure(_ context.Context, req ConfigureRequest, resp *ConfigureResponse) {
-
-	if req.ProviderData == nil {
-		return
-	}
-
-	data, ok := req.ProviderData.(*IdmcProviderData)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *IdmcProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-		return
-	}
-	d.Client = data.Api.V2.Client
-
-}
-
 const AgentInstallerInfoDataSourceBadRead = "Unable to read data source"
 
 func (d *AgentInstallerDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
 	diags := &resp.Diagnostics
 	errHandler := DiagsErrHandler(diags, AgentInstallerInfoDataSourceBadRead)
+
+	client := d.GetApiClientV2(diags)
+	if diags.HasError() {
+		return
+	}
 
 	// Load the previous state if present.
 	var config AgentInstallerDataSourceModel
@@ -89,13 +74,25 @@ func (d *AgentInstallerDataSource) Read(ctx context.Context, req ReadRequest, re
 	}
 
 	// Perform the API request.
-	apiRes, apiErr := d.Client.GetAgentInstallerInfoWithResponse(ctx, config.Platform.ValueString())
+	apiRes, apiErr := client.GetAgentInstallerInfoWithResponse(ctx, config.Platform.ValueString())
 	if errHandler(apiErr); diags.HasError() {
 		return
 	}
 
-	errHandler(RequireHttpStatus(200, apiRes))
-	if diags.HasError() {
+	// Handle error responses.
+	if apiRes.StatusCode() != 200 {
+		CheckApiErrorV2(diags,
+			apiRes.JSON400,
+			apiRes.JSON401,
+			apiRes.JSON403,
+			apiRes.JSON404,
+			apiRes.JSON500,
+			apiRes.JSON502,
+			apiRes.JSON503,
+		)
+		if !diags.HasError() {
+			errHandler(RequireHttpStatus(200, apiRes))
+		}
 		return
 	}
 

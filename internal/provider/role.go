@@ -19,14 +19,16 @@ import (
 	. "terraform-provider-idmc/internal/utils"
 )
 
-var _ Resource = &RoleResource{}
-
-func NewRoleResource() Resource {
-	return &RoleResource{}
-}
+var _ ResourceWithConfigure = &RoleResource{}
 
 type RoleResource struct {
-	Client *v3.ClientWithResponses
+	IdmcProviderResource
+}
+
+func NewRoleResource() Resource {
+	return &RoleResource{
+		IdmcProviderResource{},
+	}
 }
 
 type RoleResourceModel struct {
@@ -123,6 +125,11 @@ func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *Creat
 	diags := &resp.Diagnostics
 	errHandler := DiagsErrHandler(diags, MsgResourceBadCreate)
 
+	client := r.GetApiClientV3(diags)
+	if diags.HasError() {
+		return
+	}
+
 	// Load configuration from plan.
 	var data RoleResourceModel
 	diags.Append(req.Plan.Get(ctx, &data)...)
@@ -148,7 +155,7 @@ func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *Creat
 		return
 	}
 
-	apiRes, apiErr := r.Client.CreateRoleWithResponse(ctx, v3.CreateRoleJSONRequestBody{
+	apiRes, apiErr := client.CreateRoleWithResponse(ctx, v3.CreateRoleJSONRequestBody{
 		Name:        data.Name.ValueStringPointer(),
 		Description: data.Description.ValueStringPointer(),
 		Privileges:  &rolePrivilegeValues,
@@ -195,6 +202,11 @@ func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadRespo
 	diags := &resp.Diagnostics
 	errHandler := DiagsErrHandler(diags, MsgResourceBadRead)
 
+	client := r.GetApiClientV3(diags)
+	if diags.HasError() {
+		return
+	}
+
 	// Load configuration from plan.
 	var data RoleResourceModel
 	diags.Append(req.State.Get(ctx, &data)...)
@@ -226,7 +238,7 @@ func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadRespo
 	}
 
 	// Perform the API request.
-	apiRes, apiErr := r.Client.GetRolesWithResponse(ctx, params)
+	apiRes, apiErr := client.GetRolesWithResponse(ctx, params)
 	if errHandler(apiErr); diags.HasError() {
 		return
 	}
@@ -284,6 +296,11 @@ func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadRespo
 func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *UpdateResponse) {
 	diags := &resp.Diagnostics
 	errHandler := DiagsErrHandler(diags, MsgResourceBadUpdate)
+
+	client := r.GetApiClientV3(diags)
+	if diags.HasError() {
+		return
+	}
 
 	// Load config from state for comparison.
 	var state RoleResourceModel
@@ -354,7 +371,7 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 	}
 
 	// Add all the privileges that need to be added
-	addApiRes, addApiErr := r.Client.AddRolePrivilegesWithResponse(
+	addApiRes, addApiErr := client.AddRolePrivilegesWithResponse(
 		ctx,
 		plan.Id.ValueString(),
 		&v3.AddRolePrivilegesParams{},
@@ -381,7 +398,7 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 	}
 
 	// Remove all the privileges that need to be removed
-	remApiRes, remApiErr := r.Client.RemoveRolePrivilegesWithResponse(
+	remApiRes, remApiErr := client.RemoveRolePrivilegesWithResponse(
 		ctx,
 		plan.Id.ValueString(),
 		&v3.RemoveRolePrivilegesParams{},
@@ -416,6 +433,11 @@ func (r RoleResource) Delete(ctx context.Context, req DeleteRequest, resp *Delet
 	diags := &resp.Diagnostics
 	errHandler := DiagsErrHandler(diags, MsgResourceBadDelete)
 
+	client := r.GetApiClientV3(diags)
+	if diags.HasError() {
+		return
+	}
+
 	// Load configuration from plan.
 	var data RoleResourceModel
 	diags.Append(req.State.Get(ctx, &data)...)
@@ -423,7 +445,7 @@ func (r RoleResource) Delete(ctx context.Context, req DeleteRequest, resp *Delet
 		return
 	}
 
-	apiRes, apiErr := r.Client.DeleteRoleWithResponse(ctx, data.Id.ValueString(), &v3.DeleteRoleParams{})
+	apiRes, apiErr := client.DeleteRoleWithResponse(ctx, data.Id.ValueString(), &v3.DeleteRoleParams{})
 	if errHandler(apiErr); diags.HasError() {
 		return
 	}

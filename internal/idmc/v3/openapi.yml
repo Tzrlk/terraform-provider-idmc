@@ -24,6 +24,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/loginResponseBody'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
 
   /public/core/v3/roles:
     description: |-
@@ -62,6 +76,18 @@ paths:
                 $ref: '#/components/schemas/getRolesResponseBody'
         400:
           $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
     post:
       operationId: createRole
       description: You can create custom roles for your organization.
@@ -78,6 +104,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/createRoleResponseBody'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
 
   /public/core/v3/roles/{role_ref}:
     parameters:
@@ -92,6 +132,20 @@ paths:
       responses:
         200:
           description: A successful deletion.
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
 
   /public/core/v3/roles/{role_ref}/addPrivileges:
     parameters:
@@ -108,6 +162,20 @@ paths:
       responses:
         200:
           description: Successfully added privileges.
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
 
   /public/core/v3/roles/{role_ref}/removePrivileges:
     parameters:
@@ -125,6 +193,20 @@ paths:
       responses:
         200:
           description: Successfully removed privileges.
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
 
 components:
 

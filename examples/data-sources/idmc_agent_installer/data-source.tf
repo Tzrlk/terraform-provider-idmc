@@ -1,10 +1,10 @@
 
 # Linux
 data "idmc_agent_installer" "linux" {
-  platform = "linux"
+  platform = "linux64"
 }
 
 # Windows
 data "idmc_agent_installer" "windows" {
-  platform = "windows"
+  platform = "win64"
 }

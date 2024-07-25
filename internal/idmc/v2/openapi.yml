@@ -2,6 +2,8 @@ openapi: '3.0.0'
 info:
   title:   'Admin API for IDMC'
   version: '2.0.0'
+externalDocs:
+  url: https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform-rest-api-version-2-resources.html
 paths:
 
   /ma/api/v2/user/login:
@@ -20,6 +22,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/loginResponseBody'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
 
   /api/v2/agent/installerInfo/{platform}:
     get:
@@ -44,6 +60,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/getAgentInstallerInfoResponseBody'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
 
   /api/v2/runtimeEnvironment:
     get:
@@ -54,6 +84,20 @@ paths:
         200:
           description: |-
             Returns all the runtime environments for the organization.
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
     post:
       operationId: createRuntimeEnvironment
       description: |-
@@ -73,6 +117,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/runtimeEnvironment'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
 
   /api/v2/runtimeEnvironment/{id}:
     parameters:
@@ -94,6 +152,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/runtimeEnvironment'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
     post:
       operationId: updateRuntimeEnvironment
       description: |-
@@ -113,6 +185,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/runtimeEnvironment'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
     delete:
       operationId: deleteRuntimeEnvironment
       description: |-
@@ -123,8 +209,90 @@ paths:
         200:
           description: |-
             Successfully deleted the runtime environment.
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
 
 components:
+
+  parameters:
+
+    headerSession:
+      name: icSessionId
+      in: header
+      schema:
+        type: string
+      required: true
+
+  # https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/informatica-intelligent-cloud-services-rest-api/rest-api-responses.html
+  responses:
+
+    400:
+      description: |-
+        Bad request. Can be a field or format issue such as an invalid character or incorrect string length.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/apiErrorBody'
+
+    401:
+      description: |-
+        Authentication issue. For example, invalid credentials or invalid session IDs.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/apiErrorBody'
+
+    403:
+      description: |-
+        Generic error. For example, user doesn't have required permissions for a resource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/apiErrorBody'
+
+    404:
+      description: |-
+        Resource can't be found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/apiErrorBody'
+
+    500:
+      description: |-
+        Unexpected error. Generic error message that appears when an unexpected condition was encountered.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/apiErrorBody'
+
+    502:
+      description: |-
+        Network issue.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/apiErrorBody'
+
+    503:
+      description: |-
+        Service unavailable. The server cannot handle the request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/apiErrorBody'
 
   schemas:
 
@@ -330,38 +498,35 @@ components:
             agents:
               type: array
               items:
-                $ref: '#/components/schemas/updateRuntimeEnvironmentRequestBodyAgents'
+                $ref: '#/components/schemas/runtimeEnvironmentAgent'
               description: |-
                 Agents assigned to the Secure Agent group.
-    updateRuntimeEnvironmentRequestBodyAgents:
-      type: object
-      properties:
-        orgId:
-          type: string
-          description: |-
-            Organization ID.
-        id:
-          type: string
-          description: |-
-            Agent ID.
-      example: |-
-        {
-          "@type": "runtimeEnvironment",
-          "name": "14401",
-          "agents": [
-            {
-              "@type": "agent",
-              "id": "01000308000000000003",
-              "orgId": "010003"
-            }
-          ],
-          "isShared": false
-        }
 
     runtimeEnvironment:
       allOf:
         - $ref: '#/components/schemas/runtimeEnvironmentDataMinimal'
         - $ref: '#/components/schemas/runtimeEnvironmentDataBulk'
+      example: |-
+        {
+          "@type": "runtimeEnvironment",
+          "id": "01000325000000000005",
+          "orgId": "010003",
+          "name": "USW1MJ02W6PP-2",
+          "createTime": "2021-11-09T17:20:55.583Z",
+          "updateTime": "2021-11-09T17:20:55.583Z",
+          "createdBy": "ctan",
+          "updatedBy": "ctan",
+          "agents": [],
+          "isShared": false,
+          "federatedId": "9F4z0pY1kKqdlmLp5kYXkF",
+          "createTimeUTC": "2021-11-09T22:20:55.583Z",
+          "updateTimeUTC": "2021-11-09T22:20:55.583Z",
+          "serverlessConfig": {
+            "cloudProviderConfig": {
+              "cloudConfig": []
+            }
+          }
+        }
 
     runtimeEnvironmentDataMinimal:
       type: object
@@ -384,26 +549,65 @@ components:
         }
 
     runtimeEnvironmentDataBulk:
+      type: object
       properties:
         id:
           type: string
+          description: |-
+            Secure Agent group ID.
         orgId:
           type: string
+          description: |-
+            Organization ID.
         name:
           type: string
+          description: |-
+            Secure Agent group name.
         description:
           type: string
+          description: |-
+            Description of the Secure Agent group.
         createTime:
           type: string
+          description: |-
+            Date and time the Secure Agent group was created.
         updateTime:
           type: string
+          description: |-
+            Date and time that the Secure Agent group was last updated.
         createdBy:
           type: string
+          description: |-
+            User who created the Secure Agent group.
         updatedBy:
           type: string
+          description: |-
+            User who last updated the Secure Agent group.
         agents:
           type: array
+          description: |-
+            Agents assigned to the Secure Agent group.
+          items:
+            $ref: '#/components/schemas/runtimeEnvironmentAgent'
         federatedId:
           type: string
+          description: |-
+            Global unique identifier.
         serverlessConfig:
           type: object
+          description: |-
+            Attribute that defines serverless runtime environment properties.
+
+    runtimeEnvironmentAgent:
+      type: object
+      description: |-
+        An agent assigned to a Secure Agent group.
+      properties:
+        id:
+          type: string
+          description: |-
+            Agent ID.
+        orgId:
+          type: string
+          description: |-
+            Organization ID.

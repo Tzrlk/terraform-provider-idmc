@@ -3,31 +3,33 @@ package provider
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"terraform-provider-idmc/internal/utils"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"terraform-provider-idmc/internal/idmc/v3"
+	"terraform-provider-idmc/internal/utils"
 
 	. "github.com/hashicorp/terraform-plugin-framework/datasource"
 	. "terraform-provider-idmc/internal/provider/utils"
 )
 
-var _ DataSource = &RolesDataSource{}
+var _ DataSourceWithConfigure = &RolesDataSource{}
 var _ DataSourceWithConfigValidators = &RolesDataSource{}
 
-func NewRolesDataSource() DataSource {
-	return &RolesDataSource{}
+type RolesDataSource struct {
+	IdmcProviderDataSource
 }
 
-type RolesDataSource struct {
-	Client *v3.ClientWithResponses
+func NewRolesDataSource() DataSource {
+	return &RolesDataSource{
+		IdmcProviderDataSource{},
+	}
 }
 
 type RolesDataSourceModel struct {
@@ -159,24 +161,6 @@ func (d *RolesDataSource) Schema(_ context.Context, _ SchemaRequest, resp *Schem
 	}
 }
 
-func (d *RolesDataSource) Configure(_ context.Context, req ConfigureRequest, resp *ConfigureResponse) {
-
-	if req.ProviderData == nil {
-		return
-	}
-
-	data, ok := req.ProviderData.(*IdmcProviderData)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *IdmcProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-		return
-	}
-	d.Client = data.Api.V3.Client
-
-}
-
 func (d *RolesDataSource) ConfigValidators(ctx context.Context) []ConfigValidator {
 	return []ConfigValidator{
 		datasourcevalidator.Conflicting(
@@ -219,6 +203,11 @@ func (d *RolesDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadR
 	diags := &resp.Diagnostics
 	errHandler := DiagsErrHandler(diags, MsgDataSourceBadRead)
 
+	client := d.GetApiClientV3(diags)
+	if diags.HasError() {
+		return
+	}
+
 	// Load the previous state if present.
 	var config RolesDataSourceModel
 	diags.Append(req.Config.Get(ctx, &config)...)
@@ -248,29 +237,24 @@ func (d *RolesDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadR
 	}
 
 	// Perform the API request.
-	apiRes, apiErr := d.Client.GetRolesWithResponse(ctx, params)
+	apiRes, apiErr := client.GetRolesWithResponse(ctx, params)
 	if errHandler(apiErr); diags.HasError() {
 		return
 	}
 
-	// Handle non-200 responses
+	// Handle error responses.
 	if apiRes.StatusCode() != 200 {
-		switch apiRes.StatusCode() {
-		case 400:
-			apiErr := *utils.Val(apiRes.JSON400).Error
-			diags.AddError(
-				"IDMC API bad response status",
-				fmt.Sprintf("Request: %s\nCode: %s\nMsg: %s",
-					utils.ValOr(apiErr.RequestId, "-"),
-					utils.ValOr(apiErr.Code, "-"),
-					utils.ValOr(apiErr.Message, "-"),
-				),
-			)
-		default:
-			diags.AddError(
-				"IDMC API bad response status",
-				fmt.Sprintf("IDMC API response 200 expected; got %s", apiRes.Status()),
-			)
+		CheckApiErrorV3(diags,
+			apiRes.JSON400,
+			apiRes.JSON401,
+			apiRes.JSON403,
+			apiRes.JSON404,
+			apiRes.JSON500,
+			apiRes.JSON502,
+			apiRes.JSON503,
+		)
+		if !diags.HasError() {
+			errHandler(RequireHttpStatus(200, apiRes))
 		}
 		return
 	}
