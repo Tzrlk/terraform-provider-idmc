@@ -72,17 +72,8 @@ type CreateRoleResponseBody struct {
 	Id *string `json:"id,omitempty"`
 
 	// OrgId ID of the organization the role belongs to.
-	OrgId      *string `json:"orgId,omitempty"`
-	Privileges *[]struct {
-		// Description Description of the privilege.
-		Description *string `json:"description,omitempty"`
-		Id          *string `json:"id,omitempty"`
-
-		// Name Name of the privilege.
-		Name    *string `json:"name,omitempty"`
-		Service *string `json:"service,omitempty"`
-		Status  *string `json:"status,omitempty"`
-	} `json:"privileges,omitempty"`
+	OrgId      *string              `json:"orgId,omitempty"`
+	Privileges *[]RolePrivilegeItem `json:"privileges,omitempty"`
 
 	// RoleName Name of the role.
 	RoleName *string `json:"roleName,omitempty"`
@@ -124,17 +115,8 @@ type GetRolesResponseBodyItem struct {
 	Id *string `json:"id,omitempty"`
 
 	// OrgId ID of the organization the role belongs to.
-	OrgId      *string `json:"orgId,omitempty"`
-	Privileges *[]struct {
-		// Description Description of the privilege.
-		Description *string `json:"description,omitempty"`
-		Id          *string `json:"id,omitempty"`
-
-		// Name Name of the privilege.
-		Name    *string `json:"name,omitempty"`
-		Service *string `json:"service,omitempty"`
-		Status  *string `json:"status,omitempty"`
-	} `json:"privileges,omitempty"`
+	OrgId      *string              `json:"orgId,omitempty"`
+	Privileges *[]RolePrivilegeItem `json:"privileges,omitempty"`
 
 	// RoleName Name of the role.
 	RoleName *string `json:"roleName,omitempty"`
@@ -243,18 +225,21 @@ type RoleInfo struct {
 	UpdatedBy *string `json:"updatedBy,omitempty"`
 }
 
+// RolePrivilegeItem defines model for rolePrivilegeItem.
+type RolePrivilegeItem struct {
+	// Description Description of the privilege.
+	Description *string `json:"description,omitempty"`
+	Id          *string `json:"id,omitempty"`
+
+	// Name Name of the privilege.
+	Name    *string `json:"name,omitempty"`
+	Service *string `json:"service,omitempty"`
+	Status  *string `json:"status,omitempty"`
+}
+
 // WithPrivilegeItems defines model for withPrivilegeItems.
 type WithPrivilegeItems struct {
-	Privileges *[]struct {
-		// Description Description of the privilege.
-		Description *string `json:"description,omitempty"`
-		Id          *string `json:"id,omitempty"`
-
-		// Name Name of the privilege.
-		Name    *string `json:"name,omitempty"`
-		Service *string `json:"service,omitempty"`
-		Status  *string `json:"status,omitempty"`
-	} `json:"privileges,omitempty"`
+	Privileges *[]RolePrivilegeItem `json:"privileges,omitempty"`
 }
 
 // WithPrivilegeRefs defines model for withPrivilegeRefs.

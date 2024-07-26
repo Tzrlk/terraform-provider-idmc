@@ -502,25 +502,7 @@ components:
         privileges:
           type: array
           items:
-            type: object
-            properties:
-              id:
-                type: string
-              name:
-                type: string
-                description: |-
-                  Name of the privilege.
-              description:
-                type: string
-                description: |-
-                  Description of the privilege.
-              service:
-                type: string
-              status:
-                type: string
-#                enum:
-#                  - Enabled
-#                  - Disabled
+            $ref: '#/components/schemas/rolePrivilegeItem'
       example: |-
         {
           "privileges": [
@@ -536,6 +518,26 @@ components:
             }
           ]
         }
+    rolePrivilegeItem:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          description: |-
+            Name of the privilege.
+        description:
+          type: string
+          description: |-
+            Description of the privilege.
+        service:
+          type: string
+        status:
+          type: string
+#          enum:
+#            - Enabled
+#            - Disabled
 
     withPrivilegeRefs:
       type: object

@@ -20,12 +20,12 @@ import (
 var _ ResourceWithConfigure = &RuntimeEnvironmentResource{}
 
 type RuntimeEnvironmentResource struct {
-	IdmcProviderResource
+	*IdmcProviderResource
 }
 
 func NewRuntimeEnvironmentResource() Resource {
 	return &RuntimeEnvironmentResource{
-		IdmcProviderResource{},
+		&IdmcProviderResource{},
 	}
 }
 
@@ -45,10 +45,12 @@ type RuntimeEnvironmentResourceModel struct {
 
 // TODO: Implement serverless config.
 
+// Metadata <editor-fold desc="Metadata" defaultstate="collapsed">
 func (r RuntimeEnvironmentResource) Metadata(ctx context.Context, req MetadataRequest, resp *MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_runtime_environment"
 }
 
+// Schema <editor-fold desc="Schema" defaultstate="collapsed">
 func (r RuntimeEnvironmentResource) Schema(ctx context.Context, req SchemaRequest, resp *SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-2-resources/runtime_environments.html",
@@ -105,11 +107,14 @@ func (r RuntimeEnvironmentResource) Schema(ctx context.Context, req SchemaReques
 	}
 }
 
+// </editor-fold>
+
+// Create <editor-fold desc="Create" defaultstate="collapsed">
 func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateRequest, resp *CreateResponse) {
 	diags := &resp.Diagnostics
 	errHandler := DiagsErrHandler(diags, MsgResourceBadCreate)
 
-	client := r.GetApiClientV2(diags)
+	client := r.GetApiClientV2(diags, MsgResourceBadCreate)
 	if diags.HasError() {
 		return
 	}
@@ -158,11 +163,13 @@ func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReques
 
 }
 
+// </editor-fold>
+
 func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
 	diags := &resp.Diagnostics
 	errHandler := DiagsErrHandler(diags, MsgResourceBadRead)
 
-	client := r.GetApiClientV2(diags)
+	client := r.GetApiClientV2(diags, MsgResourceBadRead)
 	if diags.HasError() {
 		return
 	}
@@ -222,11 +229,14 @@ func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, r
 
 }
 
+// </editor-fold>
+
+// Update <editor-fold desc="Update" defaultstate="collapsed">
 func (r RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateRequest, resp *UpdateResponse) {
 	diags := &resp.Diagnostics
 	errHandler := DiagsErrHandler(diags, MsgResourceBadUpdate)
 
-	client := r.GetApiClientV2(diags)
+	client := r.GetApiClientV2(diags, MsgResourceBadUpdate)
 	if diags.HasError() {
 		return
 	}
@@ -294,11 +304,14 @@ func (r RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateReques
 
 }
 
+// </editor-fold>
+
+// Delete <editor-fold desc="Delete" defaultstate="collapsed">
 func (r RuntimeEnvironmentResource) Delete(ctx context.Context, req DeleteRequest, resp *DeleteResponse) {
 	diags := &resp.Diagnostics
 	errHandler := DiagsErrHandler(diags, MsgResourceBadDelete)
 
-	client := r.GetApiClientV2(diags)
+	client := r.GetApiClientV2(diags, MsgResourceBadDelete)
 	if diags.HasError() {
 		return
 	}
@@ -336,6 +349,8 @@ func (r RuntimeEnvironmentResource) Delete(ctx context.Context, req DeleteReques
 	diags.Append(resp.State.Set(ctx, &data)...)
 
 }
+
+// </editor-fold>
 
 func (r RuntimeEnvironmentResource) UpdateState(
 	diags *diag.Diagnostics,

@@ -22,12 +22,12 @@ import (
 var _ ResourceWithConfigure = &RoleResource{}
 
 type RoleResource struct {
-	IdmcProviderResource
+	*IdmcProviderResource
 }
 
 func NewRoleResource() Resource {
 	return &RoleResource{
-		IdmcProviderResource{},
+		&IdmcProviderResource{},
 	}
 }
 
@@ -125,7 +125,7 @@ func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *Creat
 	diags := &resp.Diagnostics
 	errHandler := DiagsErrHandler(diags, MsgResourceBadCreate)
 
-	client := r.GetApiClientV3(diags)
+	client := r.GetApiClientV3(diags, MsgResourceBadCreate)
 	if diags.HasError() {
 		return
 	}
@@ -202,7 +202,7 @@ func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadRespo
 	diags := &resp.Diagnostics
 	errHandler := DiagsErrHandler(diags, MsgResourceBadRead)
 
-	client := r.GetApiClientV3(diags)
+	client := r.GetApiClientV3(diags, MsgResourceBadRead)
 	if diags.HasError() {
 		return
 	}
@@ -297,7 +297,7 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 	diags := &resp.Diagnostics
 	errHandler := DiagsErrHandler(diags, MsgResourceBadUpdate)
 
-	client := r.GetApiClientV3(diags)
+	client := r.GetApiClientV3(diags, MsgResourceBadUpdate)
 	if diags.HasError() {
 		return
 	}
@@ -433,7 +433,7 @@ func (r RoleResource) Delete(ctx context.Context, req DeleteRequest, resp *Delet
 	diags := &resp.Diagnostics
 	errHandler := DiagsErrHandler(diags, MsgResourceBadDelete)
 
-	client := r.GetApiClientV3(diags)
+	client := r.GetApiClientV3(diags, MsgResourceBadDelete)
 	if diags.HasError() {
 		return
 	}

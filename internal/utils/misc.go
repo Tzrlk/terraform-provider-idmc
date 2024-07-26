@@ -69,6 +69,25 @@ func Coalesce[T any](items ...*T) *T {
 	return nil
 }
 
+func TransformSlice[F any, T any](from []F, to func(from F) T) []T {
+	out := make([]T, len(from))
+	for index, item := range from {
+		out[index] = to(item)
+	}
+	return out
+}
+func TransformSliceErr[F any, T any](from []F, to func(from F) (T, error)) ([]T, error) {
+	out := make([]T, len(from))
+	for index, item := range from {
+		val, err := to(item)
+		if err != nil {
+			return nil, err
+		}
+		out[index] = val
+	}
+	return out, nil
+}
+
 func Handle0(handler func(error), target func() error) func() {
 	return func() { handler(target()) }
 }

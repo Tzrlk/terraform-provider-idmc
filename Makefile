@@ -39,8 +39,11 @@ clobber:
 CMD_OAPI_CODEGEN  ?= go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
 CMD_TFPLUGINDOCS  ?= go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 CMD_GOLANGCI_LINT ?= go run github.com/golangci/golangci-lint/cmd/golangci-lint
+CMD_TERRAFORM     ?= terraform
 
 ################################################################################
+
+EXE_OUT := $(realpath ${GOPATH}/bin/terraform-provider-idmc.exe)
 
 API_SRC_FILES := $(wildcard internal/idmc/*/openapi.yml)
 API_SRC_DIRS  := $(sort $(dir ${API_SRC_FILES}))
@@ -53,10 +56,16 @@ GO_TEST_FILES := $(shell find . -type f -name *_test.go)
 GO_TEST_DIRS  := $(sort $(dir ${GO_TEST_FILES}))
 vpath %_test.go ${GO_TEST_DIRS}
 
-TF_SRC_FILES := $(shell find . -type f -name *.tf)
-vpath %.tf      examples/
-vpath %.tfvars  examples/
-vpath %.tfstate examples/
+TF_SRC_DIRS  := \
+	examples/provider \
+	$(wildcard examples/data-sources/*/) \
+	$(wildcard examples/resources/*/)
+TF_SRC_FILES := $(foreach dir,${TF_SRC_DIRS},$(wildcard ${dir}/*.tf))
+vpath %.tf      ${TF_SRC_DIRS}
+vpath %.tfvars  ${TF_SRC_DIRS}
+vpath %.tfstate ${TF_SRC_DIRS}
+
+TF_LOG_FILES := $(foreach dir,${TF_SRC_DIRS},$(realpath ${dir}/terraform.jsonl))
 
 ################################################################################
 #: Generate OpenAPI clients
@@ -129,10 +138,10 @@ go.sum: \
 
 ################################################################################
 #: Compile module.
-install: ${GOPATH}/bin/terraform-provider-idmc.exe
+install: ${EXE_OUT}
 .PHONY: install
 
-${GOPATH}/bin/terraform-provider-idmc.exe: \
+${EXE_OUT}: \
 		${GO_SRC_FILES} \
 		go.sum \
 		codegen
@@ -152,6 +161,34 @@ test: .build/gotest.jsonl
 %_test.go: %.go
 	touch ${@}
 .NOTINTERMEDIATE: %_test.go
+
+################################################################################
+#: Run acceptance tests.
+verify:
+	TF_ACC=1 go test ./... -v ${TESTARGS} -timeout 120m
+.PHONY: verify
+
+################################################################################
+#: Run examples
+examples: ${TF_LOG_FILES}
+.PHONY: examples
+
+TF_INPUT         = 0
+TF_IN_AUTOMATION = true
+TF_LOG           = json
+TF_PROVIDER_LOG  = json
+TF_LOG_PATH      = terraform.jsonl
+
+%/terraform.jsonl: \
+		%/local_override.tf \
+		$$(wildcard %/*.tf) \
+		$$(wildcard %/*.tfvars) \
+		${EXE_OUT}
+	${CMD_TERRAFORM} -chdir=$(dir ${@}) plan
+
+%/local_override.tf: \
+		examples/local_override.tf
+	cp ${<} ${@}
 
 ################################################################################
 #: Generate documentation.
@@ -184,9 +221,3 @@ examples/resources/idmc_%/resource.tf: \
 examples/provider/provider.tf: \
 		internal/provider/provider.go
 	touch ${@}
-
-################################################################################
-#: Run acceptance tests.
-verify:
-	TF_ACC=1 go test ./... -v ${TESTARGS} -timeout 120m
-.PHONY: verify

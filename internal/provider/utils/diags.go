@@ -67,6 +67,17 @@ func UnwrapSetValue(
 	})
 }
 
+func UnwrapListValue(
+	diagnostics *diag.Diagnostics,
+	path path.Path,
+	elementType attr.Type,
+	elements []attr.Value,
+) types.List {
+	return UnwrapDiag(diagnostics, path, func() (types.List, diag.Diagnostics) {
+		return types.ListValue(elementType, elements)
+	})
+}
+
 func DiagsErrHandler(diags *diag.Diagnostics, title string) func(error) {
 	return func(err error) {
 		if err != nil {

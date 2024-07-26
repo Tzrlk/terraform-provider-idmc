@@ -11,12 +11,12 @@ import (
 var _ DataSourceWithConfigure = &AgentInstallerDataSource{}
 
 type AgentInstallerDataSource struct {
-	IdmcProviderDataSource
+	*IdmcProviderDataSource
 }
 
 func NewAgentInstallerDataSource() DataSource {
 	return &AgentInstallerDataSource{
-		IdmcProviderDataSource{},
+		&IdmcProviderDataSource{},
 	}
 }
 
@@ -55,13 +55,11 @@ func (d *AgentInstallerDataSource) Schema(_ context.Context, _ SchemaRequest, re
 	}
 }
 
-const AgentInstallerInfoDataSourceBadRead = "Unable to read data source"
-
 func (d *AgentInstallerDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
 	diags := &resp.Diagnostics
-	errHandler := DiagsErrHandler(diags, AgentInstallerInfoDataSourceBadRead)
+	errHandler := DiagsErrHandler(diags, MsgDataSourceBadRead)
 
-	client := d.GetApiClientV2(diags)
+	client := d.GetApiClientV2(diags, MsgDataSourceBadRead)
 	if diags.HasError() {
 		return
 	}

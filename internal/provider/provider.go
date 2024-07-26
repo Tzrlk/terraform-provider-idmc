@@ -3,6 +3,10 @@ package provider
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"os"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/function"
@@ -12,14 +16,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"net/http"
-	"os"
 	"terraform-provider-idmc/internal/idmc"
 	"terraform-provider-idmc/internal/idmc/common"
-	v2 "terraform-provider-idmc/internal/idmc/v2"
 	"terraform-provider-idmc/internal/idmc/v3"
-	"terraform-provider-idmc/internal/provider/utils"
+
+	. "terraform-provider-idmc/internal/provider/utils"
 )
+
+const MsgProviderBadConfigure = "Unable to configure provider"
 
 // Ensure IdmcProvider satisfies various provider interfaces.
 var _ provider.Provider = &IdmcProvider{}
@@ -29,12 +33,16 @@ func New(version string) func() provider.Provider {
 	return func() provider.Provider {
 		return &IdmcProvider{
 			version: version,
+			IdmcProviderData: &IdmcProviderData{
+				Api: nil,
+			},
 		}
 	}
 }
 
 // IdmcProvider defines the provider implementation.
 type IdmcProvider struct {
+	*IdmcProviderData
 	// version is set to the provider version on release, "dev" when the
 	// provider is built and ran locally, and "test" when running acceptance
 	// testing.
@@ -46,65 +54,6 @@ type IdmcProviderModel struct {
 	AuthHost types.String `tfsdk:"auth_host"`
 	AuthUser types.String `tfsdk:"auth_user"`
 	AuthPass types.String `tfsdk:"auth_pass"`
-}
-
-type IdmcProviderData struct {
-	Api *idmc.IdmcApi
-}
-
-func (r *IdmcProviderData) GetApi(diags *diag.Diagnostics) *idmc.IdmcApi {
-	if r != nil {
-		return r.Api
-	}
-	diags.AddError(
-		"Unconfigured Provider",
-		"The provider (and therefore IDMC api client) has not been configured yet.",
-	)
-	return nil
-}
-
-func (r *IdmcProviderData) GetApiClientV2(diags *diag.Diagnostics) *v2.ClientWithResponses {
-	api := r.GetApi(diags)
-	if api == nil {
-		return nil
-	}
-	if api.V2 == nil {
-		diags.AddError(
-			"Malconfigured Provider",
-			"The V2 api client wrapper has not been initialised.",
-		)
-		return nil
-	}
-	if api.V2.Client == nil {
-		diags.AddError(
-			"Malconfigured Provider",
-			"The V2 api client has not been initialised.",
-		)
-		return nil
-	}
-	return api.V2.Client
-}
-
-func (r *IdmcProviderData) GetApiClientV3(diags *diag.Diagnostics) *v3.ClientWithResponses {
-	api := r.GetApi(diags)
-	if api == nil {
-		return nil
-	}
-	if api.V3 == nil {
-		diags.AddError(
-			"Malconfigured Provider",
-			"The V3 api client wrapper has not been initialised.",
-		)
-		return nil
-	}
-	if api.V3.Client == nil {
-		diags.AddError(
-			"Malconfigured Provider",
-			"The V3 api client has not been initialised.",
-		)
-		return nil
-	}
-	return api.V3.Client
 }
 
 func (p *IdmcProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -133,13 +82,36 @@ func (p *IdmcProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp 
 	}
 }
 
+func getCfgVal(diags *diag.Diagnostics, attrVal types.String, attrPath string) string {
+
+	// Check the attribute for a valid value.
+	if !attrVal.IsNull() && attrVal.ValueString() != "" {
+		return attrVal.ValueString()
+	}
+
+	// Check the environment for a valid value.
+	envKey := "IDMC_" + strings.ToUpper(attrPath)
+	val, ok := os.LookupEnv(envKey)
+	if ok && val != "" {
+		return val
+	}
+
+	// Register an error on the attribute and return an empty string.
+	diags.AddAttributeError(path.Root(attrPath), MsgProviderBadConfigure, fmt.Sprintf(
+		"Either '%s' in the config, or '%s' in the env is needed.",
+		attrPath, envKey,
+	))
+	return ""
+
+}
+
 func (p *IdmcProvider) Configure(
 	ctx context.Context,
 	req provider.ConfigureRequest,
 	resp *provider.ConfigureResponse,
 ) {
 	diags := &resp.Diagnostics
-	errHandler := utils.DiagsErrHandler(diags, "Unable to initialise provider")
+	errHandler := DiagsErrHandler(diags, MsgProviderBadConfigure)
 
 	var config IdmcProviderModel
 	diags.Append(req.Config.Get(ctx, &config)...)
@@ -147,44 +119,10 @@ func (p *IdmcProvider) Configure(
 		return
 	}
 
-	authHost := os.Getenv("IDMC_AUTH_HOST")
-	if !config.AuthHost.IsNull() {
-		authHost = config.AuthHost.ValueString()
-	}
-	if authHost == "" {
-		diags.AddAttributeError(
-			path.Root("auth_host"),
-			"Missing IDMC API authentication host",
-			"Either 'auth_host' in the config or 'IDMC_AUTH_HOST' in the env is needed.",
-		)
-	}
-
-	authUser := os.Getenv("IDMC_AUTH_USER")
-	if !config.AuthUser.IsNull() {
-		authUser = config.AuthUser.ValueString()
-	}
-	if authUser == "" {
-		diags.AddAttributeError(
-			path.Root("auth_user"),
-			"Missing IDMC API authentication username",
-			"Either 'auth_user' in the config or 'IDMC_AUTH_USER' in the env is needed.",
-		)
-	}
-
-	authPass := os.Getenv("IDMC_AUTH_PASS")
-	if !config.AuthPass.IsNull() {
-		authPass = config.AuthPass.ValueString()
-	}
-	if authPass == "" {
-		diags.AddAttributeError(
-			path.Root("auth_pass"),
-			"Missing IDMC API authentication password",
-			"Either 'auth_pass' in the config or 'IDMC_AUTH_PASS' in the env is needed.",
-		)
-	}
-
-	// Catching errors here lets us display all the config issues in one go,
-	// rather than treating the user to an onion of failure.
+	// Extract config and validate all the required values are set.
+	authHost := getCfgVal(diags, config.AuthHost, "auth_host")
+	authUser := getCfgVal(diags, config.AuthUser, "auth_user")
+	authPass := getCfgVal(diags, config.AuthPass, "auth_pass")
 	if diags.HasError() {
 		return
 	}
@@ -203,19 +141,21 @@ func (p *IdmcProvider) Configure(
 
 	idmcApi, idmcApiErr := idmc.NewIdmcApi(baseApiUrl, sessionId,
 		common.WithHTTPClient(httpClient),
-		common.WithRequestEditorFn(utils.LogHttpRequest),
-		common.WithApiResponseEditorFn(utils.LogApiResponse),
+		common.WithRequestEditorFn(LogHttpRequest),
+		common.WithApiResponseEditorFn(LogApiResponse),
 	)
 	if idmcApiErr != nil {
 		errHandler(idmcApiErr)
 		return
 	}
-
-	idmcProviderData := &IdmcProviderData{
-		Api: idmcApi,
+	if idmcApi == nil {
+		errHandler(fmt.Errorf("IDMC API not correctly initialised"))
+		return
 	}
-	resp.DataSourceData = idmcProviderData
-	resp.ResourceData = idmcProviderData
+
+	p.Api = idmcApi
+	resp.DataSourceData = p.IdmcProviderData
+	resp.ResourceData = p.IdmcProviderData
 
 }
 
@@ -229,7 +169,7 @@ func doLogin(ctx context.Context, authHost string, authUser string, authPass str
 			req.Header["Accept"] = []string{"application/json"}
 			return nil
 		}),
-		common.WithApiResponseEditorFn(utils.LogApiResponse),
+		common.WithApiResponseEditorFn(LogApiResponse),
 	)
 	if clientErr != nil {
 		return apiUrl, "", clientErr
@@ -245,7 +185,7 @@ func doLogin(ctx context.Context, authHost string, authUser string, authPass str
 	}
 
 	// We only want 200 responses.
-	if err := utils.RequireHttpStatus(200, res); err != nil {
+	if err := RequireHttpStatus(200, res); err != nil {
 		return apiUrl, "", err
 	}
 	// TODO: Handle other responses.
@@ -292,31 +232,11 @@ func (p *IdmcProvider) Resources(_ context.Context) []func() resource.Resource {
 func (p *IdmcProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewAgentInstallerDataSource,
-		NewRolesDataSource,
+		NewRoleDataSource,
+		NewRoleListDataSource,
 	}
 }
 
 func (p *IdmcProvider) Functions(_ context.Context) []func() function.Function {
 	return []func() function.Function{}
-}
-
-func GetProviderData(diags *diag.Diagnostics, data any) *IdmcProviderData {
-
-	// Provider hasn't been configured yet.
-	if data == nil {
-		return nil
-	}
-
-	// Attempt to cast the data.
-	if data, ok := data.(*IdmcProviderData); ok {
-		return data
-	}
-
-	// Really, this should never happen.
-	diags.AddError(
-		"Unexpected Provider Configuration Type",
-		fmt.Sprintf("Expected *IdmcProviderData, got: %T. Please report this issue to the provider developers.", data),
-	)
-	return nil
-
 }
