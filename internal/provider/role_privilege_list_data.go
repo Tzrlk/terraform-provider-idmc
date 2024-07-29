@@ -159,7 +159,7 @@ func convertPrivilegeListResponse(diags *diag.Diagnostics, path path.Path, items
 			"name":        types.StringPointerValue(item.Name),
 			"description": types.StringPointerValue(item.Description),
 			"service":     types.StringPointerValue(item.Service),
-			"status":      types.StringPointerValue(item.Status),
+			"status":      types.StringPointerValue((*string)(item.Status)),
 		})
 	}
 

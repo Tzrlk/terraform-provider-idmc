@@ -57,7 +57,7 @@ API_TPL_FILES := $(sort $(wildcard internal/idmc/templates/*.go.tmpl))
 
 # Sadly I'd have to maintain a manual list of all the source package dirs here
 # if handling them only with wildcard would work.
-GO_SRC_FILES := $(shell find . -type f -name *.go -not -name *_test.go -not -name *.gen.go)
+GO_SRC_FILES := $(patsubst ./%,%,$(shell find . -type f -name '*.go' -not -name '*_test.go' -not -name '*.gen.go'))
 GO_SRC_DIRS  := $(sort $(dir ${GO_SRC_FILES}))
 vpath %.go ${GO_SRC_DIRS}
 
@@ -82,8 +82,7 @@ TF_LOG_FILES := $(addsuffix terraform.jsonl,${TF_SRC_DIRS})
 
 #: Used to debug variable resolution.
 debug:
-	@echo "${TF_SRC_FILES}" | tr ' ' '\n'
-	@echo "${TF_LOG_FILES}" | tr ' ' '\n'
+	@echo "${GO_SRC_FILES}" | tr ' ' '\n'
 .PHONY: debug
 
 ################################################################################
@@ -194,6 +193,8 @@ verify:
 examples: \
 	${TF_LOG_FILES}
 .PHONY: examples
+
+# TODO: Re-implement as actual terraform tests.
 
 TF_INPUT         = 0
 TF_IN_AUTOMATION = true

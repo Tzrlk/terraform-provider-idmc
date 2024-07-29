@@ -23,19 +23,64 @@ import (
 // </editor-fold> //////////////////////////////////////////////////////////////
 // <editor-fold desc="constants" defaultstate="collapsed"> /////////////////////
 
+// Defines values for CreateRoleResponseBodyStatus.
+const (
+	CreateRoleResponseBodyStatusDisabled CreateRoleResponseBodyStatus = "Disabled"
+	CreateRoleResponseBodyStatusEnabled  CreateRoleResponseBodyStatus = "Enabled"
+)
+
+// Defines values for GetRolesResponseBodyItemStatus.
+const (
+	GetRolesResponseBodyItemStatusDisabled GetRolesResponseBodyItemStatus = "Disabled"
+	GetRolesResponseBodyItemStatusEnabled  GetRolesResponseBodyItemStatus = "Enabled"
+)
+
+// Defines values for LoginResponseBodyUserInfoStatus.
+const (
+	LoginResponseBodyUserInfoStatusActive   LoginResponseBodyUserInfoStatus = "Active"
+	LoginResponseBodyUserInfoStatusInactive LoginResponseBodyUserInfoStatus = "Inactive"
+)
+
+// Defines values for RoleInfoStatus.
+const (
+	RoleInfoStatusDisabled RoleInfoStatus = "Disabled"
+	RoleInfoStatusEnabled  RoleInfoStatus = "Enabled"
+)
+
+// Defines values for RolePrivilegeItemStatus.
+const (
+	RolePrivilegeItemStatusDefault    RolePrivilegeItemStatus = "Default"
+	RolePrivilegeItemStatusDisabled   RolePrivilegeItemStatus = "Disabled"
+	RolePrivilegeItemStatusEnabled    RolePrivilegeItemStatus = "Enabled"
+	RolePrivilegeItemStatusUnassigned RolePrivilegeItemStatus = "Unassigned"
+)
+
+// Defines values for GetRolesParamsExpand.
+const (
+	GetRolesParamsExpandPrivileges GetRolesParamsExpand = "privileges"
+)
+
 // </editor-fold> //////////////////////////////////////////////////////////////
 
-// ApiErrorBody When the REST API encounters an error, it returns a REST API error object.
-type ApiErrorBody struct {
-	Error *ApiErrorBodyError `json:"error,omitempty"`
+// ApiError defines model for apiError.
+type ApiError struct {
+	Code         *string           `json:"code,omitempty"`
+	DebugMessage *string           `json:"debugMessage,omitempty"`
+	Details      *[]ApiErrorDetail `json:"details,omitempty"`
+	Message      *string           `json:"message,omitempty"`
+	RequestId    *string           `json:"requestId,omitempty"`
 }
 
-// ApiErrorBodyError defines model for apiErrorBodyError.
-type ApiErrorBodyError struct {
-	Code      *string      `json:"code,omitempty"`
-	Details   *interface{} `json:"details,omitempty"`
-	Message   *string      `json:"message,omitempty"`
-	RequestId *string      `json:"requestId,omitempty"`
+// ApiErrorDetail defines model for apiErrorDetail.
+type ApiErrorDetail struct {
+	Code         *string `json:"code,omitempty"`
+	DebugMessage *string `json:"debugMessage,omitempty"`
+	Message      *string `json:"message,omitempty"`
+}
+
+// ApiErrorResponseBody When the REST API encounters an error, it returns a REST API error object.
+type ApiErrorResponseBody struct {
+	Error *ApiError `json:"error,omitempty"`
 }
 
 // CreateRoleRequestBody defines model for createRoleRequestBody.
@@ -79,7 +124,7 @@ type CreateRoleResponseBody struct {
 	RoleName *string `json:"roleName,omitempty"`
 
 	// Status Whether the organization's license to use the role is valid or has expired.
-	Status *string `json:"status,omitempty"`
+	Status *CreateRoleResponseBodyStatus `json:"status,omitempty"`
 
 	// SystemRole Whether the role is a system-defined role.
 	SystemRole *bool `json:"systemRole,omitempty"`
@@ -90,6 +135,9 @@ type CreateRoleResponseBody struct {
 	// UpdatedBy User who last updated the role.
 	UpdatedBy *string `json:"updatedBy,omitempty"`
 }
+
+// CreateRoleResponseBodyStatus Whether the organization's license to use the role is valid or has expired.
+type CreateRoleResponseBodyStatus string
 
 // GetRolesResponseBody defines model for getRolesResponseBody.
 type GetRolesResponseBody = []GetRolesResponseBodyItem
@@ -122,7 +170,7 @@ type GetRolesResponseBodyItem struct {
 	RoleName *string `json:"roleName,omitempty"`
 
 	// Status Whether the organization's license to use the role is valid or has expired.
-	Status *string `json:"status,omitempty"`
+	Status *GetRolesResponseBodyItemStatus `json:"status,omitempty"`
 
 	// SystemRole Whether the role is a system-defined role.
 	SystemRole *bool `json:"systemRole,omitempty"`
@@ -133,6 +181,9 @@ type GetRolesResponseBodyItem struct {
 	// UpdatedBy User who last updated the role.
 	UpdatedBy *string `json:"updatedBy,omitempty"`
 }
+
+// GetRolesResponseBodyItemStatus Whether the organization's license to use the role is valid or has expired.
+type GetRolesResponseBodyItemStatus string
 
 // LoginRequestBody defines model for loginRequestBody.
 type LoginRequestBody struct {
@@ -183,8 +234,11 @@ type LoginResponseBodyUserInfo struct {
 	SessionId *string `json:"sessionId,omitempty"`
 
 	// Status Status of the user.
-	Status *string `json:"status,omitempty"`
+	Status *LoginResponseBodyUserInfoStatus `json:"status,omitempty"`
 }
+
+// LoginResponseBodyUserInfoStatus Status of the user.
+type LoginResponseBodyUserInfoStatus string
 
 // RoleInfo defines model for roleInfo.
 type RoleInfo struct {
@@ -213,7 +267,7 @@ type RoleInfo struct {
 	RoleName *string `json:"roleName,omitempty"`
 
 	// Status Whether the organization's license to use the role is valid or has expired.
-	Status *string `json:"status,omitempty"`
+	Status *RoleInfoStatus `json:"status,omitempty"`
 
 	// SystemRole Whether the role is a system-defined role.
 	SystemRole *bool `json:"systemRole,omitempty"`
@@ -225,17 +279,37 @@ type RoleInfo struct {
 	UpdatedBy *string `json:"updatedBy,omitempty"`
 }
 
+// RoleInfoStatus Whether the organization's license to use the role is valid or has expired.
+type RoleInfoStatus string
+
 // RolePrivilegeItem defines model for rolePrivilegeItem.
 type RolePrivilegeItem struct {
 	// Description Description of the privilege.
 	Description *string `json:"description,omitempty"`
-	Id          *string `json:"id,omitempty"`
+
+	// Id Privilege ID.
+	Id *string `json:"id,omitempty"`
 
 	// Name Name of the privilege.
-	Name    *string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty"`
+
+	// Service The Informatica Intelligent Cloud Services service that applies to the privilege.
 	Service *string `json:"service,omitempty"`
-	Status  *string `json:"status,omitempty"`
+
+	// Status Status of the privilege. Returns one of the following values:
+	// * Enabled: License to use the privilege is valid.
+	// * Disabled: License to use the privilege has expired.
+	// * Unassigned: No license to use this privilege.
+	// * Default: Privilege included by default.
+	Status *RolePrivilegeItemStatus `json:"status,omitempty"`
 }
+
+// RolePrivilegeItemStatus Status of the privilege. Returns one of the following values:
+// * Enabled: License to use the privilege is valid.
+// * Disabled: License to use the privilege has expired.
+// * Unassigned: No license to use this privilege.
+// * Default: Privilege included by default.
+type RolePrivilegeItemStatus string
 
 // WithPrivilegeItems defines model for withPrivilegeItems.
 type WithPrivilegeItems struct {
@@ -256,25 +330,25 @@ type HeaderSession = string
 type PathRole = string
 
 // N400 When the REST API encounters an error, it returns a REST API error object.
-type N400 = ApiErrorBody
+type N400 = ApiErrorResponseBody
 
 // N401 When the REST API encounters an error, it returns a REST API error object.
-type N401 = ApiErrorBody
+type N401 = ApiErrorResponseBody
 
 // N403 When the REST API encounters an error, it returns a REST API error object.
-type N403 = ApiErrorBody
+type N403 = ApiErrorResponseBody
 
 // N404 When the REST API encounters an error, it returns a REST API error object.
-type N404 = ApiErrorBody
+type N404 = ApiErrorResponseBody
 
 // N500 When the REST API encounters an error, it returns a REST API error object.
-type N500 = ApiErrorBody
+type N500 = ApiErrorResponseBody
 
 // N502 When the REST API encounters an error, it returns a REST API error object.
-type N502 = ApiErrorBody
+type N502 = ApiErrorResponseBody
 
 // N503 When the REST API encounters an error, it returns a REST API error object.
-type N503 = ApiErrorBody
+type N503 = ApiErrorResponseBody
 
 // RolePrivileges defines model for rolePrivileges.
 type RolePrivileges = WithPrivilegeRefs
@@ -295,9 +369,12 @@ type GetRolesParams struct {
 	Q *string `form:"q,omitempty" json:"q,omitempty"`
 
 	// Expand Returns the privileges associated with the role specified in the query filter.
-	Expand        *string       `form:"expand,omitempty" json:"expand,omitempty"`
-	INFASESSIONID HeaderSession `json:"INFA-SESSION-ID"`
+	Expand        *GetRolesParamsExpand `form:"expand,omitempty" json:"expand,omitempty"`
+	INFASESSIONID HeaderSession         `json:"INFA-SESSION-ID"`
 }
+
+// GetRolesParamsExpand defines parameters for GetRoles.
+type GetRolesParamsExpand string
 
 // DeleteRoleParams defines parameters for DeleteRole.
 type DeleteRoleParams struct {

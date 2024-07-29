@@ -199,7 +199,7 @@ func (d *RoleDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadRe
 
 	// Obtain request parameters from config.
 	params := &v3.GetRolesParams{
-		Expand: utils.Ptr("privileges"),
+		Expand: utils.Ptr(v3.GetRolesParamsExpandPrivileges),
 	}
 	if !config.Id.IsNull() {
 		params.Q = utils.Ptr(fmt.Sprintf("roleId==\"%s\"", config.Id.ValueString()))
@@ -247,7 +247,7 @@ func (d *RoleDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadRe
 	config.Description = types.StringPointerValue(item.Description)
 	config.DisplayDescription = types.StringPointerValue(item.DisplayDescription)
 	config.SystemRole = types.BoolPointerValue(item.SystemRole)
-	config.Status = types.StringPointerValue(item.Status)
+	config.Status = types.StringPointerValue((*string)(item.Status))
 	config.CreatedBy = types.StringPointerValue(item.CreatedBy)
 	config.UpdatedBy = types.StringPointerValue(item.UpdatedBy)
 	config.CreatedTime = UnwrapNewRFC3339PointerValue(diags, path.Root("created_time"), item.CreateTime)
@@ -272,7 +272,7 @@ func convertRoleGetResponsePrivileges(diags *diag.Diagnostics, path path.Path, i
 			"name":        types.StringPointerValue(item.Name),
 			"description": types.StringPointerValue(item.Description),
 			"service":     types.StringPointerValue(item.Service),
-			"status":      types.StringPointerValue(item.Status),
+			"status":      types.StringPointerValue((*string)(item.Status)),
 		})
 	}
 

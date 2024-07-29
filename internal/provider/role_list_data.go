@@ -180,7 +180,7 @@ func convertRoleListResponse(diags *diag.Diagnostics, items *[]v3.GetRolesRespon
 			"description":         types.StringPointerValue(item.Description),
 			"display_description": types.StringPointerValue(item.DisplayDescription),
 			"system_role":         types.BoolPointerValue(item.SystemRole),
-			"status":              types.StringPointerValue(item.Status),
+			"status":              types.StringPointerValue((*string)(item.Status)),
 			"created_by":          types.StringPointerValue(item.CreatedBy),
 			"updated_by":          types.StringPointerValue(item.UpdatedBy),
 			"created_time":        UnwrapNewRFC3339PointerValue(diags, rolePath.AtName("created_time"), item.CreateTime),

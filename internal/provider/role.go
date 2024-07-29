@@ -47,11 +47,11 @@ type RoleResourceModel struct {
 	UpdatedTime        types.String `tfsdk:"updated_time"`
 }
 
-func (r RoleResource) Metadata(ctx context.Context, req MetadataRequest, resp *MetadataResponse) {
+func (r RoleResource) Metadata(_ context.Context, req MetadataRequest, resp *MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_role"
 }
 
-func (r RoleResource) Schema(ctx context.Context, req SchemaRequest, resp *SchemaResponse) {
+func (r RoleResource) Schema(_ context.Context, _ SchemaRequest, resp *SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "TODO",
 		Attributes: map[string]schema.Attribute{
@@ -164,8 +164,20 @@ func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *Creat
 		return
 	}
 
-	errHandler(RequireHttpStatus(200, apiRes))
-	if diags.HasError() {
+	// Handle error responses.
+	if apiRes.StatusCode() != 200 {
+		CheckApiErrorV3(diags,
+			apiRes.JSON400,
+			apiRes.JSON401,
+			apiRes.JSON403,
+			apiRes.JSON404,
+			apiRes.JSON500,
+			apiRes.JSON502,
+			apiRes.JSON503,
+		)
+		if !diags.HasError() {
+			errHandler(RequireHttpStatus(200, apiRes))
+		}
 		return
 	}
 
@@ -187,7 +199,7 @@ func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *Creat
 	data.DisplayName = types.StringPointerValue(apiRes.JSON200.DisplayName)
 	data.DisplayDescription = types.StringPointerValue(apiRes.JSON200.DisplayDescription)
 	data.SystemRole = types.BoolPointerValue(apiRes.JSON200.SystemRole)
-	data.Status = types.StringPointerValue(apiRes.JSON200.Status)
+	data.Status = types.StringPointerValue((*string)(apiRes.JSON200.Status))
 	data.CreatedBy = types.StringPointerValue(apiRes.JSON200.CreatedBy)
 	data.UpdatedBy = types.StringPointerValue(apiRes.JSON200.UpdatedBy)
 	data.CreatedTime = types.StringPointerValue(apiRes.JSON200.CreateTime)
@@ -282,7 +294,7 @@ func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadRespo
 	data.DisplayName = types.StringPointerValue(apiItems[0].DisplayName)
 	data.DisplayDescription = types.StringPointerValue(apiItems[0].DisplayDescription)
 	data.SystemRole = types.BoolPointerValue(apiItems[0].SystemRole)
-	data.Status = types.StringPointerValue(apiItems[0].Status)
+	data.Status = types.StringPointerValue((*string)(apiItems[0].Status))
 	data.CreatedBy = types.StringPointerValue(apiItems[0].CreatedBy)
 	data.UpdatedBy = types.StringPointerValue(apiItems[0].UpdatedBy)
 	data.CreatedTime = types.StringPointerValue(apiItems[0].CreateTime)
@@ -392,8 +404,20 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 		return
 	}
 
-	errHandler(RequireHttpStatus(200, addApiRes))
-	if diags.HasError() {
+	// Handle error responses.
+	if addApiRes.StatusCode() != 200 {
+		CheckApiErrorV3(diags,
+			addApiRes.JSON400,
+			addApiRes.JSON401,
+			addApiRes.JSON403,
+			addApiRes.JSON404,
+			addApiRes.JSON500,
+			addApiRes.JSON502,
+			addApiRes.JSON503,
+		)
+		if !diags.HasError() {
+			errHandler(RequireHttpStatus(200, addApiRes))
+		}
 		return
 	}
 
@@ -419,8 +443,20 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 		return
 	}
 
-	errHandler(RequireHttpStatus(200, remApiRes))
-	if diags.HasError() {
+	// Handle error responses.
+	if remApiRes.StatusCode() != 200 {
+		CheckApiErrorV3(diags,
+			remApiRes.JSON400,
+			remApiRes.JSON401,
+			remApiRes.JSON403,
+			remApiRes.JSON404,
+			remApiRes.JSON500,
+			remApiRes.JSON502,
+			remApiRes.JSON503,
+		)
+		if !diags.HasError() {
+			errHandler(RequireHttpStatus(200, remApiRes))
+		}
 		return
 	}
 

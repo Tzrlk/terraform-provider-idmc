@@ -105,8 +105,8 @@ paths:
             Returns the privileges associated with the role specified in the query filter.
           schema:
             type: string
-#            enum:
-#              - privileges
+            enum:
+              - privileges
       responses:
         200:
           description: |-
@@ -288,7 +288,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/apiErrorBody'
+            $ref: '#/components/schemas/apiErrorResponseBody'
 
     401:
       description: |-
@@ -296,7 +296,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/apiErrorBody'
+            $ref: '#/components/schemas/apiErrorResponseBody'
 
     403:
       description: |-
@@ -304,7 +304,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/apiErrorBody'
+            $ref: '#/components/schemas/apiErrorResponseBody'
 
     404:
       description: |-
@@ -312,7 +312,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/apiErrorBody'
+            $ref: '#/components/schemas/apiErrorResponseBody'
 
     500:
       description: |-
@@ -320,7 +320,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/apiErrorBody'
+            $ref: '#/components/schemas/apiErrorResponseBody'
 
     502:
       description: |-
@@ -328,7 +328,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/apiErrorBody'
+            $ref: '#/components/schemas/apiErrorResponseBody'
 
     503:
       description: |-
@@ -336,11 +336,11 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/apiErrorBody'
+            $ref: '#/components/schemas/apiErrorResponseBody'
 
   schemas:
 
-    apiErrorBody:
+    apiErrorResponseBody:
       description: |-
         When the REST API encounters an error, it returns a REST API error object.
       externalDocs:
@@ -348,7 +348,7 @@ components:
       type: object
       properties:
         error:
-          $ref: '#/components/schemas/apiErrorBodyError'
+          $ref: '#/components/schemas/apiError'
       example: |-
         {
           "error": {
@@ -358,16 +358,26 @@ components:
             "details": null
           }
         }
-    apiErrorBodyError:
+    apiError:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/apiErrorDetail'
+        - properties:
+            requestId:
+              type: string
+            details:
+              type: array
+              items:
+                $ref: '#/components/schemas/apiErrorDetail'
+    apiErrorDetail:
       type: object
       properties:
         code:
           type: string
         message:
           type: string
-        requestId:
+        debugMessage:
           type: string
-        details: {} # Unknown type.
 
     loginRequestBody:
       type: object
@@ -447,9 +457,9 @@ components:
           type: string
           description: |-
             Status of the user.
-#           enum:
-#             - Active
-#             - Inactive
+          enum:
+            - Active
+            - Inactive
 
     getRolesResponseBody:
       type: array
@@ -533,9 +543,9 @@ components:
           type: string
           description: |-
             Whether the organization's license to use the role is valid or has expired.
-#          enum:
-#            - Enabled
-#            - Disabled
+          enum:
+            - Enabled
+            - Disabled
 
     withPrivilegeItems:
       type: object
@@ -564,6 +574,8 @@ components:
       properties:
         id:
           type: string
+          description: |-
+            Privilege ID.
         name:
           type: string
           description: |-
@@ -574,11 +586,21 @@ components:
             Description of the privilege.
         service:
           type: string
+          description: |-
+            The Informatica Intelligent Cloud Services service that applies to the privilege.
         status:
           type: string
-#          enum:
-#            - Enabled
-#            - Disabled
+          description: |-
+            Status of the privilege. Returns one of the following values:
+            * Enabled: License to use the privilege is valid.
+            * Disabled: License to use the privilege has expired.
+            * Unassigned: No license to use this privilege.
+            * Default: Privilege included by default.
+          enum:
+            - Enabled
+            - Disabled
+            - Default
+            - Unassigned
 
     withPrivilegeRefs:
       type: object
