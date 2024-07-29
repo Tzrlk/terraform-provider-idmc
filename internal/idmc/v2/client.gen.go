@@ -23,6 +23,21 @@ import (
 // </editor-fold> //////////////////////////////////////////////////////////////
 // <editor-fold desc="constants" defaultstate="collapsed"> /////////////////////
 
+// Defines values for RuntimeEnvironmentType.
+const (
+	RuntimeEnvironmentTypeRuntimeEnvironment RuntimeEnvironmentType = "runtimeEnvironment"
+)
+
+// Defines values for RuntimeEnvironmentDataMinimalType.
+const (
+	RuntimeEnvironmentDataMinimalTypeRuntimeEnvironment RuntimeEnvironmentDataMinimalType = "runtimeEnvironment"
+)
+
+// Defines values for UpdateRuntimeEnvironmentRequestBodyType.
+const (
+	UpdateRuntimeEnvironmentRequestBodyTypeRuntimeEnvironment UpdateRuntimeEnvironmentRequestBodyType = "runtimeEnvironment"
+)
+
 // </editor-fold> //////////////////////////////////////////////////////////////
 
 // ApiErrorBody When the REST API encounters an error, it returns a REST API error object.
@@ -156,6 +171,8 @@ type LoginResponseBody struct {
 
 // RuntimeEnvironment defines model for runtimeEnvironment.
 type RuntimeEnvironment struct {
+	Type *RuntimeEnvironmentType `json:"@type,omitempty"`
+
 	// Agents Agents assigned to the Secure Agent group.
 	Agents *[]RuntimeEnvironmentAgent `json:"agents,omitempty"`
 
@@ -192,6 +209,9 @@ type RuntimeEnvironment struct {
 	// UpdatedBy User who last updated the Secure Agent group.
 	UpdatedBy *string `json:"updatedBy,omitempty"`
 }
+
+// RuntimeEnvironmentType defines model for RuntimeEnvironment.Type.
+type RuntimeEnvironmentType string
 
 // RuntimeEnvironmentAgent An agent assigned to a Secure Agent group.
 type RuntimeEnvironmentAgent struct {
@@ -240,6 +260,8 @@ type RuntimeEnvironmentDataBulk struct {
 
 // RuntimeEnvironmentDataMinimal defines model for runtimeEnvironmentDataMinimal.
 type RuntimeEnvironmentDataMinimal struct {
+	Type *RuntimeEnvironmentDataMinimalType `json:"@type,omitempty"`
+
 	// IsShared Whether the Secure Agent group can be shared with sub-organizations.
 	IsShared *bool `json:"isShared,omitempty"`
 
@@ -247,8 +269,13 @@ type RuntimeEnvironmentDataMinimal struct {
 	Name string `json:"name"`
 }
 
+// RuntimeEnvironmentDataMinimalType defines model for RuntimeEnvironmentDataMinimal.Type.
+type RuntimeEnvironmentDataMinimalType string
+
 // UpdateRuntimeEnvironmentRequestBody defines model for updateRuntimeEnvironmentRequestBody.
 type UpdateRuntimeEnvironmentRequestBody struct {
+	Type *UpdateRuntimeEnvironmentRequestBodyType `json:"@type,omitempty"`
+
 	// Agents Agents assigned to the Secure Agent group.
 	Agents *[]RuntimeEnvironmentAgent `json:"agents,omitempty"`
 
@@ -258,6 +285,9 @@ type UpdateRuntimeEnvironmentRequestBody struct {
 	// Name Name of the Secure Agent group.
 	Name string `json:"name"`
 }
+
+// UpdateRuntimeEnvironmentRequestBodyType defines model for UpdateRuntimeEnvironmentRequestBody.Type.
+type UpdateRuntimeEnvironmentRequestBodyType string
 
 // N400 When the REST API encounters an error, it returns a REST API error object.
 type N400 = ApiErrorBody
@@ -667,7 +697,7 @@ func NewLoginRequestWithBody(server string, contentType string, body io.Reader) 
 
 // ClientWithResponses builds on Client to offer response payloads
 type ClientWithResponses struct {
-	Client
+	*Client
 }
 
 // NewClientWithResponses creates a new ClientWithResponses, which wraps
@@ -677,7 +707,7 @@ func NewClientWithResponses(server string, opts ...common.ClientOption) (*Client
 	if err != nil {
 		return nil, err
 	}
-	return &ClientWithResponses{*client}, nil
+	return &ClientWithResponses{client}, nil
 }
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.

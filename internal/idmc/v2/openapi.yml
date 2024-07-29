@@ -531,6 +531,10 @@ components:
     runtimeEnvironmentDataMinimal:
       type: object
       properties:
+        '@type':
+          type:   string
+          enum:   [ runtimeEnvironment ]
+          default: runtimeEnvironment
         name:
           type: string
           description: |-

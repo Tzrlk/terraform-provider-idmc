@@ -281,6 +281,12 @@ type RolePrivileges = WithPrivilegeRefs
 
 // <editor-fold desc="param-types" defaultstate="collapsed"> ///////////////////
 
+// ListPrivilegesParams defines parameters for ListPrivileges.
+type ListPrivilegesParams struct {
+	// Q The query string used to filter results.
+	Q *string `form:"q,omitempty" json:"q,omitempty"`
+}
+
 // GetRolesParams defines parameters for GetRoles.
 type GetRolesParams struct {
 	// Q Query filter. You can filter using one of the following fields:
@@ -352,6 +358,9 @@ type ClientInterface interface {
 
 	Login(ctx context.Context, body LoginJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error)
 
+	// ListPrivileges request
+	ListPrivileges(ctx context.Context, params *ListPrivilegesParams, editors ...common.ClientConfigEditor) (*http.Response, error)
+
 	// GetRoles request
 	GetRoles(ctx context.Context, params *GetRolesParams, editors ...common.ClientConfigEditor) (*http.Response, error)
 
@@ -383,6 +392,12 @@ func (c *Client) LoginWithBody(ctx context.Context, contentType string, body io.
 func (c *Client) Login(ctx context.Context, body LoginJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error) {
 	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
 		return NewLoginRequest(c.Server, body)
+	})
+}
+
+func (c *Client) ListPrivileges(ctx context.Context, params *ListPrivilegesParams, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+		return NewListPrivilegesRequest(c.Server, params)
 	})
 }
 
@@ -470,6 +485,55 @@ func NewLoginRequestWithBody(server string, contentType string, body io.Reader) 
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListPrivilegesRequest generates requests for ListPrivileges
+func NewListPrivilegesRequest(server string, params *ListPrivilegesParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/public/core/v3/privileges")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Q != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "q", runtime.ParamLocationQuery, *params.Q); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -784,6 +848,9 @@ type ClientWithResponsesInterface interface {
 
 	LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, editors ...common.ClientConfigEditor) (*LoginResponse, error)
 
+	// ListPrivilegesWithResponse request
+	ListPrivilegesWithResponse(ctx context.Context, params *ListPrivilegesParams, editors ...common.ClientConfigEditor) (*ListPrivilegesResponse, error)
+
 	// GetRolesWithResponse request
 	GetRolesWithResponse(ctx context.Context, params *GetRolesParams, editors ...common.ClientConfigEditor) (*GetRolesResponse, error)
 
@@ -842,6 +909,45 @@ func (r LoginResponse) HttpResponse() *http.Response {
 
 // BodyData returns HTTPResponse.Body
 func (r LoginResponse) BodyData() []byte {
+	return r.Body
+}
+
+type ListPrivilegesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]RolePrivilegeItem
+	JSON400      *N400
+	JSON401      *N401
+	JSON403      *N403
+	JSON404      *N404
+	JSON500      *N500
+	JSON502      *N502
+	JSON503      *N503
+}
+
+// Status returns HTTPResponse.Status
+func (r ListPrivilegesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListPrivilegesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// HttpResponse returns HTTPResponse
+func (r ListPrivilegesResponse) HttpResponse() *http.Response {
+	return r.HTTPResponse
+}
+
+// BodyData returns HTTPResponse.Body
+func (r ListPrivilegesResponse) BodyData() []byte {
 	return r.Body
 }
 
@@ -1070,6 +1176,23 @@ func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJ
 	return apiRes, nil
 }
 
+// ListPrivilegesWithResponse request returning *ListPrivilegesResponse
+func (c *ClientWithResponses) ListPrivilegesWithResponse(ctx context.Context, params *ListPrivilegesParams, editors ...common.ClientConfigEditor) (*ListPrivilegesResponse, error) {
+	rsp, err := c.ListPrivileges(ctx, params, editors...)
+	if err != nil {
+		return nil, err
+	}
+	apiRes, err := ParseListPrivilegesResponse(rsp)
+	if err != nil {
+		return nil, err
+	}
+	editor := c.Editors.Merge(editors...)
+	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+		return nil, err
+	}
+	return apiRes, nil
+}
+
 // GetRolesWithResponse request returning *GetRolesResponse
 func (c *ClientWithResponses) GetRolesWithResponse(ctx context.Context, params *GetRolesParams, editors ...common.ClientConfigEditor) (*GetRolesResponse, error) {
 	rsp, err := c.GetRoles(ctx, params, editors...)
@@ -1219,6 +1342,81 @@ func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest LoginResponseBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest N502
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListPrivilegesResponse parses an HTTP response from a ListPrivilegesWithResponse call
+func ParseListPrivilegesResponse(rsp *http.Response) (*ListPrivilegesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListPrivilegesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []RolePrivilegeItem
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

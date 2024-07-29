@@ -39,6 +39,47 @@ paths:
         503:
           $ref: '#/components/responses/503'
 
+  /public/core/v3/privileges:
+    parameters:
+      - name: q
+        in:   query
+        description: |-
+          The query string used to filter results.
+        schema:
+          type: string
+        example: |-
+          /public/core/v3/privileges?q=status==All
+    get:
+      operationId: listPrivileges
+      description: |-
+        Use the privileges resource to obtain a list of privileges that you can use for custom roles.
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform_rest_api_version_3_resources/privileges.html
+      responses:
+        200:
+          description: |-
+            A successful response provides a list of privilege objects matching the implicit or explicit query.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/rolePrivilegeItem'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
+
   /public/core/v3/roles:
     description: |-
       You can request the details for all of your organization's roles or request the details for a particular role.

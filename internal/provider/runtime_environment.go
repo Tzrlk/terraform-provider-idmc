@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -12,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"terraform-provider-idmc/internal/idmc/v2"
+	"terraform-provider-idmc/internal/utils"
 
 	. "github.com/hashicorp/terraform-plugin-framework/resource"
 	. "terraform-provider-idmc/internal/provider/utils"
@@ -49,6 +49,8 @@ type RuntimeEnvironmentResourceModel struct {
 func (r RuntimeEnvironmentResource) Metadata(ctx context.Context, req MetadataRequest, resp *MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_runtime_environment"
 }
+
+// </editor-fold>
 
 // Schema <editor-fold desc="Schema" defaultstate="collapsed">
 func (r RuntimeEnvironmentResource) Schema(ctx context.Context, req SchemaRequest, resp *SchemaResponse) {
@@ -127,6 +129,7 @@ func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReques
 	}
 
 	reqBody := v2.CreateRuntimeEnvironmentJSONRequestBody{
+		Type:     utils.Ptr(v2.RuntimeEnvironmentDataMinimalTypeRuntimeEnvironment),
 		Name:     data.Name.ValueString(),
 		IsShared: data.Shared.ValueBoolPointer(),
 	}
@@ -165,6 +168,7 @@ func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReques
 
 // </editor-fold>
 
+// Create <editor-fold desc="Read" defaultstate="collapsed">
 func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
 	diags := &resp.Diagnostics
 	errHandler := DiagsErrHandler(diags, MsgResourceBadRead)
