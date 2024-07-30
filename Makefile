@@ -59,25 +59,26 @@ API_TPL_FILES := $(sort $(wildcard internal/idmc/templates/*.go.tmpl))
 # if handling them only with wildcard would work.
 GO_SRC_FILES := $(patsubst ./%,%,$(shell find . -type f -name '*.go' -not -name '*_test.go' -not -name '*.gen.go'))
 GO_SRC_DIRS  := $(sort $(dir ${GO_SRC_FILES}))
-vpath %.go ${GO_SRC_DIRS}
 
 # Tests are always in the same dirs as the src files, so we can just use that.
 # Any actual test files should be able to be wildcarded from those dirs.
 GO_TEST_FILES := $(wildcard $(addsuffix *_test.go,${GO_SRC_DIRS}))
-vpath %_test.go ${GO_SRC_DIRS}
 
 # Our terraform sources are in very specific directories, so using wildcard like
 # this is a lot more efficient than shelling-out to 'find'.
+TF_SRC_DIRS_DAT := $(wildcard examples/data-sources/*/)
+TF_SRC_DIRS_RES := $(wildcard examples/resources/*/)
+TF_SRC_DIRS_FUN := $(wildcard examples/functions/*/)
 TF_SRC_DIRS  := $(sort \
 	examples/provider/ \
-	$(wildcard examples/data-sources/*/) \
-	$(wildcard examples/resources/*/) \
+	${TF_SRC_DIRS_DAT} \
+	${TF_SRC_DIRS_RES} \
+	${TF_SRC_DIRS_FUN} \
 )
+TF_SRC_FILES_DAT := $(addsuffix data-source.tf,${TF_SRC_DIRS_DAT})
+TF_SRC_FILES_RES := $(addsuffix resource.tf,${TF_SRC_DIRS_RES})
+TF_SRC_FILES_FUN := $(addsuffix function.tf,${TF_SRC_DIRS_FUN})
 TF_SRC_FILES := $(wildcard $(addsuffix *.tf,${TF_SRC_DIRS}))
-vpath %.tf      ${TF_SRC_DIRS}
-vpath %.tfvars  ${TF_SRC_DIRS}
-vpath %.tfstate ${TF_SRC_DIRS}
-
 TF_LOG_FILES := $(addsuffix terraform.jsonl,${TF_SRC_DIRS})
 
 #: Used to debug variable resolution.
@@ -194,8 +195,6 @@ examples: \
 	${TF_LOG_FILES}
 .PHONY: examples
 
-# TODO: Re-implement as actual terraform tests.
-
 TF_INPUT         = 0
 TF_IN_AUTOMATION = true
 TF_LOG           = json
@@ -203,12 +202,12 @@ TF_PROVIDER_LOG  = json
 TF_LOG_PATH      = terraform.jsonl
 
 ${TF_LOG_FILES}: %/terraform.jsonl: \
-		%/local_override.tf \
+		$(wildcard %/*.tftest.hcl) \
 		$(wildcard %/*.tf) \
-		$(wildcard %/*.tfvars) \
+		%/local_override.tf \
 		${EXE_OUT}
 	@rm -f ${@}
-	${CMD_TERRAFORM} -chdir=$(dir ${@}) plan
+	${CMD_TERRAFORM} -chdir=$(dir ${@}) test
 
 # This ensures that any local auth settings can be immediately updated in each
 # of the examples. Not worth extracting this pattern into a re-usable variable,
@@ -243,10 +242,23 @@ docs/*: \
 	docs/resources/* \
 	docs/functions/*
 
-docs/data-sources/* docs/resources/* docs/functions/* &: \
+# Define relationships between docs and their source files (actually pointless).
+docs/index.md: \
+		examples/provider/provider.tf \
+		internal/provider/provider.go
+docs/data-sources/%: \
+		examples/data-sources/idmc_$$(basename %)/data-source.tf \
+		internal/provider/$$(basename %).go
+docs/resources/%: \
+		examples/resources/idmc_$$(basename %)/resource.tf \
+		internal/provider/$$(basename %).go
+docs/functions/%: \
+		examples/functions/$$(basename %)/function.tf \
+		internal/provider/$$(basename %).go
+
+docs/index.md docs/data-sources/* docs/resources/* docs/functions/* &: \
 		${GO_SRC_FILES} \
 		${TF_SRC_FILES} \
-		*.md \
 		| .build/
 	${CMD_TFPLUGINDOCS} \
 		generate \

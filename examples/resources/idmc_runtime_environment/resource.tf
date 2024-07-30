@@ -2,7 +2,16 @@ resource "idmc_runtime_environment" "example" {
   name   = var.env_name
   shared = false
 }
-resource "idmc_runtime_environment" "example_shared" {
-  name   = var.env_shared_name
-  shared = true
+
+# Inputs
+variable "env_name" {
+  type    = string
+}
+variable "env_shared" {
+  type    = bool
+}
+
+# Outputs
+output "example" {
+  value = idmc_runtime_environment.example
 }
