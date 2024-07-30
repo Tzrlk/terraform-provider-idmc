@@ -151,7 +151,7 @@ func (d *RoleListDataSource) Read(ctx context.Context, req ReadRequest, resp *Re
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			errHandler(RequireHttpStatus(200, apiRes))
+			errHandler(RequireHttpStatus(200, &apiRes.ClientResponse))
 		}
 		return
 	}

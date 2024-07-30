@@ -60,15 +60,15 @@ func GetHttpResponseCtx(ctx context.Context, res *http.Response) (context.Contex
 	return GetHttpRequestCtx(ctx, res.Request)
 }
 
-func GetApiResponseCtx(ctx context.Context, apiRes common.ApiResponse) (context.Context, error) {
+func GetApiResponseCtx(ctx context.Context, apiRes *common.ClientResponse) (context.Context, error) {
 	if apiRes == nil {
 		return ctx, fmt.Errorf("unable to get context for nil api response")
 	}
 
-	resBody := apiRes.BodyData()
+	resBody := apiRes.Body
 	ctx = tflog.SetField(ctx, "http.response.body", string(resBody))
 
-	return GetHttpResponseCtx(ctx, apiRes.HttpResponse())
+	return GetHttpResponseCtx(ctx, apiRes.HTTPResponse)
 }
 
 func LogHttpRequest(ctx context.Context, req *http.Request) error {
@@ -87,7 +87,7 @@ func LogHttpResponse(ctx context.Context, res *http.Response) error {
 	return ctxErr
 }
 
-func LogApiResponse(ctx context.Context, apiRes common.ApiResponse) error {
+func LogApiResponse(ctx context.Context, apiRes *common.ClientResponse) error {
 	apiResCtx, apiResCtxErr := GetApiResponseCtx(ctx, apiRes)
 	if apiResCtxErr == nil {
 		tflog.Trace(apiResCtx, "Receiving IDMC API response.")

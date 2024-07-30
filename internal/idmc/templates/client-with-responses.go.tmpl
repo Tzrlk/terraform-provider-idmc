@@ -35,8 +35,7 @@ type {{ $clientTypeName }}WithResponsesInterface interface {
 
 {{range .}}{{$opid := .OperationId}}{{$op := .}}
 type {{genResponseTypeName $opid | ucFirst}} struct {
-	Body         []byte
-	HTTPResponse *http.Response
+	common.ClientResponse
 	{{- range getResponseTypeDefinitions .}}
 	{{.TypeName}} *{{.Schema.TypeDecl}}
 	{{- end}}
@@ -86,7 +85,7 @@ func (c *{{ $clientTypeName }}WithResponses) {{$opid}}{{if .HasBody}}WithBody{{e
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -107,7 +106,7 @@ func (c *{{ $clientTypeName }}WithResponses) {{$opid}}{{.Suffix}}WithResponse(ct
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -128,7 +127,12 @@ func Parse{{genResponseTypeName $opid | ucFirst}}(rsp *http.Response) (*{{genRes
 		return nil, err
 	}
 
-	response := {{genResponsePayload $opid}}
+	response := &{{genResponseTypeName $opid}}{
+		ClientResponse: common.ClientResponse{
+			Body:         bodyBytes,
+			HTTPResponse: rsp,
+		},
+	}
 
 	{{genResponseUnmarshal .}}
 

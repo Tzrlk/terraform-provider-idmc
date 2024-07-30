@@ -13,7 +13,7 @@ type RequestEditorFn func(ctx context.Context, req *http.Request) error
 type ResponseEditorFn func(ctx context.Context, res *http.Response) error
 
 // ApiResponseEditorFn are functions that inspect or alter api-wrapped http responses.
-type ApiResponseEditorFn func(ctx context.Context, apiRes ApiResponse) error
+type ApiResponseEditorFn func(ctx context.Context, apiRes *ClientResponse) error
 
 // ClientConfigEditor
 // Combines some number of request, response, and/or apiResponse editors into
@@ -64,9 +64,9 @@ func (c ClientConfigEditor) EditHttpResponse(ctx context.Context, res *http.Resp
 
 // EditApiResponse
 // Performs any needed manipulations to the api response after parsing it.
-func (c ClientConfigEditor) EditApiResponse(ctx context.Context, res ApiResponse) error {
+func (c ClientConfigEditor) EditApiResponse(ctx context.Context, apiRes *ClientResponse) error {
 	for _, editor := range c.ApiResponseEditors {
-		if err := editor(ctx, res); err != nil {
+		if err := editor(ctx, apiRes); err != nil {
 			return err
 		}
 	}

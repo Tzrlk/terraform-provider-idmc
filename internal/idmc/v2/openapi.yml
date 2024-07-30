@@ -244,7 +244,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/apiErrorBody'
+            $ref: '#/components/schemas/apiErrorResponse'
 
     401:
       description: |-
@@ -252,7 +252,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/apiErrorBody'
+            $ref: '#/components/schemas/apiErrorResponse'
 
     403:
       description: |-
@@ -260,7 +260,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/apiErrorBody'
+            $ref: '#/components/schemas/apiErrorResponse'
 
     404:
       description: |-
@@ -268,7 +268,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/apiErrorBody'
+            $ref: '#/components/schemas/apiErrorResponse'
 
     500:
       description: |-
@@ -276,7 +276,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/apiErrorBody'
+            $ref: '#/components/schemas/apiErrorResponse'
 
     502:
       description: |-
@@ -284,7 +284,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/apiErrorBody'
+            $ref: '#/components/schemas/apiErrorResponse'
 
     503:
       description: |-
@@ -292,11 +292,16 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/apiErrorBody'
+            $ref: '#/components/schemas/apiErrorResponse'
 
   schemas:
 
-    apiErrorBody:
+    apiErrorResponse:
+      oneOf:
+        - $ref: '#/components/schemas/apiErrorResponseBody'
+        - $ref: '#/components/schemas/v3ApiErrorResponseBody'
+
+    apiErrorResponseBody:
       description: |-
         When the REST API encounters an error, it returns a REST API error object.
       externalDocs:
@@ -305,15 +310,19 @@ components:
       properties:
         '@type':
           type: string
-          default: error
-#          enum:
-#            - error
+          enum:
+            - error
         code:
           type: string
         description:
           type: string
         statusCode:
           type: integer
+      required:
+        - '@type'
+        - code
+        - description
+        - statusCode
       example: |-
         {
           "code": "UI_10000",
@@ -321,6 +330,52 @@ components:
           "statusCode": 403,
           "@type": "error"
         }
+
+    v3ApiErrorResponseBody:
+      description: |-
+        When the REST API encounters an error, it returns a REST API error object.
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/informatica-intelligent-cloud-services-rest-api/error-object.html
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/v3ApiError'
+      required:
+        - error
+      example: |-
+        {
+          "error": {
+            "code": "IDS_085",
+            "message": "User name or password is not valid.",
+            "requestId": "9hr8e2ObIcChbwYftgDui7",
+            "details": null
+          }
+        }
+    v3ApiError:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/v3ApiErrorDetail'
+        - properties:
+            requestId:
+              type: string
+            details:
+              type: array
+              items:
+                $ref: '#/components/schemas/v3ApiErrorDetail'
+          required:
+            - requestId
+    v3ApiErrorDetail:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        debugMessage:
+          type: string
+      required:
+        - code
+        - message
 
     loginRequestBody:
       type: object

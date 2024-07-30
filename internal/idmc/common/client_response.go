@@ -3,17 +3,23 @@ package common
 import "net/http"
 
 // ClientResponse
-// Currently aspirational, but intended to be a base struct for all IDMC api
-// responses.
-type ClientResponse[S any, E any] struct {
+// Basic details of a parsed api response.
+type ClientResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *S
-	JSON400      *E
-	JSON401      *E
-	JSON403      *E
-	JSON404      *E
-	JSON500      *E
-	JSON502      *E
-	JSON503      *E
+}
+
+// IdmcClientResponse
+// Currently aspirational, but intended to be a base struct for all IDMC api
+// responses.
+type IdmcClientResponse[Dat any, Err any] struct {
+	ClientResponse
+	JSON200 *Dat
+	JSON400 *Err
+	JSON401 *Err
+	JSON403 *Err
+	JSON404 *Err
+	JSON500 *Err
+	JSON502 *Err
+	JSON503 *Err
 }

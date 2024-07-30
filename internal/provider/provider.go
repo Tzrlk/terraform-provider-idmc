@@ -185,7 +185,7 @@ func doLogin(ctx context.Context, authHost string, authUser string, authPass str
 	}
 
 	// We only want 200 responses.
-	if err := RequireHttpStatus(200, res); err != nil {
+	if err := RequireHttpStatus(200, &res.ClientResponse); err != nil {
 		return apiUrl, "", err
 	}
 	// TODO: Handle other responses.

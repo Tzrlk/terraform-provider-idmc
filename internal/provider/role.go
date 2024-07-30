@@ -176,7 +176,7 @@ func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *Creat
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			errHandler(RequireHttpStatus(200, apiRes))
+			errHandler(RequireHttpStatus(200, &apiRes.ClientResponse))
 		}
 		return
 	}
@@ -255,7 +255,7 @@ func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadRespo
 		return
 	}
 
-	errHandler(RequireHttpStatus(200, apiRes))
+	errHandler(RequireHttpStatus(200, &apiRes.ClientResponse))
 	if diags.HasError() {
 		return
 	}
@@ -416,7 +416,7 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 			addApiRes.JSON503,
 		)
 		if !diags.HasError() {
-			errHandler(RequireHttpStatus(200, addApiRes))
+			errHandler(RequireHttpStatus(200, &addApiRes.ClientResponse))
 		}
 		return
 	}
@@ -455,7 +455,7 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 			remApiRes.JSON503,
 		)
 		if !diags.HasError() {
-			errHandler(RequireHttpStatus(200, remApiRes))
+			errHandler(RequireHttpStatus(200, &remApiRes.ClientResponse))
 		}
 		return
 	}
@@ -486,7 +486,7 @@ func (r RoleResource) Delete(ctx context.Context, req DeleteRequest, resp *Delet
 		return
 	}
 
-	errHandler(RequireHttpStatus(200, apiRes))
+	errHandler(RequireHttpStatus(200, &apiRes.ClientResponse))
 	if diags.HasError() {
 		return
 	}

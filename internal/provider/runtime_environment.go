@@ -151,7 +151,7 @@ func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReques
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			errHandler(RequireHttpStatus(200, apiRes))
+			errHandler(RequireHttpStatus(200, &apiRes.ClientResponse))
 		}
 		return
 	}
@@ -218,7 +218,7 @@ func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, r
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			errHandler(RequireHttpStatus(200, apiRes))
+			errHandler(RequireHttpStatus(200, &apiRes.ClientResponse))
 		}
 		return
 	}
@@ -293,7 +293,7 @@ func (r RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateReques
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			errHandler(RequireHttpStatus(200, apiRes))
+			errHandler(RequireHttpStatus(200, &apiRes.ClientResponse))
 		}
 		return
 	}
@@ -344,7 +344,7 @@ func (r RuntimeEnvironmentResource) Delete(ctx context.Context, req DeleteReques
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			errHandler(RequireHttpStatus(200, apiRes))
+			errHandler(RequireHttpStatus(200, &apiRes.ClientResponse))
 		}
 		return
 	}

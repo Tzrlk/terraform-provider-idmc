@@ -134,7 +134,7 @@ func (d *PrivilegeListDataSource) Read(ctx context.Context, req ReadRequest, res
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			errHandler(RequireHttpStatus(200, apiRes))
+			errHandler(RequireHttpStatus(200, &apiRes.ClientResponse))
 		}
 		return
 	}

@@ -23,6 +23,11 @@ import (
 // </editor-fold> //////////////////////////////////////////////////////////////
 // <editor-fold desc="constants" defaultstate="collapsed"> /////////////////////
 
+// Defines values for ApiErrorResponseBodyType.
+const (
+	ApiErrorResponseBodyTypeError ApiErrorResponseBodyType = "error"
+)
+
 // Defines values for RuntimeEnvironmentType.
 const (
 	RuntimeEnvironmentTypeRuntimeEnvironment RuntimeEnvironmentType = "runtimeEnvironment"
@@ -40,13 +45,21 @@ const (
 
 // </editor-fold> //////////////////////////////////////////////////////////////
 
-// ApiErrorBody When the REST API encounters an error, it returns a REST API error object.
-type ApiErrorBody struct {
-	Type        *string `json:"@type,omitempty"`
-	Code        *string `json:"code,omitempty"`
-	Description *string `json:"description,omitempty"`
-	StatusCode  *int    `json:"statusCode,omitempty"`
+// ApiErrorResponse defines model for apiErrorResponse.
+type ApiErrorResponse struct {
+	union json.RawMessage
 }
+
+// ApiErrorResponseBody When the REST API encounters an error, it returns a REST API error object.
+type ApiErrorResponseBody struct {
+	Type        ApiErrorResponseBodyType `json:"@type"`
+	Code        string                   `json:"code"`
+	Description string                   `json:"description"`
+	StatusCode  int                      `json:"statusCode"`
+}
+
+// ApiErrorResponseBodyType defines model for ApiErrorResponseBody.Type.
+type ApiErrorResponseBodyType string
 
 // GetAgentInstallerInfoResponseBody defines model for getAgentInstallerInfoResponseBody.
 type GetAgentInstallerInfoResponseBody struct {
@@ -289,26 +302,47 @@ type UpdateRuntimeEnvironmentRequestBody struct {
 // UpdateRuntimeEnvironmentRequestBodyType defines model for UpdateRuntimeEnvironmentRequestBody.Type.
 type UpdateRuntimeEnvironmentRequestBodyType string
 
-// N400 When the REST API encounters an error, it returns a REST API error object.
-type N400 = ApiErrorBody
+// V3ApiError defines model for v3ApiError.
+type V3ApiError struct {
+	Code         string              `json:"code"`
+	DebugMessage *string             `json:"debugMessage,omitempty"`
+	Details      *[]V3ApiErrorDetail `json:"details,omitempty"`
+	Message      string              `json:"message"`
+	RequestId    string              `json:"requestId"`
+}
 
-// N401 When the REST API encounters an error, it returns a REST API error object.
-type N401 = ApiErrorBody
+// V3ApiErrorDetail defines model for v3ApiErrorDetail.
+type V3ApiErrorDetail struct {
+	Code         string  `json:"code"`
+	DebugMessage *string `json:"debugMessage,omitempty"`
+	Message      string  `json:"message"`
+}
 
-// N403 When the REST API encounters an error, it returns a REST API error object.
-type N403 = ApiErrorBody
+// V3ApiErrorResponseBody When the REST API encounters an error, it returns a REST API error object.
+type V3ApiErrorResponseBody struct {
+	Error V3ApiError `json:"error"`
+}
 
-// N404 When the REST API encounters an error, it returns a REST API error object.
-type N404 = ApiErrorBody
+// N400 defines model for 400.
+type N400 = ApiErrorResponse
 
-// N500 When the REST API encounters an error, it returns a REST API error object.
-type N500 = ApiErrorBody
+// N401 defines model for 401.
+type N401 = ApiErrorResponse
 
-// N502 When the REST API encounters an error, it returns a REST API error object.
-type N502 = ApiErrorBody
+// N403 defines model for 403.
+type N403 = ApiErrorResponse
 
-// N503 When the REST API encounters an error, it returns a REST API error object.
-type N503 = ApiErrorBody
+// N404 defines model for 404.
+type N404 = ApiErrorResponse
+
+// N500 defines model for 500.
+type N500 = ApiErrorResponse
+
+// N502 defines model for 502.
+type N502 = ApiErrorResponse
+
+// N503 defines model for 503.
+type N503 = ApiErrorResponse
 
 // <editor-fold desc="param-types" defaultstate="collapsed"> ///////////////////
 
@@ -326,6 +360,68 @@ type UpdateRuntimeEnvironmentJSONRequestBody = UpdateRuntimeEnvironmentRequestBo
 type LoginJSONRequestBody = LoginRequestBody
 
 // </editor-fold> //////////////////////////////////////////////////////////////
+
+// AsApiErrorResponseBody returns the union data inside the ApiErrorResponse as a ApiErrorResponseBody
+func (t ApiErrorResponse) AsApiErrorResponseBody() (ApiErrorResponseBody, error) {
+	var body ApiErrorResponseBody
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromApiErrorResponseBody overwrites any union data inside the ApiErrorResponse as the provided ApiErrorResponseBody
+func (t *ApiErrorResponse) FromApiErrorResponseBody(v ApiErrorResponseBody) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeApiErrorResponseBody performs a merge with any union data inside the ApiErrorResponse, using the provided ApiErrorResponseBody
+func (t *ApiErrorResponse) MergeApiErrorResponseBody(v ApiErrorResponseBody) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsV3ApiErrorResponseBody returns the union data inside the ApiErrorResponse as a V3ApiErrorResponseBody
+func (t ApiErrorResponse) AsV3ApiErrorResponseBody() (V3ApiErrorResponseBody, error) {
+	var body V3ApiErrorResponseBody
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromV3ApiErrorResponseBody overwrites any union data inside the ApiErrorResponse as the provided V3ApiErrorResponseBody
+func (t *ApiErrorResponse) FromV3ApiErrorResponseBody(v V3ApiErrorResponseBody) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeV3ApiErrorResponseBody performs a merge with any union data inside the ApiErrorResponse, using the provided V3ApiErrorResponseBody
+func (t *ApiErrorResponse) MergeV3ApiErrorResponseBody(v V3ApiErrorResponseBody) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t ApiErrorResponse) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ApiErrorResponse) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
 
 // <editor-fold desc="client" defaultstate="collapsed"> ////////////////////////
 
@@ -741,16 +837,15 @@ type ClientWithResponsesInterface interface {
 }
 
 type GetAgentInstallerInfoResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *GetAgentInstallerInfoResponseBody
-	JSON400      *N400
-	JSON401      *N401
-	JSON403      *N403
-	JSON404      *N404
-	JSON500      *N500
-	JSON502      *N502
-	JSON503      *N503
+	common.ClientResponse
+	JSON200 *GetAgentInstallerInfoResponseBody
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -780,15 +875,14 @@ func (r GetAgentInstallerInfoResponse) BodyData() []byte {
 }
 
 type ListRuntimeEnvironmentsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON400      *N400
-	JSON401      *N401
-	JSON403      *N403
-	JSON404      *N404
-	JSON500      *N500
-	JSON502      *N502
-	JSON503      *N503
+	common.ClientResponse
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -818,16 +912,15 @@ func (r ListRuntimeEnvironmentsResponse) BodyData() []byte {
 }
 
 type CreateRuntimeEnvironmentResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *RuntimeEnvironment
-	JSON400      *N400
-	JSON401      *N401
-	JSON403      *N403
-	JSON404      *N404
-	JSON500      *N500
-	JSON502      *N502
-	JSON503      *N503
+	common.ClientResponse
+	JSON200 *RuntimeEnvironment
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -857,15 +950,14 @@ func (r CreateRuntimeEnvironmentResponse) BodyData() []byte {
 }
 
 type DeleteRuntimeEnvironmentResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON400      *N400
-	JSON401      *N401
-	JSON403      *N403
-	JSON404      *N404
-	JSON500      *N500
-	JSON502      *N502
-	JSON503      *N503
+	common.ClientResponse
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -895,16 +987,15 @@ func (r DeleteRuntimeEnvironmentResponse) BodyData() []byte {
 }
 
 type GetRuntimeEnvironmentResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *RuntimeEnvironment
-	JSON400      *N400
-	JSON401      *N401
-	JSON403      *N403
-	JSON404      *N404
-	JSON500      *N500
-	JSON502      *N502
-	JSON503      *N503
+	common.ClientResponse
+	JSON200 *RuntimeEnvironment
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -934,16 +1025,15 @@ func (r GetRuntimeEnvironmentResponse) BodyData() []byte {
 }
 
 type UpdateRuntimeEnvironmentResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *RuntimeEnvironment
-	JSON400      *N400
-	JSON401      *N401
-	JSON403      *N403
-	JSON404      *N404
-	JSON500      *N500
-	JSON502      *N502
-	JSON503      *N503
+	common.ClientResponse
+	JSON200 *RuntimeEnvironment
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -973,16 +1063,15 @@ func (r UpdateRuntimeEnvironmentResponse) BodyData() []byte {
 }
 
 type LoginResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *LoginResponseBody
-	JSON400      *N400
-	JSON401      *N401
-	JSON403      *N403
-	JSON404      *N404
-	JSON500      *N500
-	JSON502      *N502
-	JSON503      *N503
+	common.ClientResponse
+	JSON200 *LoginResponseBody
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -1022,7 +1111,7 @@ func (c *ClientWithResponses) GetAgentInstallerInfoWithResponse(ctx context.Cont
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1039,7 +1128,7 @@ func (c *ClientWithResponses) ListRuntimeEnvironmentsWithResponse(ctx context.Co
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1056,7 +1145,7 @@ func (c *ClientWithResponses) CreateRuntimeEnvironmentWithBodyWithResponse(ctx c
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1072,7 +1161,7 @@ func (c *ClientWithResponses) CreateRuntimeEnvironmentWithResponse(ctx context.C
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1089,7 +1178,7 @@ func (c *ClientWithResponses) DeleteRuntimeEnvironmentWithResponse(ctx context.C
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1106,7 +1195,7 @@ func (c *ClientWithResponses) GetRuntimeEnvironmentWithResponse(ctx context.Cont
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1123,7 +1212,7 @@ func (c *ClientWithResponses) UpdateRuntimeEnvironmentWithBodyWithResponse(ctx c
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1139,7 +1228,7 @@ func (c *ClientWithResponses) UpdateRuntimeEnvironmentWithResponse(ctx context.C
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1156,7 +1245,7 @@ func (c *ClientWithResponses) LoginWithBodyWithResponse(ctx context.Context, con
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1172,7 +1261,7 @@ func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJ
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1187,8 +1276,10 @@ func ParseGetAgentInstallerInfoResponse(rsp *http.Response) (*GetAgentInstallerI
 	}
 
 	response := &GetAgentInstallerInfoResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
+		ClientResponse: common.ClientResponse{
+			Body:         bodyBytes,
+			HTTPResponse: rsp,
+		},
 	}
 
 	switch {
@@ -1262,8 +1353,10 @@ func ParseListRuntimeEnvironmentsResponse(rsp *http.Response) (*ListRuntimeEnvir
 	}
 
 	response := &ListRuntimeEnvironmentsResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
+		ClientResponse: common.ClientResponse{
+			Body:         bodyBytes,
+			HTTPResponse: rsp,
+		},
 	}
 
 	switch {
@@ -1330,8 +1423,10 @@ func ParseCreateRuntimeEnvironmentResponse(rsp *http.Response) (*CreateRuntimeEn
 	}
 
 	response := &CreateRuntimeEnvironmentResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
+		ClientResponse: common.ClientResponse{
+			Body:         bodyBytes,
+			HTTPResponse: rsp,
+		},
 	}
 
 	switch {
@@ -1405,8 +1500,10 @@ func ParseDeleteRuntimeEnvironmentResponse(rsp *http.Response) (*DeleteRuntimeEn
 	}
 
 	response := &DeleteRuntimeEnvironmentResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
+		ClientResponse: common.ClientResponse{
+			Body:         bodyBytes,
+			HTTPResponse: rsp,
+		},
 	}
 
 	switch {
@@ -1473,8 +1570,10 @@ func ParseGetRuntimeEnvironmentResponse(rsp *http.Response) (*GetRuntimeEnvironm
 	}
 
 	response := &GetRuntimeEnvironmentResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
+		ClientResponse: common.ClientResponse{
+			Body:         bodyBytes,
+			HTTPResponse: rsp,
+		},
 	}
 
 	switch {
@@ -1548,8 +1647,10 @@ func ParseUpdateRuntimeEnvironmentResponse(rsp *http.Response) (*UpdateRuntimeEn
 	}
 
 	response := &UpdateRuntimeEnvironmentResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
+		ClientResponse: common.ClientResponse{
+			Body:         bodyBytes,
+			HTTPResponse: rsp,
+		},
 	}
 
 	switch {
@@ -1623,8 +1724,10 @@ func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
 	}
 
 	response := &LoginResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
+		ClientResponse: common.ClientResponse{
+			Body:         bodyBytes,
+			HTTPResponse: rsp,
+		},
 	}
 
 	switch {

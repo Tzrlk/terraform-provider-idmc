@@ -951,16 +951,15 @@ type ClientWithResponsesInterface interface {
 }
 
 type LoginResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *LoginResponseBody
-	JSON400      *N400
-	JSON401      *N401
-	JSON403      *N403
-	JSON404      *N404
-	JSON500      *N500
-	JSON502      *N502
-	JSON503      *N503
+	common.ClientResponse
+	JSON200 *LoginResponseBody
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -990,16 +989,15 @@ func (r LoginResponse) BodyData() []byte {
 }
 
 type ListPrivilegesResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *[]RolePrivilegeItem
-	JSON400      *N400
-	JSON401      *N401
-	JSON403      *N403
-	JSON404      *N404
-	JSON500      *N500
-	JSON502      *N502
-	JSON503      *N503
+	common.ClientResponse
+	JSON200 *[]RolePrivilegeItem
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -1029,16 +1027,15 @@ func (r ListPrivilegesResponse) BodyData() []byte {
 }
 
 type GetRolesResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *GetRolesResponseBody
-	JSON400      *N400
-	JSON401      *N401
-	JSON403      *N403
-	JSON404      *N404
-	JSON500      *N500
-	JSON502      *N502
-	JSON503      *N503
+	common.ClientResponse
+	JSON200 *GetRolesResponseBody
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -1068,16 +1065,15 @@ func (r GetRolesResponse) BodyData() []byte {
 }
 
 type CreateRoleResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *CreateRoleResponseBody
-	JSON400      *N400
-	JSON401      *N401
-	JSON403      *N403
-	JSON404      *N404
-	JSON500      *N500
-	JSON502      *N502
-	JSON503      *N503
+	common.ClientResponse
+	JSON200 *CreateRoleResponseBody
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -1107,15 +1103,14 @@ func (r CreateRoleResponse) BodyData() []byte {
 }
 
 type DeleteRoleResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON400      *N400
-	JSON401      *N401
-	JSON403      *N403
-	JSON404      *N404
-	JSON500      *N500
-	JSON502      *N502
-	JSON503      *N503
+	common.ClientResponse
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -1145,15 +1140,14 @@ func (r DeleteRoleResponse) BodyData() []byte {
 }
 
 type AddRolePrivilegesResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON400      *N400
-	JSON401      *N401
-	JSON403      *N403
-	JSON404      *N404
-	JSON500      *N500
-	JSON502      *N502
-	JSON503      *N503
+	common.ClientResponse
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -1183,15 +1177,14 @@ func (r AddRolePrivilegesResponse) BodyData() []byte {
 }
 
 type RemoveRolePrivilegesResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON400      *N400
-	JSON401      *N401
-	JSON403      *N403
-	JSON404      *N404
-	JSON500      *N500
-	JSON502      *N502
-	JSON503      *N503
+	common.ClientResponse
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
 }
 
 // Status returns HTTPResponse.Status
@@ -1231,7 +1224,7 @@ func (c *ClientWithResponses) LoginWithBodyWithResponse(ctx context.Context, con
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1247,7 +1240,7 @@ func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJ
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1264,7 +1257,7 @@ func (c *ClientWithResponses) ListPrivilegesWithResponse(ctx context.Context, pa
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1281,7 +1274,7 @@ func (c *ClientWithResponses) GetRolesWithResponse(ctx context.Context, params *
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1298,7 +1291,7 @@ func (c *ClientWithResponses) CreateRoleWithBodyWithResponse(ctx context.Context
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1314,7 +1307,7 @@ func (c *ClientWithResponses) CreateRoleWithResponse(ctx context.Context, body C
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1331,7 +1324,7 @@ func (c *ClientWithResponses) DeleteRoleWithResponse(ctx context.Context, roleRe
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1348,7 +1341,7 @@ func (c *ClientWithResponses) AddRolePrivilegesWithBodyWithResponse(ctx context.
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1364,7 +1357,7 @@ func (c *ClientWithResponses) AddRolePrivilegesWithResponse(ctx context.Context,
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1381,7 +1374,7 @@ func (c *ClientWithResponses) RemoveRolePrivilegesWithBodyWithResponse(ctx conte
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1397,7 +1390,7 @@ func (c *ClientWithResponses) RemoveRolePrivilegesWithResponse(ctx context.Conte
 		return nil, err
 	}
 	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, apiRes); err != nil {
+	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
 		return nil, err
 	}
 	return apiRes, nil
@@ -1412,8 +1405,10 @@ func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
 	}
 
 	response := &LoginResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
+		ClientResponse: common.ClientResponse{
+			Body:         bodyBytes,
+			HTTPResponse: rsp,
+		},
 	}
 
 	switch {
@@ -1487,8 +1482,10 @@ func ParseListPrivilegesResponse(rsp *http.Response) (*ListPrivilegesResponse, e
 	}
 
 	response := &ListPrivilegesResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
+		ClientResponse: common.ClientResponse{
+			Body:         bodyBytes,
+			HTTPResponse: rsp,
+		},
 	}
 
 	switch {
@@ -1562,8 +1559,10 @@ func ParseGetRolesResponse(rsp *http.Response) (*GetRolesResponse, error) {
 	}
 
 	response := &GetRolesResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
+		ClientResponse: common.ClientResponse{
+			Body:         bodyBytes,
+			HTTPResponse: rsp,
+		},
 	}
 
 	switch {
@@ -1637,8 +1636,10 @@ func ParseCreateRoleResponse(rsp *http.Response) (*CreateRoleResponse, error) {
 	}
 
 	response := &CreateRoleResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
+		ClientResponse: common.ClientResponse{
+			Body:         bodyBytes,
+			HTTPResponse: rsp,
+		},
 	}
 
 	switch {
@@ -1712,8 +1713,10 @@ func ParseDeleteRoleResponse(rsp *http.Response) (*DeleteRoleResponse, error) {
 	}
 
 	response := &DeleteRoleResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
+		ClientResponse: common.ClientResponse{
+			Body:         bodyBytes,
+			HTTPResponse: rsp,
+		},
 	}
 
 	switch {
@@ -1780,8 +1783,10 @@ func ParseAddRolePrivilegesResponse(rsp *http.Response) (*AddRolePrivilegesRespo
 	}
 
 	response := &AddRolePrivilegesResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
+		ClientResponse: common.ClientResponse{
+			Body:         bodyBytes,
+			HTTPResponse: rsp,
+		},
 	}
 
 	switch {
@@ -1848,8 +1853,10 @@ func ParseRemoveRolePrivilegesResponse(rsp *http.Response) (*RemoveRolePrivilege
 	}
 
 	response := &RemoveRolePrivilegesResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
+		ClientResponse: common.ClientResponse{
+			Body:         bodyBytes,
+			HTTPResponse: rsp,
+		},
 	}
 
 	switch {
