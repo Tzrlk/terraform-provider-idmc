@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"terraform-provider-idmc/internal/idmc/common"
 	"terraform-provider-idmc/internal/utils"
 	"testing"
@@ -21,7 +22,7 @@ import (
 // acceptance testing. The factory function will be invoked for every Terraform
 // CLI command executed to create a provider server to which the CLI can
 // reattach.
-var _ = map[string]func() (tfprotov6.ProviderServer, error){
+var testAccProviders = map[string]func() (tfprotov6.ProviderServer, error){
 	"idmc": providerserver.NewProtocol6WithError(New("test")()),
 }
 
@@ -84,4 +85,24 @@ func TestDoLogin(t *testing.T) {
 	Expect(baseApiUrl).To(Equal(fakeApiUrl))
 	Expect(sessionId).To(Equal(fakeSessionId))
 
+}
+
+
+func testAccPreCheck(t *testing.T) func() {
+	return func() {
+		requireEnv(t, "TF_AUTH_HOST", "TF_AUTH_USER", "TF_AUTH_PASS")
+	}
+}
+
+func requireEnv(t *testing.T, keys ...string) {
+	failed := false
+	for _, key := range keys {
+		if val := os.Getenv(key); val == "" {
+			t.Log("Missing environment variable: " + key)
+			failed = true
+		}
+	}
+	if failed {
+		t.FailNow()
+	}
 }
