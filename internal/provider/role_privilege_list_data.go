@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"terraform-provider-idmc/internal/idmc/v3"
@@ -16,23 +15,23 @@ import (
 	. "terraform-provider-idmc/internal/provider/utils"
 )
 
-var _ DataSourceWithConfigure = &PrivilegeListDataSource{}
+var _ DataSourceWithConfigure = &RolePrivilegeListDataSource{}
 
-type PrivilegeListDataSource struct {
+type RolePrivilegeListDataSource struct {
 	*IdmcProviderDataSource
 }
 
-func NewPrivilegeListDataSource() DataSource {
-	return &PrivilegeListDataSource{
+func NewRolePrivilegeListDataSource() DataSource {
+	return &RolePrivilegeListDataSource{
 		&IdmcProviderDataSource{},
 	}
 }
 
-type PrivilegeListDataSourceModel struct {
+type RolePrivilegeListDataSourceModel struct {
 	Status     types.String `tfsdk:"status"`
 	Privileges types.List   `tfsdk:"privileges"`
 }
-type PrivilegeListDataSourceModelPrivilege struct {
+type RolePrivilegeListDataSourceModelPrivilege struct {
 	Id          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
@@ -40,11 +39,11 @@ type PrivilegeListDataSourceModelPrivilege struct {
 	Status      types.String `tfsdk:"status"`
 }
 
-func (d *PrivilegeListDataSource) Metadata(_ context.Context, req MetadataRequest, resp *MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_privilege_list"
+func (d *RolePrivilegeListDataSource) Metadata(_ context.Context, req MetadataRequest, resp *MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_role_privilege_list"
 }
 
-func (d *PrivilegeListDataSource) Schema(_ context.Context, _ SchemaRequest, resp *SchemaResponse) {
+func (d *RolePrivilegeListDataSource) Schema(_ context.Context, _ SchemaRequest, resp *SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform_rest_api_version_3_resources/privileges.html",
 		Attributes: map[string]schema.Attribute{
@@ -94,19 +93,18 @@ var privilegeDataItemType = types.ObjectType{
 	},
 }
 
-func (d *PrivilegeListDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
-	diags := &resp.Diagnostics
-	errHandler := DiagsErrHandler(diags, MsgDataSourceBadRead)
+func (d *RolePrivilegeListDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
+	diags := NewDiagsHandler(&resp.Diagnostics, MsgDataSourceBadRead)
+	defer func() { diags.HandlePanic(recover()) }()
 
-	client := d.GetApiClientV3(diags, MsgDataSourceBadRead)
+	client := d.GetApiClientV3(diags)
 	if diags.HasError() {
 		return
 	}
 
 	// Load the previous state if present.
-	var config PrivilegeListDataSourceModel
-	diags.Append(req.Config.Get(ctx, &config)...)
-	if diags.HasError() {
+	var config RolePrivilegeListDataSourceModel
+	if diags.HandleDiags(req.Config.Get(ctx, &config)) {
 		return
 	}
 
@@ -118,7 +116,7 @@ func (d *PrivilegeListDataSource) Read(ctx context.Context, req ReadRequest, res
 
 	// Perform the API request.
 	apiRes, apiErr := client.ListPrivilegesWithResponse(ctx, params)
-	if errHandler(apiErr); diags.HasError() {
+	if diags.HandleErr(apiErr) {
 		return
 	}
 
@@ -134,27 +132,27 @@ func (d *PrivilegeListDataSource) Read(ctx context.Context, req ReadRequest, res
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			errHandler(RequireHttpStatus(200, &apiRes.ClientResponse))
+			diags.HandleErr(RequireHttpStatus(&apiRes.ClientResponse, 200))
 		}
 		return
 	}
 
-	config.Privileges = convertPrivilegeListResponse(diags, path.Root("privileges"), apiRes.JSON200)
+	config.Privileges = convertRolePrivilegeListResponse(diags.WithPath(path.Root("privileges")), apiRes.JSON200)
 
 	// Update the state and add the result
 	diags.Append(resp.State.Set(ctx, &config)...)
 
 }
 
-func convertPrivilegeListResponse(diags *diag.Diagnostics, path path.Path, items *[]v3.RolePrivilegeItem) types.List {
+func convertRolePrivilegeListResponse(diags DiagsHandler, items *[]v3.RolePrivilegeItem) types.List {
 	if items == nil {
 		return types.ListNull(privilegeDataItemType)
 	}
 
 	privileges := make([]attr.Value, len(*items))
 	for index, item := range *items {
-		itemPath := path.AtListIndex(index)
-		privileges[index] = UnwrapObjectValue(diags, itemPath, privilegeDataItemType.AttrTypes, map[string]attr.Value{
+		itemPath := diags.Path.AtListIndex(index)
+		privileges[index] = UnwrapObjectValue(diags.Diagnostics, itemPath, privilegeDataItemType.AttrTypes, map[string]attr.Value{
 			"id":          types.StringPointerValue(item.Id),
 			"name":        types.StringPointerValue(item.Name),
 			"description": types.StringPointerValue(item.Description),
@@ -163,5 +161,5 @@ func convertPrivilegeListResponse(diags *diag.Diagnostics, path path.Path, items
 		})
 	}
 
-	return UnwrapListValue(diags, path, rolesDataRolesPrivilegeType, privileges)
+	return UnwrapListValue(diags.Diagnostics, diags.Path, rolesDataRolesPrivilegeType, privileges)
 }

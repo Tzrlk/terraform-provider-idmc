@@ -18,3 +18,5 @@ output-options:
     constants.tmpl:             internal/idmc/templates/constants.go.tmpl
     param-types.tmpl:           internal/idmc/templates/param-types.go.tmpl
     request-bodies.tmpl:        internal/idmc/templates/request-bodies.go.tmpl
+import-mapping:
+  ../common/openapi.yml: terraform-provider-idmc/internal/idmc/common

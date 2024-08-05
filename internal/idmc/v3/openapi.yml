@@ -138,7 +138,7 @@ paths:
             schema:
               $ref: '#/components/schemas/createRoleRequestBody'
       responses:
-        200:
+        201:
           description: |-
             If successful, returns the roles object with the details you included in the POST request.
           content:
@@ -173,6 +173,8 @@ paths:
       responses:
         200:
           description: A successful deletion.
+        204:
+          $ref: '#/components/responses/204'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -282,6 +284,14 @@ components:
   # https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/informatica-intelligent-cloud-services-rest-api/rest-api-responses.html
   responses:
 
+    204:
+      description: |-
+        No content. Only good when attempting to delete a resource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/apiErrorResponseBody' # tentative
+
     400:
       description: |-
         Bad request. Can be a field or format issue such as an invalid character or incorrect string length.
@@ -349,6 +359,8 @@ components:
       properties:
         error:
           $ref: '#/components/schemas/apiError'
+      required:
+        - error
       example: |-
         {
           "error": {
@@ -369,6 +381,8 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/apiErrorDetail'
+          required:
+            - requestId
     apiErrorDetail:
       type: object
       properties:
@@ -378,6 +392,9 @@ components:
           type: string
         debugMessage:
           type: string
+      required:
+        - code
+        - message
 
     loginRequestBody:
       type: object
@@ -540,12 +557,15 @@ components:
           description: |-
             Whether the role is a system-defined role.
         status:
-          type: string
-          description: |-
-            Whether the organization's license to use the role is valid or has expired.
-          enum:
-            - Enabled
-            - Disabled
+          $ref: '#/components/schemas/roleStatus'
+
+    roleStatus:
+      type: string
+      description: |-
+        Whether the organization's license to use the role is valid or has expired.
+      enum:
+        - Enabled
+        - Disabled
 
     withPrivilegeItems:
       type: object

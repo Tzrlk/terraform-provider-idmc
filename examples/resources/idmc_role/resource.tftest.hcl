@@ -2,8 +2,7 @@ variables {
   role_name        = "test_role"
   role_description = "Role specifically for testing the IDMC terraform provider"
   role_privileges  = [
-    "5ElQYfz8pekjksNRoMY3Kj",
-    "???",
+    "0EBevfPsSRnjOEeM9kNvMz",
   ]
 }
 

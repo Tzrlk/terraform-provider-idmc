@@ -299,7 +299,7 @@ components:
     apiErrorResponse:
       oneOf:
         - $ref: '#/components/schemas/apiErrorResponseBody'
-        - $ref: '#/components/schemas/v3ApiErrorResponseBody'
+        - $ref: '../v3/openapi.yml#/components/schemas/apiErrorResponseBody'
 
     apiErrorResponseBody:
       description: |-
@@ -314,10 +314,16 @@ components:
             - error
         code:
           type: string
+          description: |-
+            The internal error code.
         description:
           type: string
+          description: |-
+            The error message.
         statusCode:
           type: integer
+          description: |-
+            The http status code of the response.
       required:
         - '@type'
         - code
@@ -331,60 +337,13 @@ components:
           "@type": "error"
         }
 
-    v3ApiErrorResponseBody:
-      description: |-
-        When the REST API encounters an error, it returns a REST API error object.
-      externalDocs:
-        url: https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/informatica-intelligent-cloud-services-rest-api/error-object.html
-      type: object
-      properties:
-        error:
-          $ref: '#/components/schemas/v3ApiError'
-      required:
-        - error
-      example: |-
-        {
-          "error": {
-            "code": "IDS_085",
-            "message": "User name or password is not valid.",
-            "requestId": "9hr8e2ObIcChbwYftgDui7",
-            "details": null
-          }
-        }
-    v3ApiError:
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/v3ApiErrorDetail'
-        - properties:
-            requestId:
-              type: string
-            details:
-              type: array
-              items:
-                $ref: '#/components/schemas/v3ApiErrorDetail'
-          required:
-            - requestId
-    v3ApiErrorDetail:
-      type: object
-      properties:
-        code:
-          type: string
-        message:
-          type: string
-        debugMessage:
-          type: string
-      required:
-        - code
-        - message
-
     loginRequestBody:
       type: object
       properties:
         '@type':
-          type:    string
-          default: login
-#          enum:
-#            - login
+          type: string
+          enum:
+            - login
         username:
           type: string
           description: |-
@@ -534,16 +493,21 @@ components:
       type: object
       properties:
         '@type':
-          type:    string
-          default: agentInstallerInfo
-#          enum:
-#            - agentInstallerInfo
+          type: string
+          enum:
+            - agentInstallerInfo
         downloadUrl:
           type: string
+          description: |-
+            The url to use for downloading the current secure agent version.
         installToken:
           type: string
+          description: |-
+            The short-lived token to use when registering a secure agent with the environment.
         checksumDownloadUrl:
           type: string
+          description: |-
+            The url for a checksum file that can be used to verify the installation.
 
     updateRuntimeEnvironmentRequestBody:
       allOf:
@@ -670,3 +634,4 @@ components:
           type: string
           description: |-
             Organization ID.
+

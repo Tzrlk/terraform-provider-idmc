@@ -23,5 +23,12 @@ dist/
 *.iml
 
 # Testing
-*.auto.tfvars
 *.jsonl
+
+# Terraform
+.terraform/
+*.tfplan
+*.tfplan.json
+*.tfstate
+*.tfstate.backup
+*.tfvars

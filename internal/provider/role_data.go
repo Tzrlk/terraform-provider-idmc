@@ -182,18 +182,17 @@ var rolesDataRolesType = types.ObjectType{
 }
 
 func (d *RoleDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
-	diags := &resp.Diagnostics
-	errHandler := DiagsErrHandler(diags, MsgDataSourceBadRead)
+	diags := NewDiagsHandler(&resp.Diagnostics, MsgDataSourceBadRead)
+	defer func() { diags.HandlePanic(recover()) }()
 
-	client := d.GetApiClientV3(diags, MsgDataSourceBadRead)
+	client := d.GetApiClientV3(diags)
 	if diags.HasError() {
 		return
 	}
 
 	// Load the previous state if present.
 	var config RoleDataSourceModel
-	diags.Append(req.Config.Get(ctx, &config)...)
-	if diags.HasError() {
+	if diags.HandleDiags(req.Config.Get(ctx, &config)) {
 		return
 	}
 
@@ -209,7 +208,7 @@ func (d *RoleDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadRe
 
 	// Perform the API request.
 	apiRes, apiErr := client.GetRolesWithResponse(ctx, params)
-	if errHandler(apiErr); diags.HasError() {
+	if diags.HandleErr(apiErr) {
 		return
 	}
 
@@ -225,16 +224,16 @@ func (d *RoleDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadRe
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			errHandler(RequireHttpStatus(200, &apiRes.ClientResponse))
+			diags.HandleErr(RequireHttpStatus(&apiRes.ClientResponse, 200))
 		}
 		return
 	}
 
 	if apiRes.JSON200 == nil || len(*apiRes.JSON200) < 1 {
 		if !config.Id.IsNull() {
-			errHandler(fmt.Errorf("no results returned for given id: %s", config.Id.ValueString()))
+			diags.HandleErrMsg("no results returned for given id: %s", config.Id.ValueString())
 		} else if !config.Name.IsNull() {
-			errHandler(fmt.Errorf("no results returned for given name: %s", config.Name.ValueString()))
+			diags.HandleErrMsg("no results returned for given name: %s", config.Name.ValueString())
 		}
 		return
 	}
@@ -250,9 +249,9 @@ func (d *RoleDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadRe
 	config.Status = types.StringPointerValue((*string)(item.Status))
 	config.CreatedBy = types.StringPointerValue(item.CreatedBy)
 	config.UpdatedBy = types.StringPointerValue(item.UpdatedBy)
-	config.CreatedTime = UnwrapNewRFC3339PointerValue(diags, path.Root("created_time"), item.CreateTime)
-	config.UpdatedTime = UnwrapNewRFC3339PointerValue(diags, path.Root("updated_time"), item.UpdateTime)
-	config.Privileges = convertRoleGetResponsePrivileges(diags, path.Root("privileges"), item.Privileges)
+	config.CreatedTime = UnwrapNewRFC3339PointerValue(diags.Diagnostics, path.Root("created_time"), item.CreateTime)
+	config.UpdatedTime = UnwrapNewRFC3339PointerValue(diags.Diagnostics, path.Root("updated_time"), item.UpdateTime)
+	config.Privileges = convertRoleGetResponsePrivileges(diags.Diagnostics, path.Root("privileges"), item.Privileges)
 
 	// Update the state and add the result
 	diags.Append(resp.State.Set(ctx, &config)...)

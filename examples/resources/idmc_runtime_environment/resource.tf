@@ -1,14 +1,14 @@
 resource "idmc_runtime_environment" "example" {
-  name   = var.env_name
-  shared = false
+  name   = var.name
+  shared = var.shared
 }
 
 # Inputs
-variable "env_name" {
-  type    = string
+variable "name" {
+  type = string
 }
-variable "env_shared" {
-  type    = bool
+variable "shared" {
+  type = bool
 }
 
 # Outputs

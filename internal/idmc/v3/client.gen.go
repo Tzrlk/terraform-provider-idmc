@@ -23,28 +23,10 @@ import (
 // </editor-fold> //////////////////////////////////////////////////////////////
 // <editor-fold desc="constants" defaultstate="collapsed"> /////////////////////
 
-// Defines values for CreateRoleResponseBodyStatus.
-const (
-	CreateRoleResponseBodyStatusDisabled CreateRoleResponseBodyStatus = "Disabled"
-	CreateRoleResponseBodyStatusEnabled  CreateRoleResponseBodyStatus = "Enabled"
-)
-
-// Defines values for GetRolesResponseBodyItemStatus.
-const (
-	GetRolesResponseBodyItemStatusDisabled GetRolesResponseBodyItemStatus = "Disabled"
-	GetRolesResponseBodyItemStatusEnabled  GetRolesResponseBodyItemStatus = "Enabled"
-)
-
 // Defines values for LoginResponseBodyUserInfoStatus.
 const (
 	LoginResponseBodyUserInfoStatusActive   LoginResponseBodyUserInfoStatus = "Active"
 	LoginResponseBodyUserInfoStatusInactive LoginResponseBodyUserInfoStatus = "Inactive"
-)
-
-// Defines values for RoleInfoStatus.
-const (
-	RoleInfoStatusDisabled RoleInfoStatus = "Disabled"
-	RoleInfoStatusEnabled  RoleInfoStatus = "Enabled"
 )
 
 // Defines values for RolePrivilegeItemStatus.
@@ -53,6 +35,12 @@ const (
 	RolePrivilegeItemStatusDisabled   RolePrivilegeItemStatus = "Disabled"
 	RolePrivilegeItemStatusEnabled    RolePrivilegeItemStatus = "Enabled"
 	RolePrivilegeItemStatusUnassigned RolePrivilegeItemStatus = "Unassigned"
+)
+
+// Defines values for RoleStatus.
+const (
+	RoleStatusDisabled RoleStatus = "Disabled"
+	RoleStatusEnabled  RoleStatus = "Enabled"
 )
 
 // Defines values for GetRolesParamsExpand.
@@ -64,23 +52,23 @@ const (
 
 // ApiError defines model for apiError.
 type ApiError struct {
-	Code         *string           `json:"code,omitempty"`
+	Code         string            `json:"code"`
 	DebugMessage *string           `json:"debugMessage,omitempty"`
 	Details      *[]ApiErrorDetail `json:"details,omitempty"`
-	Message      *string           `json:"message,omitempty"`
-	RequestId    *string           `json:"requestId,omitempty"`
+	Message      string            `json:"message"`
+	RequestId    string            `json:"requestId"`
 }
 
 // ApiErrorDetail defines model for apiErrorDetail.
 type ApiErrorDetail struct {
-	Code         *string `json:"code,omitempty"`
+	Code         string  `json:"code"`
 	DebugMessage *string `json:"debugMessage,omitempty"`
-	Message      *string `json:"message,omitempty"`
+	Message      string  `json:"message"`
 }
 
 // ApiErrorResponseBody When the REST API encounters an error, it returns a REST API error object.
 type ApiErrorResponseBody struct {
-	Error *ApiError `json:"error,omitempty"`
+	Error ApiError `json:"error"`
 }
 
 // CreateRoleRequestBody defines model for createRoleRequestBody.
@@ -124,7 +112,7 @@ type CreateRoleResponseBody struct {
 	RoleName *string `json:"roleName,omitempty"`
 
 	// Status Whether the organization's license to use the role is valid or has expired.
-	Status *CreateRoleResponseBodyStatus `json:"status,omitempty"`
+	Status *RoleStatus `json:"status,omitempty"`
 
 	// SystemRole Whether the role is a system-defined role.
 	SystemRole *bool `json:"systemRole,omitempty"`
@@ -135,9 +123,6 @@ type CreateRoleResponseBody struct {
 	// UpdatedBy User who last updated the role.
 	UpdatedBy *string `json:"updatedBy,omitempty"`
 }
-
-// CreateRoleResponseBodyStatus Whether the organization's license to use the role is valid or has expired.
-type CreateRoleResponseBodyStatus string
 
 // GetRolesResponseBody defines model for getRolesResponseBody.
 type GetRolesResponseBody = []GetRolesResponseBodyItem
@@ -170,7 +155,7 @@ type GetRolesResponseBodyItem struct {
 	RoleName *string `json:"roleName,omitempty"`
 
 	// Status Whether the organization's license to use the role is valid or has expired.
-	Status *GetRolesResponseBodyItemStatus `json:"status,omitempty"`
+	Status *RoleStatus `json:"status,omitempty"`
 
 	// SystemRole Whether the role is a system-defined role.
 	SystemRole *bool `json:"systemRole,omitempty"`
@@ -181,9 +166,6 @@ type GetRolesResponseBodyItem struct {
 	// UpdatedBy User who last updated the role.
 	UpdatedBy *string `json:"updatedBy,omitempty"`
 }
-
-// GetRolesResponseBodyItemStatus Whether the organization's license to use the role is valid or has expired.
-type GetRolesResponseBodyItemStatus string
 
 // LoginRequestBody defines model for loginRequestBody.
 type LoginRequestBody struct {
@@ -267,7 +249,7 @@ type RoleInfo struct {
 	RoleName *string `json:"roleName,omitempty"`
 
 	// Status Whether the organization's license to use the role is valid or has expired.
-	Status *RoleInfoStatus `json:"status,omitempty"`
+	Status *RoleStatus `json:"status,omitempty"`
 
 	// SystemRole Whether the role is a system-defined role.
 	SystemRole *bool `json:"systemRole,omitempty"`
@@ -278,9 +260,6 @@ type RoleInfo struct {
 	// UpdatedBy User who last updated the role.
 	UpdatedBy *string `json:"updatedBy,omitempty"`
 }
-
-// RoleInfoStatus Whether the organization's license to use the role is valid or has expired.
-type RoleInfoStatus string
 
 // RolePrivilegeItem defines model for rolePrivilegeItem.
 type RolePrivilegeItem struct {
@@ -311,6 +290,9 @@ type RolePrivilegeItem struct {
 // * Default: Privilege included by default.
 type RolePrivilegeItemStatus string
 
+// RoleStatus Whether the organization's license to use the role is valid or has expired.
+type RoleStatus string
+
 // WithPrivilegeItems defines model for withPrivilegeItems.
 type WithPrivilegeItems struct {
 	Privileges *[]RolePrivilegeItem `json:"privileges,omitempty"`
@@ -328,6 +310,9 @@ type HeaderSession = string
 
 // PathRole defines model for pathRole.
 type PathRole = string
+
+// N204 When the REST API encounters an error, it returns a REST API error object.
+type N204 = ApiErrorResponseBody
 
 // N400 When the REST API encounters an error, it returns a REST API error object.
 type N400 = ApiErrorResponseBody
@@ -1066,7 +1051,7 @@ func (r GetRolesResponse) BodyData() []byte {
 
 type CreateRoleResponse struct {
 	common.ClientResponse
-	JSON200 *CreateRoleResponseBody
+	JSON201 *CreateRoleResponseBody
 	JSON400 *N400
 	JSON401 *N401
 	JSON403 *N403
@@ -1104,6 +1089,7 @@ func (r CreateRoleResponse) BodyData() []byte {
 
 type DeleteRoleResponse struct {
 	common.ClientResponse
+	JSON204 *N204
 	JSON400 *N400
 	JSON401 *N401
 	JSON403 *N403
@@ -1643,12 +1629,12 @@ func ParseCreateRoleResponse(rsp *http.Response) (*CreateRoleResponse, error) {
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
 		var dest CreateRoleResponseBody
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON200 = &dest
+		response.JSON201 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest N400
@@ -1720,6 +1706,13 @@ func ParseDeleteRoleResponse(rsp *http.Response) (*DeleteRoleResponse, error) {
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 204:
+		var dest N204
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON204 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest N400
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {

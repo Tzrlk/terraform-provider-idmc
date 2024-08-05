@@ -2,9 +2,7 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -64,21 +62,24 @@ func (r RuntimeEnvironmentResource) Schema(ctx context.Context, req SchemaReques
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"org_id": schema.StringAttribute{
-				Description: "Organization ID.",
-				Computed:    true,
-			},
 			"name": schema.StringAttribute{
 				Description: "Runtime environment name.",
 				Required:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"shared": schema.BoolAttribute{
+				Description: "Indicates whether the Secure Agent group is shared.",
+				Optional:    true,
 			},
 			"description": schema.StringAttribute{
 				Description: "Description of the runtime environment.",
 				Computed:    true,
 			},
-			"shared": schema.BoolAttribute{
-				Description: "Indicates whether the Secure Agent group is shared.",
-				Optional:    true,
+			"org_id": schema.StringAttribute{
+				Description: "Organization ID.",
+				Computed:    true,
 			},
 			"federated_id": schema.StringAttribute{
 				Description: "Global unique identifier.",
@@ -113,10 +114,10 @@ func (r RuntimeEnvironmentResource) Schema(ctx context.Context, req SchemaReques
 
 // Create <editor-fold desc="Create" defaultstate="collapsed">
 func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateRequest, resp *CreateResponse) {
-	diags := &resp.Diagnostics
-	errHandler := DiagsErrHandler(diags, MsgResourceBadCreate)
+	diags := NewDiagsHandler(&resp.Diagnostics, MsgResourceBadCreate)
+	defer func() { diags.HandlePanic(recover()) }()
 
-	client := r.GetApiClientV2(diags, MsgResourceBadCreate)
+	client := r.GetApiClientV2(diags)
 	if diags.HasError() {
 		return
 	}
@@ -135,7 +136,7 @@ func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReques
 	}
 
 	apiRes, apiErr := client.CreateRuntimeEnvironmentWithResponse(ctx, reqBody)
-	if errHandler(apiErr); diags.HasError() {
+	if diags.HandleErr(apiErr) {
 		return
 	}
 
@@ -151,13 +152,12 @@ func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReques
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			errHandler(RequireHttpStatus(200, &apiRes.ClientResponse))
+			diags.HandleErr(RequireHttpStatus(&apiRes.ClientResponse, 200))
 		}
 		return
 	}
 
-	errHandler(r.UpdateState(diags, &data, apiRes.JSON200))
-	if diags.HasError() {
+	if r.updateRuntimeEnvironmentState(diags, &data, apiRes.JSON200) {
 		return
 	}
 
@@ -170,33 +170,29 @@ func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReques
 
 // Create <editor-fold desc="Read" defaultstate="collapsed">
 func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
-	diags := &resp.Diagnostics
-	errHandler := DiagsErrHandler(diags, MsgResourceBadRead)
+	diags := NewDiagsHandler(&resp.Diagnostics, MsgResourceBadRead)
+	defer func() { diags.HandlePanic(recover()) }()
 
-	client := r.GetApiClientV2(diags, MsgResourceBadRead)
+	client := r.GetApiClientV2(diags)
 	if diags.HasError() {
 		return
 	}
 
 	// Load configuration from plan.
 	var data RuntimeEnvironmentResourceModel
-	diags.Append(req.State.Get(ctx, &data)...)
-	if diags.HasError() {
+	if diags.HandleDiags(req.State.Get(ctx, &data)) {
 		return
 	}
 
 	if data.Id.IsNull() {
-		diags.AddAttributeError(
-			path.Root("id"),
-			MsgResourceBadRead,
-			"Resource id is missing.",
-		)
+		diags.WithPath(path.Root("id")).HandleErrMsg(
+			"Resource id is missing.")
 		return
 	}
 
 	// Perform the API request.
 	apiRes, apiErr := client.GetRuntimeEnvironmentWithResponse(ctx, data.Id.ValueString())
-	if errHandler(apiErr); apiErr != nil {
+	if diags.HandleErr(apiErr) {
 		return
 	}
 
@@ -218,13 +214,12 @@ func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, r
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			errHandler(RequireHttpStatus(200, &apiRes.ClientResponse))
+			diags.HandleErr(RequireHttpStatus(&apiRes.ClientResponse, 200))
 		}
 		return
 	}
 
-	errHandler(r.UpdateState(diags, &data, apiRes.JSON200))
-	if diags.HasError() {
+	if r.updateRuntimeEnvironmentState(diags, &data, apiRes.JSON200) {
 		return
 	}
 
@@ -237,21 +232,21 @@ func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, r
 
 // Update <editor-fold desc="Update" defaultstate="collapsed">
 func (r RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateRequest, resp *UpdateResponse) {
-	diags := &resp.Diagnostics
-	errHandler := DiagsErrHandler(diags, MsgResourceBadUpdate)
+	diags := NewDiagsHandler(&resp.Diagnostics, MsgResourceBadUpdate)
+	defer func() { diags.HandlePanic(recover()) }()
 
-	client := r.GetApiClientV2(diags, MsgResourceBadUpdate)
+	client := r.GetApiClientV2(diags)
 	if diags.HasError() {
 		return
 	}
 
 	// Load config from state for comparison.
 	var state RuntimeEnvironmentResourceModel
-	diags.Append(req.State.Get(ctx, &state)...)
+	diags.HandleDiags(req.State.Get(ctx, &state))
 
 	// Load configuration from plan.
 	var plan RuntimeEnvironmentResourceModel
-	diags.Append(req.Plan.Get(ctx, &plan)...)
+	diags.HandleDiags(req.Plan.Get(ctx, &plan))
 
 	// Only check for errors here so we can see if there are any issues with
 	// either data structure before breaking.
@@ -277,7 +272,7 @@ func (r RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateReques
 	}
 
 	apiRes, apiErr := client.UpdateRuntimeEnvironmentWithResponse(ctx, plan.Id.ValueString(), reqBody)
-	if errHandler(apiErr); diags.HasError() {
+	if diags.HandleErr(apiErr) {
 		return
 	}
 
@@ -293,13 +288,12 @@ func (r RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateReques
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			errHandler(RequireHttpStatus(200, &apiRes.ClientResponse))
+			diags.HandleErr(RequireHttpStatus(&apiRes.ClientResponse, 200))
 		}
 		return
 	}
 
-	errHandler(r.UpdateState(diags, &plan, apiRes.JSON200))
-	if diags.HasError() {
+	if r.updateRuntimeEnvironmentState(diags, &plan, apiRes.JSON200) {
 		return
 	}
 
@@ -312,10 +306,10 @@ func (r RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateReques
 
 // Delete <editor-fold desc="Delete" defaultstate="collapsed">
 func (r RuntimeEnvironmentResource) Delete(ctx context.Context, req DeleteRequest, resp *DeleteResponse) {
-	diags := &resp.Diagnostics
-	errHandler := DiagsErrHandler(diags, MsgResourceBadDelete)
+	diags := NewDiagsHandler(&resp.Diagnostics, MsgResourceBadDelete)
+	defer func() { diags.HandlePanic(recover()) }()
 
-	client := r.GetApiClientV2(diags, MsgResourceBadDelete)
+	client := r.GetApiClientV2(diags)
 	if diags.HasError() {
 		return
 	}
@@ -328,7 +322,7 @@ func (r RuntimeEnvironmentResource) Delete(ctx context.Context, req DeleteReques
 	}
 
 	apiRes, apiErr := client.DeleteRuntimeEnvironmentWithResponse(ctx, data.Id.ValueString())
-	if errHandler(apiErr); diags.HasError() {
+	if diags.HandleErr(apiErr) {
 		return
 	}
 
@@ -344,7 +338,7 @@ func (r RuntimeEnvironmentResource) Delete(ctx context.Context, req DeleteReques
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			errHandler(RequireHttpStatus(200, &apiRes.ClientResponse))
+			diags.HandleErr(RequireHttpStatus(&apiRes.ClientResponse, 200))
 		}
 		return
 	}
@@ -356,13 +350,14 @@ func (r RuntimeEnvironmentResource) Delete(ctx context.Context, req DeleteReques
 
 // </editor-fold>
 
-func (r RuntimeEnvironmentResource) UpdateState(
-	diags *diag.Diagnostics,
+func (r RuntimeEnvironmentResource) updateRuntimeEnvironmentState(
+	diags DiagsHandler,
 	state *RuntimeEnvironmentResourceModel,
 	data *v2.RuntimeEnvironment,
-) error {
+) bool {
 	if data == nil {
-		return fmt.Errorf("no runtime environment response data provided")
+		diags.HandleErrMsg("no runtime environment response data provided")
+		return false
 	}
 
 	// Update the configured state so instabilities can be detected.
@@ -386,8 +381,8 @@ func (r RuntimeEnvironmentResource) UpdateState(
 		for index, agent := range *data.Agents {
 			agents[index] = types.StringPointerValue(agent.Id)
 		}
-		state.Agents = UnwrapSetValue(diags, path.Root("agents"), types.StringType, agents)
+		state.Agents = UnwrapSetValue(diags.Diagnostics, path.Root("agents"), types.StringType, agents)
 	}
 
-	return nil
+	return !diags.HasError()
 }

@@ -1,6 +1,6 @@
 variables {
-  env_name   = "test_example"
-  env_shared = false
+  name   = "test_example"
+  shared = false
 }
 
 run "create" {
@@ -8,7 +8,7 @@ run "create" {
 
 run "change_name" {
   variables {
-    env_name = "test_example_changed"
+    name = "test_example_changed"
   }
 
   assert {
@@ -20,8 +20,8 @@ run "change_name" {
 
 run "change_shared" {
   variables {
-    env_name = run.change_name.example.name
-    shared   = true
+    name   = run.change_name.example.name
+    shared = true
   }
 
   assert {

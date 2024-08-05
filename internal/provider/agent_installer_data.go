@@ -56,24 +56,23 @@ func (d *AgentInstallerDataSource) Schema(_ context.Context, _ SchemaRequest, re
 }
 
 func (d *AgentInstallerDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
-	diags := &resp.Diagnostics
-	errHandler := DiagsErrHandler(diags, MsgDataSourceBadRead)
+	diags := NewDiagsHandler(&resp.Diagnostics, MsgDataSourceBadRead)
+	defer func() { diags.HandlePanic(recover()) }()
 
-	client := d.GetApiClientV2(diags, MsgDataSourceBadRead)
+	client := d.GetApiClientV2(diags)
 	if diags.HasError() {
 		return
 	}
 
 	// Load the previous state if present.
 	var config AgentInstallerDataSourceModel
-	diags.Append(req.Config.Get(ctx, &config)...)
-	if diags.HasError() {
+	if diags.HandleDiags(req.Config.Get(ctx, &config)) {
 		return
 	}
 
 	// Perform the API request.
 	apiRes, apiErr := client.GetAgentInstallerInfoWithResponse(ctx, config.Platform.ValueString())
-	if errHandler(apiErr); diags.HasError() {
+	if diags.HandleErr(apiErr) {
 		return
 	}
 
@@ -89,7 +88,7 @@ func (d *AgentInstallerDataSource) Read(ctx context.Context, req ReadRequest, re
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			errHandler(RequireHttpStatus(200, &apiRes.ClientResponse))
+			diags.HandleErr(RequireHttpStatus(&apiRes.ClientResponse, 200))
 		}
 		return
 	}
@@ -100,6 +99,6 @@ func (d *AgentInstallerDataSource) Read(ctx context.Context, req ReadRequest, re
 	config.ChecksumDownloadUrl = types.StringPointerValue(apiRes.JSON200.ChecksumDownloadUrl)
 
 	// Save result back to state.
-	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
+	diags.Append(resp.State.Set(ctx, &config)...)
 
 }

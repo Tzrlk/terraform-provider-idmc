@@ -185,7 +185,7 @@ func doLogin(ctx context.Context, authHost string, authUser string, authPass str
 	}
 
 	// We only want 200 responses.
-	if err := RequireHttpStatus(200, &res.ClientResponse); err != nil {
+	if err := RequireHttpStatus(&res.ClientResponse, 200); err != nil {
 		return apiUrl, "", err
 	}
 	// TODO: Handle other responses.
@@ -234,6 +234,7 @@ func (p *IdmcProvider) DataSources(_ context.Context) []func() datasource.DataSo
 		NewAgentInstallerDataSource,
 		NewRoleDataSource,
 		NewRoleListDataSource,
+		NewRolePrivilegeListDataSource,
 	}
 }
 

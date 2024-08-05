@@ -75,11 +75,16 @@ TF_SRC_DIRS  := $(sort \
 	${TF_SRC_DIRS_RES} \
 	${TF_SRC_DIRS_FUN} \
 )
-TF_SRC_FILES_DAT := $(addsuffix data-source.tf,${TF_SRC_DIRS_DAT})
-TF_SRC_FILES_RES := $(addsuffix resource.tf,${TF_SRC_DIRS_RES})
-TF_SRC_FILES_FUN := $(addsuffix function.tf,${TF_SRC_DIRS_FUN})
 TF_SRC_FILES := $(wildcard $(addsuffix *.tf,${TF_SRC_DIRS}))
-TF_LOG_FILES := $(addsuffix terraform.jsonl,${TF_SRC_DIRS})
+TF_LOG_FILES_DAT := $(addsuffix terraform.jsonl,${TF_SRC_DIRS_DAT})
+TF_LOG_FILES_RES := $(addsuffix terraform.jsonl,${TF_SRC_DIRS_RES})
+TF_LOG_FILES_FUN := $(addsuffix terraform.jsonl,${TF_SRC_DIRS_FUN})
+TF_LOG_FILES := $(sort \
+	examples/provider/terraform.jsonl \
+	${TF_LOG_FILES_DAT} \
+	${TF_LOG_FILES_RES} \
+	${TF_LOG_FILES_FUN} \
+)
 
 #: Used to debug variable resolution.
 debug:
@@ -201,12 +206,40 @@ TF_LOG           = json
 TF_PROVIDER_LOG  = json
 TF_LOG_PATH      = terraform.jsonl
 
+# <editor-fold desc="This isn't working for some reason">
+
+#define TPL_TF_DEPS =
+#${1}/terraform.jsonl: \
+#		${1}/${2}.tf \
+#		${1}/${2}.tftest.hcl \
+#		${1}/local_override.tf \
+#		${1}/main.tf \
+#		${EXE_OUT}
+#	@rm -f ${@}
+#	@export TF_LOG_PATH=${@}
+#	@echo "Testing $(dir ${@})"
+#	${CMD_TERRAFORM} -chdir=$(dir ${@}) test
+#${1}/${2}.tf: \
+#		internal/provider/$(patsubst idmc_%,%,$(notdir ${dir}))${3}.go
+#	touch $${@}
+#endef
+
+#$(eval $(call ${TPL_TF_DEPS},examples/provider/,provider))
+#$(foreach dir,${TF_SRC_DIRS_DAT},$(eval $(call ${TPL_TF_DEPS},${dir},data-source,_data)))
+#$(foreach dir,${TF_SRC_DIRS_RES},$(eval $(call ${TPL_TF_DEPS},${dir},resource)))
+#$(foreach dir,${TF_SRC_DIRS_FUN},$(eval $(call ${TPL_TF_DEPS},${dir},function)))
+
+# </editor-fold>
+
+.PRECIOUS: ${TF_LOG_FILES}
 ${TF_LOG_FILES}: %/terraform.jsonl: \
 		$(wildcard %/*.tftest.hcl) \
 		$(wildcard %/*.tf) \
 		%/local_override.tf \
 		${EXE_OUT}
 	@rm -f ${@}
+	@export TF_LOG_PATH=${@}
+	@echo "Testing $(dir ${@})"
 	${CMD_TERRAFORM} -chdir=$(dir ${@}) test
 
 # This ensures that any local auth settings can be immediately updated in each
@@ -215,21 +248,6 @@ ${TF_LOG_FILES}: %/terraform.jsonl: \
 $(addsuffix local_override.tf,${TF_SRC_DIRS}): %/local_override.tf: \
 		examples/local_override.tf
 	cp ${<} ${@}
-
-# This causes any change in the corresponding source files to invalidate the
-# main file of the corresponding example, allowing the associated terraform
-# execution to be triggered again, but avoiding the creation of a transitive
-# dependency from documentation generation which would be triggered if we set
-# the example file (data-source.tf, resource.tf, etc.) as the target.
-$(wildcard examples/data-sources/*/main.tf): %/main.tf: \
-		$$(patsubst idmc_%%,%%,$$(lastword $$(subst /, ,%)))_data.go
-	touch ${@}
-$(wildcard examples/resources/*/main.tf): %/main.tf: \
-		$$(patsubst idmc_%%,%%,$$(lastword $$(subst /, ,%))).go
-	touch ${@}
-examples/provider/main.tf: \
-		internal/provider/provider.go
-	touch ${@}
 
 ################################################################################
 #: Generate documentation.

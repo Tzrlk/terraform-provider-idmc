@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	common "terraform-provider-idmc/internal/idmc/common"
+	externalRef1 "terraform-provider-idmc/internal/idmc/v3"
 
 	"github.com/oapi-codegen/runtime"
 )
@@ -26,6 +27,16 @@ import (
 // Defines values for ApiErrorResponseBodyType.
 const (
 	ApiErrorResponseBodyTypeError ApiErrorResponseBodyType = "error"
+)
+
+// Defines values for GetAgentInstallerInfoResponseBodyType.
+const (
+	GetAgentInstallerInfoResponseBodyTypeAgentInstallerInfo GetAgentInstallerInfoResponseBodyType = "agentInstallerInfo"
+)
+
+// Defines values for LoginRequestBodyType.
+const (
+	LoginRequestBodyTypeLogin LoginRequestBodyType = "login"
 )
 
 // Defines values for RuntimeEnvironmentType.
@@ -52,10 +63,16 @@ type ApiErrorResponse struct {
 
 // ApiErrorResponseBody When the REST API encounters an error, it returns a REST API error object.
 type ApiErrorResponseBody struct {
-	Type        ApiErrorResponseBodyType `json:"@type"`
-	Code        string                   `json:"code"`
-	Description string                   `json:"description"`
-	StatusCode  int                      `json:"statusCode"`
+	Type ApiErrorResponseBodyType `json:"@type"`
+
+	// Code The internal error code.
+	Code string `json:"code"`
+
+	// Description The error message.
+	Description string `json:"description"`
+
+	// StatusCode The http status code of the response.
+	StatusCode int `json:"statusCode"`
 }
 
 // ApiErrorResponseBodyType defines model for ApiErrorResponseBody.Type.
@@ -63,15 +80,24 @@ type ApiErrorResponseBodyType string
 
 // GetAgentInstallerInfoResponseBody defines model for getAgentInstallerInfoResponseBody.
 type GetAgentInstallerInfoResponseBody struct {
-	Type                *string `json:"@type,omitempty"`
+	Type *GetAgentInstallerInfoResponseBodyType `json:"@type,omitempty"`
+
+	// ChecksumDownloadUrl The url for a checksum file that can be used to verify the installation.
 	ChecksumDownloadUrl *string `json:"checksumDownloadUrl,omitempty"`
-	DownloadUrl         *string `json:"downloadUrl,omitempty"`
-	InstallToken        *string `json:"installToken,omitempty"`
+
+	// DownloadUrl The url to use for downloading the current secure agent version.
+	DownloadUrl *string `json:"downloadUrl,omitempty"`
+
+	// InstallToken The short-lived token to use when registering a secure agent with the environment.
+	InstallToken *string `json:"installToken,omitempty"`
 }
+
+// GetAgentInstallerInfoResponseBodyType defines model for GetAgentInstallerInfoResponseBody.Type.
+type GetAgentInstallerInfoResponseBodyType string
 
 // LoginRequestBody defines model for loginRequestBody.
 type LoginRequestBody struct {
-	Type *string `json:"@type,omitempty"`
+	Type *LoginRequestBodyType `json:"@type,omitempty"`
 
 	// Password Informatica Intelligent Cloud Services password.
 	Password string `json:"password"`
@@ -79,6 +105,9 @@ type LoginRequestBody struct {
 	// Username Informatica Intelligent Cloud Services user name for the organization that you want to log in to.
 	Username string `json:"username"`
 }
+
+// LoginRequestBodyType defines model for LoginRequestBody.Type.
+type LoginRequestBodyType string
 
 // LoginResponseBody defines model for loginResponseBody.
 type LoginResponseBody struct {
@@ -302,27 +331,6 @@ type UpdateRuntimeEnvironmentRequestBody struct {
 // UpdateRuntimeEnvironmentRequestBodyType defines model for UpdateRuntimeEnvironmentRequestBody.Type.
 type UpdateRuntimeEnvironmentRequestBodyType string
 
-// V3ApiError defines model for v3ApiError.
-type V3ApiError struct {
-	Code         string              `json:"code"`
-	DebugMessage *string             `json:"debugMessage,omitempty"`
-	Details      *[]V3ApiErrorDetail `json:"details,omitempty"`
-	Message      string              `json:"message"`
-	RequestId    string              `json:"requestId"`
-}
-
-// V3ApiErrorDetail defines model for v3ApiErrorDetail.
-type V3ApiErrorDetail struct {
-	Code         string  `json:"code"`
-	DebugMessage *string `json:"debugMessage,omitempty"`
-	Message      string  `json:"message"`
-}
-
-// V3ApiErrorResponseBody When the REST API encounters an error, it returns a REST API error object.
-type V3ApiErrorResponseBody struct {
-	Error V3ApiError `json:"error"`
-}
-
 // N400 defines model for 400.
 type N400 = ApiErrorResponse
 
@@ -387,22 +395,22 @@ func (t *ApiErrorResponse) MergeApiErrorResponseBody(v ApiErrorResponseBody) err
 	return err
 }
 
-// AsV3ApiErrorResponseBody returns the union data inside the ApiErrorResponse as a V3ApiErrorResponseBody
-func (t ApiErrorResponse) AsV3ApiErrorResponseBody() (V3ApiErrorResponseBody, error) {
-	var body V3ApiErrorResponseBody
+// AsExternalRef1ApiErrorResponseBody returns the union data inside the ApiErrorResponse as a externalRef1.ApiErrorResponseBody
+func (t ApiErrorResponse) AsExternalRef1ApiErrorResponseBody() (externalRef1.ApiErrorResponseBody, error) {
+	var body externalRef1.ApiErrorResponseBody
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromV3ApiErrorResponseBody overwrites any union data inside the ApiErrorResponse as the provided V3ApiErrorResponseBody
-func (t *ApiErrorResponse) FromV3ApiErrorResponseBody(v V3ApiErrorResponseBody) error {
+// FromExternalRef1ApiErrorResponseBody overwrites any union data inside the ApiErrorResponse as the provided externalRef1.ApiErrorResponseBody
+func (t *ApiErrorResponse) FromExternalRef1ApiErrorResponseBody(v externalRef1.ApiErrorResponseBody) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeV3ApiErrorResponseBody performs a merge with any union data inside the ApiErrorResponse, using the provided V3ApiErrorResponseBody
-func (t *ApiErrorResponse) MergeV3ApiErrorResponseBody(v V3ApiErrorResponseBody) error {
+// MergeExternalRef1ApiErrorResponseBody performs a merge with any union data inside the ApiErrorResponse, using the provided externalRef1.ApiErrorResponseBody
+func (t *ApiErrorResponse) MergeExternalRef1ApiErrorResponseBody(v externalRef1.ApiErrorResponseBody) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
