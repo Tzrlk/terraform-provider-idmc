@@ -2,8 +2,13 @@ variables {
   role_name        = "test_role"
   role_description = "Role specifically for testing the IDMC terraform provider"
   role_privileges  = [
-    "0EBevfPsSRnjOEeM9kNvMz", # view.cdmp.DeliveryTargets
-    "07aADbLF4mClm07UerDAy4", # vcs.asset.check_in_out
+
+#     "view.cdmp.DeliveryTargets",
+    "0EBevfPsSRnjOEeM9kNvMz",
+
+#     "view.apim.apic.asset.api",
+    "03N6cwkjyQhjbVRQEwtAMJ",
+
   ]
 }
 

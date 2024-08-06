@@ -190,10 +190,7 @@ func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *Creat
 	data.CreatedTime = types.StringPointerValue(respData.CreateTime)
 	data.UpdatedTime = types.StringPointerValue(respData.UpdateTime)
 
-	// Handle more sketchy config data
-	if data.setPrivileges(diags, respData.Privileges) {
-		return
-	}
+	// NOTE: Create does not return any privileges in the response.
 
 	// Save creation result back to state.
 	diags.Append(resp.State.Set(ctx, &data))
@@ -320,76 +317,72 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 	privDiags := diags.AtName("privileges")
 
 	// Add all the privileges that need to be added
-	addApiRes, addApiErr := client.AddRolePrivilegesWithResponse(
-		ctx,
-		plan.Id.ValueString(),
-		&v3.AddRolePrivilegesParams{},
-		v3.AddRolePrivilegesJSONRequestBody{
-			Privileges: Ptr(planPrivileges.Without(statePrivileges).ToSlice()),
-		},
-	)
-	if addApiErr != nil {
-		privDiags.AddError(
-			"Api error encountered adding privileges to role %s: %s",
+	if privs := planPrivileges.Without(statePrivileges); privs.Size() > 0 {
+		apiRes, apiErr := client.AddRolePrivilegesWithResponse(
+			ctx,
 			plan.Id.ValueString(),
-			addApiErr,
+			&v3.AddRolePrivilegesParams{},
+			v3.AddRolePrivilegesJSONRequestBody{
+				Privileges: privs.ToSlice(),
+			},
 		)
-		return
-	}
-
-	// Handle error responses.
-	if addApiRes.StatusCode() != 200 {
-		CheckApiErrorV3(diags,
-			addApiRes.JSON400,
-			addApiRes.JSON401,
-			addApiRes.JSON403,
-			addApiRes.JSON404,
-			addApiRes.JSON500,
-			addApiRes.JSON502,
-			addApiRes.JSON503,
-		)
-		if !diags.HasError() {
-			diags.HandleError(RequireHttpStatus(&addApiRes.ClientResponse, 200))
+		if privDiags.HandleError(apiErr) {
+			return
 		}
-		return
+
+		// Handle error responses.
+		if apiRes.StatusCode() != 200 {
+			CheckApiErrorV3(privDiags,
+				apiRes.JSON400,
+				apiRes.JSON401,
+				apiRes.JSON403,
+				apiRes.JSON404,
+				apiRes.JSON500,
+				apiRes.JSON502,
+				apiRes.JSON503,
+			)
+			if !privDiags.HasError() {
+				privDiags.HandleError(RequireHttpStatus(&apiRes.ClientResponse, 200))
+			}
+			return
+		}
+
 	}
 
 	// Remove all the privileges that need to be removed
-	remApiRes, remApiErr := client.RemoveRolePrivilegesWithResponse(
-		ctx,
-		plan.Id.ValueString(),
-		&v3.RemoveRolePrivilegesParams{},
-		v3.RemoveRolePrivilegesJSONRequestBody{
-			Privileges: Ptr(statePrivileges.Without(planPrivileges).ToSlice()),
-		},
-	)
-	if remApiErr != nil {
-		privDiags.AddError(
-			"Api error encountered removing privileges from role %s: %s",
+	if privs := statePrivileges.Without(planPrivileges); privs.Size() > 0 {
+		apiRes, apiErr := client.RemoveRolePrivilegesWithResponse(
+			ctx,
 			plan.Id.ValueString(),
-			remApiErr,
+			&v3.RemoveRolePrivilegesParams{},
+			v3.RemoveRolePrivilegesJSONRequestBody{
+				Privileges: privs.ToSlice(),
+			},
 		)
-		return
-	}
-
-	// Handle error responses.
-	if remApiRes.StatusCode() != 200 {
-		CheckApiErrorV3(diags,
-			remApiRes.JSON400,
-			remApiRes.JSON401,
-			remApiRes.JSON403,
-			remApiRes.JSON404,
-			remApiRes.JSON500,
-			remApiRes.JSON502,
-			remApiRes.JSON503,
-		)
-		if !diags.HasError() {
-			diags.HandleError(RequireHttpStatus(&remApiRes.ClientResponse, 200))
+		if privDiags.HandleError(apiErr) {
+			return
 		}
-		return
+
+		// Handle error responses.
+		if apiRes.StatusCode() != 200 {
+			CheckApiErrorV3(privDiags,
+				apiRes.JSON400,
+				apiRes.JSON401,
+				apiRes.JSON403,
+				apiRes.JSON404,
+				apiRes.JSON500,
+				apiRes.JSON502,
+				apiRes.JSON503,
+			)
+			if !privDiags.HasError() {
+				privDiags.HandleError(RequireHttpStatus(&apiRes.ClientResponse, 200))
+			}
+			return
+		}
+
 	}
 
-	// Save creation result back to state.
+	// Save update result back to state.
 	diags.Append(resp.State.Set(ctx, &plan))
 
 }

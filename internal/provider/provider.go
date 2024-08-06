@@ -61,7 +61,7 @@ func (p *IdmcProvider) Metadata(_ context.Context, _ provider.MetadataRequest, r
 
 func (p *IdmcProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "TODO",
+		Description: "https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform_rest_api_version_3_resources/login_2.html",
 		Attributes: map[string]schema.Attribute{
 			"auth_host": schema.StringAttribute{
 				Description: "The IDMC API authentication host.",
@@ -80,7 +80,7 @@ func (p *IdmcProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp 
 	}
 }
 
-func getCfgVal(diags DiagsHandler, attrVal types.String, attrPath string) string {
+func getCfgVal(diags DiagsHandler, attrVal types.String, attrPath string, required bool) string {
 
 	// Check the attribute for a valid value.
 	if !attrVal.IsNull() && attrVal.ValueString() != "" {
@@ -94,11 +94,14 @@ func getCfgVal(diags DiagsHandler, attrVal types.String, attrPath string) string
 		return val
 	}
 
-	// Register an error on the attribute and return an empty string.
-	diags.AtName(attrPath).AddError(
-		"Either '%s' in the config, or '%s' in the env is needed.",
-		attrPath, envKey,
-	)
+	// Register an error on the attribute if required.
+	if required {
+		diags.AtName(attrPath).AddError(
+			"Either '%s' in the config, or '%s' in the env is needed.",
+			attrPath, envKey,
+		)
+	}
+
 	return ""
 
 }
@@ -116,10 +119,17 @@ func (p *IdmcProvider) Configure(
 		return
 	}
 
+	if p.Api != nil {
+		tflog.Debug(ctx, "Re-using previously configured api.")
+		resp.DataSourceData = p.IdmcProviderData
+		resp.ResourceData = p.IdmcProviderData
+		return
+	}
+
 	// Extract config and validate all the required values are set.
-	authHost := getCfgVal(diags, config.AuthHost, "auth_host")
-	authUser := getCfgVal(diags, config.AuthUser, "auth_user")
-	authPass := getCfgVal(diags, config.AuthPass, "auth_pass")
+	authHost := getCfgVal(diags, config.AuthHost, "auth_host", true)
+	authUser := getCfgVal(diags, config.AuthUser, "auth_user", true)
+	authPass := getCfgVal(diags, config.AuthPass, "auth_pass", true)
 	if diags.HasError() {
 		return
 	}
@@ -130,6 +140,8 @@ func (p *IdmcProvider) Configure(
 	})
 
 	httpClient := &http.Client{}
+
+	// TODO: Cache this with something like bitcask or just save the response json to file.
 	baseApiUrl, sessionId, loginErr := doLogin(ctx, authHost, authUser, authPass, httpClient)
 	if loginErr != nil {
 		diags.HandleError(loginErr)

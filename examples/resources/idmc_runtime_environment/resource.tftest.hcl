@@ -12,8 +12,8 @@ run "change_name" {
   }
 
   assert {
-    error_message = "Resource should not be re-created."
-    condition     = idmc_runtime_environment.example.id == run.create.example.id
+    error_message = "Resource should be re-created."
+    condition     = idmc_runtime_environment.example.id != run.create.example.id
   }
 
 }
@@ -25,8 +25,8 @@ run "change_shared" {
   }
 
   assert {
-    error_message = "Resource should not be re-created."
-    condition     = idmc_runtime_environment.example.id == run.change_name.example.id
+    error_message = "Resource should be re-created."
+    condition     = idmc_runtime_environment.example.id != run.change_name.example.id
   }
 
 }

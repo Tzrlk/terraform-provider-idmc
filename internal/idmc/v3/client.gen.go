@@ -293,6 +293,13 @@ type RolePrivilegeItemStatus string
 // RoleStatus Whether the organization's license to use the role is valid or has expired.
 type RoleStatus string
 
+// UpdateRoleRequestBody defines model for updateRoleRequestBody.
+type UpdateRoleRequestBody struct {
+	// Privileges IDs of the privileges to assign to the role.
+	// A role must have at least one privilege assigned to it.
+	Privileges []string `json:"privileges"`
+}
+
 // WithPrivilegeItems defines model for withPrivilegeItems.
 type WithPrivilegeItems struct {
 	Privileges *[]RolePrivilegeItem `json:"privileges,omitempty"`
@@ -336,7 +343,7 @@ type N502 = ApiErrorResponseBody
 type N503 = ApiErrorResponseBody
 
 // RolePrivileges defines model for rolePrivileges.
-type RolePrivileges = WithPrivilegeRefs
+type RolePrivileges = UpdateRoleRequestBody
 
 // <editor-fold desc="param-types" defaultstate="collapsed"> ///////////////////
 
@@ -387,10 +394,10 @@ type LoginJSONRequestBody = LoginRequestBody
 type CreateRoleJSONRequestBody = CreateRoleRequestBody
 
 // AddRolePrivilegesJSONRequestBody defines body for AddRolePrivileges for application/json ContentType.
-type AddRolePrivilegesJSONRequestBody = WithPrivilegeRefs
+type AddRolePrivilegesJSONRequestBody = UpdateRoleRequestBody
 
 // RemoveRolePrivilegesJSONRequestBody defines body for RemoveRolePrivileges for application/json ContentType.
-type RemoveRolePrivilegesJSONRequestBody = WithPrivilegeRefs
+type RemoveRolePrivilegesJSONRequestBody = UpdateRoleRequestBody
 
 // </editor-fold> //////////////////////////////////////////////////////////////
 

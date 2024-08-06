@@ -279,7 +279,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/withPrivilegeRefs'
+            $ref: '#/components/schemas/updateRoleRequestBody'
 
   # https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/informatica-intelligent-cloud-services-rest-api/rest-api-responses.html
   responses:
@@ -508,6 +508,21 @@ components:
       allOf:
         - $ref: '#/components/schemas/roleInfo'
         - $ref: '#/components/schemas/withPrivilegeItems'
+
+    updateRoleRequestBody:
+      type: object
+      properties:
+        privileges:
+          type: array
+          items:
+            type:     string
+            nullable: false
+          description: |-
+            IDs of the privileges to assign to the role.
+            A role must have at least one privilege assigned to it.
+          minItems: 1
+      required:
+        - privileges
 
     roleInfo:
       type: object
