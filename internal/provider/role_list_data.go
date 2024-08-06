@@ -126,7 +126,7 @@ func (d *RoleListDataSource) Read(ctx context.Context, req ReadRequest, resp *Re
 
 	// Load the previous state if present.
 	var config RoleListDataSourceModel
-	diags.Append(req.Config.Get(ctx, &config)...)
+	diags.Append(req.Config.Get(ctx, &config))
 	if diags.HasError() {
 		return
 	}
@@ -157,7 +157,7 @@ func (d *RoleListDataSource) Read(ctx context.Context, req ReadRequest, resp *Re
 	config.setRoles(diags, apiRes.JSON200)
 
 	// Update the state and add the result
-	diags.Append(resp.State.Set(ctx, &config)...)
+	diags.Append(resp.State.Set(ctx, &config))
 
 }
 
@@ -165,7 +165,7 @@ func (r *RoleListDataSourceModel) setRoles(diags DiagsHandler, items *[]v3.GetRo
 	diags = diags.AtName("roleAttrs")
 
 	if items == nil {
-		diags.WithTitle("Issue reading datasource.").HandleWarnMsg(
+		diags.WithTitle("Issue reading datasource.").AddWarning(
 			"Expected API response to contain role list.")
 		r.Roles = types.ListNull(roleListDataRoleType)
 		return false

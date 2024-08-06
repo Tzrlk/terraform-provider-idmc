@@ -95,7 +95,7 @@ func getCfgVal(diags DiagsHandler, attrVal types.String, attrPath string) string
 	}
 
 	// Register an error on the attribute and return an empty string.
-	diags.AtName(attrPath).HandleErrMsg(
+	diags.AtName(attrPath).AddError(
 		"Either '%s' in the config, or '%s' in the env is needed.",
 		attrPath, envKey,
 	)
@@ -111,7 +111,7 @@ func (p *IdmcProvider) Configure(
 	diags := NewDiagsHandler(&resp.Diagnostics, MsgProviderBadConfigure)
 
 	var config IdmcProviderModel
-	diags.Append(req.Config.Get(ctx, &config)...)
+	diags.Append(req.Config.Get(ctx, &config))
 	if diags.HasError() {
 		return
 	}
@@ -145,7 +145,7 @@ func (p *IdmcProvider) Configure(
 		return
 	}
 	if idmcApi == nil {
-		diags.HandleErrMsg("IDMC API not correctly initialised")
+		diags.AddError("IDMC API not correctly initialised")
 		return
 	}
 

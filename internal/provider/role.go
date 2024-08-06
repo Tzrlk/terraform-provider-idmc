@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -137,7 +136,7 @@ func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *Creat
 
 	// Load configuration from plan.
 	var data RoleResourceModel
-	if diags.HandleDiags(req.Plan.Get(ctx, &data)) {
+	if diags.Append(req.Plan.Get(ctx, &data)) {
 		return
 	}
 
@@ -197,7 +196,7 @@ func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *Creat
 	}
 
 	// Save creation result back to state.
-	diags.HandleDiags(resp.State.Set(ctx, &data))
+	diags.Append(resp.State.Set(ctx, &data))
 
 }
 
@@ -215,7 +214,7 @@ func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadRespo
 
 	// Load configuration from plan.
 	var data RoleResourceModel
-	diags.Append(req.State.Get(ctx, &data)...)
+	diags.Append(req.State.Get(ctx, &data))
 	if diags.HasError() {
 		return
 	}
@@ -228,10 +227,10 @@ func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadRespo
 		params.Q = Ptr(fmt.Sprintf("roleId==\"%s\"", data.Id.ValueString()))
 	} else if !data.Name.IsNull() {
 		params.Q = Ptr(fmt.Sprintf("roleName==\"%s\"", data.Name.ValueString()))
-		diags.AtName("id").WithTitle("Issue reading resource").HandleWarnMsg(
+		diags.AtName("id").WithTitle("Issue reading resource").AddWarning(
 			"No id for the role found in state. Falling back to name: %s", data.Name.ValueString())
 	} else {
-		diags.AtName("id").HandleErrMsg(
+		diags.AtName("id").AddError(
 			"No id or name for the role found in state.")
 		return
 	}
@@ -252,7 +251,7 @@ func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadRespo
 		resp.State.RemoveResource(ctx)
 		return
 	} else if len(apiItems) != 1 {
-		diags.HandleErrMsg(
+		diags.AddError(
 			"Only one item was expected in the api response, not %d",
 			len(apiItems),
 		)
@@ -281,7 +280,7 @@ func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadRespo
 	}
 
 	// Save creation result back to state.
-	diags.HandleDiags(resp.State.Set(ctx, &data))
+	diags.Append(resp.State.Set(ctx, &data))
 
 }
 
@@ -299,11 +298,11 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 
 	// Load configuration from plan and extract privileges.
 	var plan RoleResourceModel
-	diags.HandleDiags(req.Plan.Get(ctx, &plan))
+	diags.Append(req.Plan.Get(ctx, &plan))
 
 	// Load config from state for comparison.
 	var state RoleResourceModel
-	diags.HandleDiags(req.State.Get(ctx, &state))
+	diags.Append(req.State.Get(ctx, &state))
 
 	// Only check for errors here so we can see if there are any issues with
 	// either data structure before breaking.
@@ -318,6 +317,8 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 		return
 	}
 
+	privDiags := diags.AtName("privileges")
+
 	// Add all the privileges that need to be added
 	addApiRes, addApiErr := client.AddRolePrivilegesWithResponse(
 		ctx,
@@ -328,12 +329,11 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 		},
 	)
 	if addApiErr != nil {
-		privilegesPath := path.Root("privileges")
-		diags.AddAttributeError(privilegesPath, MsgResourceBadUpdate, fmt.Sprintf(
+		privDiags.AddError(
 			"Api error encountered adding privileges to role %s: %s",
 			plan.Id.ValueString(),
 			addApiErr,
-		))
+		)
 		return
 	}
 
@@ -364,14 +364,10 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 		},
 	)
 	if remApiErr != nil {
-		diags.AddAttributeError(
-			path.Root("privileges"),
-			MsgResourceBadUpdate,
-			fmt.Sprintf(
-				"Api error encountered removing privileges from role %s: %s",
-				plan.Id.ValueString(),
-				remApiErr,
-			),
+		privDiags.AddError(
+			"Api error encountered removing privileges from role %s: %s",
+			plan.Id.ValueString(),
+			remApiErr,
 		)
 		return
 	}
@@ -394,7 +390,7 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 	}
 
 	// Save creation result back to state.
-	diags.Append(resp.State.Set(ctx, &plan)...)
+	diags.Append(resp.State.Set(ctx, &plan))
 
 }
 
@@ -412,7 +408,7 @@ func (r RoleResource) Delete(ctx context.Context, req DeleteRequest, resp *Delet
 
 	// Load configuration from plan.
 	var data RoleResourceModel
-	if diags.HandleDiags(req.State.Get(ctx, &data)) {
+	if diags.Append(req.State.Get(ctx, &data)) {
 		return
 	}
 
@@ -426,7 +422,7 @@ func (r RoleResource) Delete(ctx context.Context, req DeleteRequest, resp *Delet
 	}
 
 	// Save creation result back to state.
-	diags.HandleDiags(resp.State.Set(ctx, &data))
+	diags.Append(resp.State.Set(ctx, &data))
 
 }
 
@@ -441,7 +437,7 @@ func (r RoleResourceModel) getPrivileges(diags DiagsHandler) *HashSet[string] {
 				set.Add(elementAttr.ValueString())
 				continue
 			}
-			diags.WithPath(privilegesPath.AtSetValue(element)).HandleErrMsg(
+			diags.WithPath(privilegesPath.AtSetValue(element)).AddError(
 				"Encountered a bad value loading set data: %s", element)
 		}
 	})
@@ -451,7 +447,7 @@ func (r RoleResourceModel) setPrivileges(diags DiagsHandler, items *[]v3.RolePri
 	diags = diags.AtName("privileges")
 
 	if items == nil {
-		diags.WithTitle("Issue handling resource API response").HandleWarnMsg(
+		diags.WithTitle("Issue handling resource API response").AddWarning(
 			"Expected role privilege data, but received nothing.")
 		r.Privileges = types.SetNull(types.StringType)
 		return diags.HasError()

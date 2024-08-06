@@ -22,6 +22,6 @@ func (r *IdmcProviderResource) Configure(ctx context.Context, req ConfigureReque
 	diags := NewDiagsHandler(&res.Diagnostics, MsgResourceBadConfig)
 	r.IdmcProviderData = GetProviderData(diags, req.ProviderData)
 	if r.IdmcProviderData == nil && req.ProviderData != nil {
-		diags.HandleErrMsg("GetProviderData returned nil, but the original value isn't.")
+		diags.AddError("GetProviderData returned nil, but the original value isn't.")
 	}
 }

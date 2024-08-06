@@ -124,7 +124,7 @@ func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReques
 
 	// Load configuration from plan.
 	var data RuntimeEnvironmentResourceModel
-	diags.HandleDiags(req.Plan.Get(ctx, &data))
+	diags.Append(req.Plan.Get(ctx, &data))
 	if diags.HasError() {
 		return
 	}
@@ -162,7 +162,7 @@ func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReques
 	}
 
 	// Save result back to state.
-	diags.HandleDiags(resp.State.Set(ctx, &data))
+	diags.Append(resp.State.Set(ctx, &data))
 
 }
 
@@ -180,12 +180,12 @@ func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, r
 
 	// Load configuration from plan.
 	var data RuntimeEnvironmentResourceModel
-	if diags.HandleDiags(req.State.Get(ctx, &data)) {
+	if diags.Append(req.State.Get(ctx, &data)) {
 		return
 	}
 
 	if data.Id.IsNull() {
-		diags.WithPath(path.Root("id")).HandleErrMsg(
+		diags.WithPath(path.Root("id")).AddError(
 			"Resource id is missing.")
 		return
 	}
@@ -224,7 +224,7 @@ func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, r
 	}
 
 	// Save result back to state.
-	diags.Append(resp.State.Set(ctx, &data)...)
+	diags.Append(resp.State.Set(ctx, &data))
 
 }
 
@@ -242,11 +242,11 @@ func (r RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateReques
 
 	// Load config from state for comparison.
 	var state RuntimeEnvironmentResourceModel
-	diags.HandleDiags(req.State.Get(ctx, &state))
+	diags.Append(req.State.Get(ctx, &state))
 
 	// Load configuration from plan.
 	var plan RuntimeEnvironmentResourceModel
-	diags.HandleDiags(req.Plan.Get(ctx, &plan))
+	diags.Append(req.Plan.Get(ctx, &plan))
 
 	// Only check for errors here so we can see if there are any issues with
 	// either data structure before breaking.
@@ -298,7 +298,7 @@ func (r RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateReques
 	}
 
 	// Save result back to state.
-	diags.Append(resp.State.Set(ctx, &plan)...)
+	diags.Append(resp.State.Set(ctx, &plan))
 
 }
 
@@ -316,7 +316,7 @@ func (r RuntimeEnvironmentResource) Delete(ctx context.Context, req DeleteReques
 
 	// Load configuration from plan.
 	var data RuntimeEnvironmentResourceModel
-	diags.Append(req.State.Get(ctx, &data)...)
+	diags.Append(req.State.Get(ctx, &data))
 	if diags.HasError() {
 		return
 	}
@@ -344,7 +344,7 @@ func (r RuntimeEnvironmentResource) Delete(ctx context.Context, req DeleteReques
 	}
 
 	// Save result back to state.
-	diags.Append(resp.State.Set(ctx, &data)...)
+	diags.Append(resp.State.Set(ctx, &data))
 
 }
 
@@ -356,7 +356,7 @@ func (r RuntimeEnvironmentResource) updateRuntimeEnvironmentState(
 	data *v2.RuntimeEnvironment,
 ) bool {
 	if data == nil {
-		diags.HandleErrMsg("no runtime environment response data provided")
+		diags.AddError("no runtime environment response data provided")
 		return true
 	}
 
@@ -376,7 +376,7 @@ func (r RuntimeEnvironmentResource) updateRuntimeEnvironmentState(
 
 	agentsDiags := diags.AtName("agents")
 	if data.Agents == nil {
-		diags.WithTitle("Issue handling API response").HandleWarnMsg(
+		diags.WithTitle("Issue handling API response").AddWarning(
 			"Runtime Environment is expected to have at least an empty list of agents.")
 		state.Agents = types.SetNull(types.StringType)
 		return diags.HasError()

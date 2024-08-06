@@ -172,7 +172,7 @@ func (d *RoleDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadRe
 
 	// Load the previous state if present.
 	var config RoleDataSourceModel
-	if diags.HandleDiags(req.Config.Get(ctx, &config)) {
+	if diags.Append(req.Config.Get(ctx, &config)) {
 		return
 	}
 
@@ -211,9 +211,9 @@ func (d *RoleDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadRe
 
 	if apiRes.JSON200 == nil || len(*apiRes.JSON200) < 1 {
 		if !config.Id.IsNull() {
-			diags.HandleErrMsg("no results returned for given id: %s", config.Id.ValueString())
+			diags.AddError("no results returned for given id: %s", config.Id.ValueString())
 		} else if !config.Name.IsNull() {
-			diags.HandleErrMsg("no results returned for given name: %s", config.Name.ValueString())
+			diags.AddError("no results returned for given name: %s", config.Name.ValueString())
 		}
 		return
 	}
@@ -238,7 +238,7 @@ func (d *RoleDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadRe
 	}
 
 	// Update the state and add the result
-	diags.HandleDiags(resp.State.Set(ctx, &config))
+	diags.Append(resp.State.Set(ctx, &config))
 
 }
 
@@ -246,7 +246,7 @@ func (r *RoleDataSourceModel) setPrivileges(diags DiagsHandler, items *[]v3.Role
 	diags = diags.AtName("privileges")
 
 	if items == nil {
-		diags.WithTitle("Issue reading datasource.").HandleWarnMsg(
+		diags.WithTitle("Issue reading datasource.").AddWarning(
 			"Expected API response to contain role list.")
 		r.Privileges = types.ListNull(rolesDataRolesPrivilegeType)
 		return false

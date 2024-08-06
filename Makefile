@@ -239,7 +239,7 @@ ${TF_LOG_FILES}: %/terraform.jsonl: \
 		${EXE_OUT}
 	@rm -f ${@}
 	@export TF_LOG_PATH=${@}
-	@echo "Testing $(dir ${@})"
+	@echo -e "\nTesting $(dir ${@})"
 	${CMD_TERRAFORM} -chdir=$(dir ${@}) test
 
 # This ensures that any local auth settings can be immediately updated in each

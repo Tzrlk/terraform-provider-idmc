@@ -103,7 +103,7 @@ func (d *RolePrivilegeListDataSource) Read(ctx context.Context, req ReadRequest,
 
 	// Load the previous state if present.
 	var config RolePrivilegeListDataSourceModel
-	if diags.HandleDiags(req.Config.Get(ctx, &config)) {
+	if diags.Append(req.Config.Get(ctx, &config)) {
 		return
 	}
 
@@ -141,7 +141,7 @@ func (d *RolePrivilegeListDataSource) Read(ctx context.Context, req ReadRequest,
 	}
 
 	// Update the state and add the result
-	diags.Append(resp.State.Set(ctx, &config)...)
+	diags.Append(resp.State.Set(ctx, &config))
 
 }
 
@@ -149,7 +149,7 @@ func (r *RolePrivilegeListDataSourceModel) setPrivileges(diags DiagsHandler, ite
 	diags = diags.AtName("privileges")
 
 	if items == nil {
-		diags.HandleWarnMsg("Expected API response to contain privilege list.")
+		diags.AddWarning("Expected API response to contain privilege list.")
 		r.Privileges = types.ListNull(privilegeDataItemType)
 		return false
 	}

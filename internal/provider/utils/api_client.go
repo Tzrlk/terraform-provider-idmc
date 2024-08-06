@@ -25,10 +25,13 @@ func RequireHttpStatus(apiRes *common.ClientResponse, statuses ...int) error {
 }
 
 func CheckApiErrorV2(diags DiagsHandler, apiErrors ...*v2.ApiErrorResponse) {
+	diags = diags.WithTitle(MsgApiBadResponse)
+
 	apiError := Coalesce(apiErrors...)
 	if apiError == nil {
 		return
 	}
+
 	var msg strings.Builder
 	msg.WriteString("--- error ---")
 
@@ -37,7 +40,7 @@ func CheckApiErrorV2(diags DiagsHandler, apiErrors ...*v2.ApiErrorResponse) {
 		if v2Error.Type == v2.ApiErrorResponseBodyTypeError {
 			msg.WriteString("\nCode: " + v2Error.Code)
 			msg.WriteString("\nMsg:  " + v2Error.Description)
-			diags.AddError(MsgApiBadResponse, msg.String())
+			diags.AddError(msg.String())
 			return
 		}
 	}
@@ -52,21 +55,25 @@ func CheckApiErrorV2(diags DiagsHandler, apiErrors ...*v2.ApiErrorResponse) {
 	if jsonError, err := apiError.MarshalJSON(); err != nil {
 		msg.WriteString("\n")
 		msg.Write(jsonError)
-		diags.AddError(MsgApiBadResponse, msg.String())
+		diags.AddError(msg.String())
 		return
 	}
 
 	msg.WriteString("FAILED TO PARSE")
-	diags.AddError(MsgApiBadResponse, msg.String())
+	diags.AddError(msg.String())
 }
 
 func CheckApiErrorV3(diags DiagsHandler, apiErrors ...*v3.ApiErrorResponseBody) {
+	diags = diags.WithTitle(MsgApiBadResponse)
+
 	apiError := Coalesce(apiErrors...)
 	if apiError == nil {
 		return
 	}
+
 	var msg strings.Builder
 	msg.WriteString("--- error ---")
+
 	msg.WriteString("\nRequest: " + apiError.Error.RequestId)
 	msg.WriteString("\nCode:    " + apiError.Error.Code)
 	msg.WriteString("\nMsg:     " + apiError.Error.Message)
@@ -77,5 +84,6 @@ func CheckApiErrorV3(diags DiagsHandler, apiErrors ...*v3.ApiErrorResponseBody) 
 			msg.WriteString("\n    Msg:  " + detail.Message)
 		}
 	}
-	diags.AddError(MsgApiBadResponse, msg.String())
+
+	diags.AddError(msg.String())
 }

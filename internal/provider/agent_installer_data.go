@@ -66,7 +66,7 @@ func (d *AgentInstallerDataSource) Read(ctx context.Context, req ReadRequest, re
 
 	// Load the previous state if present.
 	var config AgentInstallerDataSourceModel
-	if diags.HandleDiags(req.Config.Get(ctx, &config)) {
+	if diags.Append(req.Config.Get(ctx, &config)) {
 		return
 	}
 
@@ -99,6 +99,6 @@ func (d *AgentInstallerDataSource) Read(ctx context.Context, req ReadRequest, re
 	config.ChecksumDownloadUrl = types.StringPointerValue(apiRes.JSON200.ChecksumDownloadUrl)
 
 	// Save result back to state.
-	diags.Append(resp.State.Set(ctx, &config)...)
+	diags.Append(resp.State.Set(ctx, &config))
 
 }
