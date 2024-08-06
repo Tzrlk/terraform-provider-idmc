@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"terraform-provider-idmc/internal/idmc/v3"
 	"terraform-provider-idmc/internal/utils"
@@ -116,7 +115,7 @@ func (d *RolePrivilegeListDataSource) Read(ctx context.Context, req ReadRequest,
 
 	// Perform the API request.
 	apiRes, apiErr := client.ListPrivilegesWithResponse(ctx, params)
-	if diags.HandleErr(apiErr) {
+	if diags.HandleError(apiErr) {
 		return
 	}
 
@@ -132,27 +131,32 @@ func (d *RolePrivilegeListDataSource) Read(ctx context.Context, req ReadRequest,
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			diags.HandleErr(RequireHttpStatus(&apiRes.ClientResponse, 200))
+			diags.HandleError(RequireHttpStatus(&apiRes.ClientResponse, 200))
 		}
 		return
 	}
 
-	config.Privileges = convertRolePrivilegeListResponse(diags.WithPath(path.Root("privileges")), apiRes.JSON200)
+	if config.setPrivileges(diags, apiRes.JSON200) {
+		return
+	}
 
 	// Update the state and add the result
 	diags.Append(resp.State.Set(ctx, &config)...)
 
 }
 
-func convertRolePrivilegeListResponse(diags DiagsHandler, items *[]v3.RolePrivilegeItem) types.List {
+func (r *RolePrivilegeListDataSourceModel) setPrivileges(diags DiagsHandler, items *[]v3.RolePrivilegeItem) bool {
+	diags = diags.AtName("privileges")
+
 	if items == nil {
-		return types.ListNull(privilegeDataItemType)
+		diags.HandleWarnMsg("Expected API response to contain privilege list.")
+		r.Privileges = types.ListNull(privilegeDataItemType)
+		return false
 	}
 
 	privileges := make([]attr.Value, len(*items))
 	for index, item := range *items {
-		itemPath := diags.Path.AtListIndex(index)
-		privileges[index] = UnwrapObjectValue(diags.Diagnostics, itemPath, privilegeDataItemType.AttrTypes, map[string]attr.Value{
+		privileges[index] = diags.AtListIndex(index).ObjectValue(privilegeDataItemType.AttrTypes, map[string]attr.Value{
 			"id":          types.StringPointerValue(item.Id),
 			"name":        types.StringPointerValue(item.Name),
 			"description": types.StringPointerValue(item.Description),
@@ -161,5 +165,12 @@ func convertRolePrivilegeListResponse(diags DiagsHandler, items *[]v3.RolePrivil
 		})
 	}
 
-	return UnwrapListValue(diags.Diagnostics, diags.Path, rolesDataRolesPrivilegeType, privileges)
+	privAttr := diags.ListValue(rolesDataRolesPrivilegeType, privileges)
+	if diags.HasError() {
+		return true
+	}
+
+	r.Privileges = privAttr
+	return false
+
 }

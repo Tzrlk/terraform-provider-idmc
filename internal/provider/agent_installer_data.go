@@ -72,7 +72,7 @@ func (d *AgentInstallerDataSource) Read(ctx context.Context, req ReadRequest, re
 
 	// Perform the API request.
 	apiRes, apiErr := client.GetAgentInstallerInfoWithResponse(ctx, config.Platform.ValueString())
-	if diags.HandleErr(apiErr) {
+	if diags.HandleError(apiErr) {
 		return
 	}
 
@@ -88,7 +88,7 @@ func (d *AgentInstallerDataSource) Read(ctx context.Context, req ReadRequest, re
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			diags.HandleErr(RequireHttpStatus(&apiRes.ClientResponse, 200))
+			diags.HandleError(RequireHttpStatus(&apiRes.ClientResponse, 200))
 		}
 		return
 	}

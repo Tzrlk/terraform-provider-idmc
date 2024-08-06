@@ -5,7 +5,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"terraform-provider-idmc/internal/idmc/v3"
 
@@ -134,7 +133,7 @@ func (d *RoleListDataSource) Read(ctx context.Context, req ReadRequest, resp *Re
 
 	// Perform the API request.
 	apiRes, apiErr := client.GetRolesWithResponse(ctx, &v3.GetRolesParams{})
-	if diags.HandleErr(apiErr) {
+	if diags.HandleError(apiErr) {
 		return
 	}
 
@@ -150,28 +149,32 @@ func (d *RoleListDataSource) Read(ctx context.Context, req ReadRequest, resp *Re
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			diags.HandleErr(RequireHttpStatus(&apiRes.ClientResponse, 200))
+			diags.HandleError(RequireHttpStatus(&apiRes.ClientResponse, 200))
 		}
 		return
 	}
 
-	config.Roles = convertRoleListResponse(diags, apiRes.JSON200)
+	config.setRoles(diags, apiRes.JSON200)
 
 	// Update the state and add the result
 	diags.Append(resp.State.Set(ctx, &config)...)
 
 }
 
-func convertRoleListResponse(diags DiagsHandler, items *[]v3.GetRolesResponseBodyItem) types.List {
+func (r *RoleListDataSourceModel) setRoles(diags DiagsHandler, items *[]v3.GetRolesResponseBodyItem) bool {
+	diags = diags.AtName("roleAttrs")
+
 	if items == nil {
-		return types.ListUnknown(roleListDataRoleType)
+		diags.WithTitle("Issue reading datasource.").HandleWarnMsg(
+			"Expected API response to contain role list.")
+		r.Roles = types.ListNull(roleListDataRoleType)
+		return false
 	}
 
-	roles := make([]attr.Value, len(*items))
-	rolesPath := path.Root("roles")
+	roleAttrs := make([]attr.Value, len(*items))
 	for index, item := range *items {
-		rolePath := rolesPath.AtListIndex(index)
-		roles[index] = UnwrapObjectValue(diags.Diagnostics, rolePath, roleListDataRoleType.AttrTypes, map[string]attr.Value{
+		itemDiags := diags.AtListIndex(index)
+		roleAttrs[index] = itemDiags.ObjectValue(roleListDataRoleType.AttrTypes, map[string]attr.Value{
 			"id":                  types.StringPointerValue(item.Id),
 			"name":                types.StringPointerValue(item.RoleName),
 			"display_name":        types.StringPointerValue(item.DisplayName),
@@ -182,10 +185,17 @@ func convertRoleListResponse(diags DiagsHandler, items *[]v3.GetRolesResponseBod
 			"status":              types.StringPointerValue((*string)(item.Status)),
 			"created_by":          types.StringPointerValue(item.CreatedBy),
 			"updated_by":          types.StringPointerValue(item.UpdatedBy),
-			"created_time":        UnwrapNewRFC3339PointerValue(diags.Diagnostics, rolePath.AtName("created_time"), item.CreateTime),
-			"updated_time":        UnwrapNewRFC3339PointerValue(diags.Diagnostics, rolePath.AtName("updated_time"), item.UpdateTime),
+			"created_time":        itemDiags.AtName("created_time").TimePointer(item.CreateTime),
+			"updated_time":        itemDiags.AtName("updated_time").TimePointer(item.UpdateTime),
 		})
 	}
 
-	return UnwrapListValue(diags.Diagnostics, rolesPath, roleListDataRoleType, roles)
+	roleAttr := diags.ListValue(roleListDataRoleType, roleAttrs)
+	if diags.HasError() {
+		return true
+	}
+
+	r.Roles = roleAttr
+	return false
+
 }

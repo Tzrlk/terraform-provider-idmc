@@ -8,9 +8,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/function"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -82,7 +80,7 @@ func (p *IdmcProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp 
 	}
 }
 
-func getCfgVal(diags *diag.Diagnostics, attrVal types.String, attrPath string) string {
+func getCfgVal(diags DiagsHandler, attrVal types.String, attrPath string) string {
 
 	// Check the attribute for a valid value.
 	if !attrVal.IsNull() && attrVal.ValueString() != "" {
@@ -97,10 +95,10 @@ func getCfgVal(diags *diag.Diagnostics, attrVal types.String, attrPath string) s
 	}
 
 	// Register an error on the attribute and return an empty string.
-	diags.AddAttributeError(path.Root(attrPath), MsgProviderBadConfigure, fmt.Sprintf(
+	diags.AtName(attrPath).HandleErrMsg(
 		"Either '%s' in the config, or '%s' in the env is needed.",
 		attrPath, envKey,
-	))
+	)
 	return ""
 
 }
@@ -110,8 +108,7 @@ func (p *IdmcProvider) Configure(
 	req provider.ConfigureRequest,
 	resp *provider.ConfigureResponse,
 ) {
-	diags := &resp.Diagnostics
-	errHandler := DiagsErrHandler(diags, MsgProviderBadConfigure)
+	diags := NewDiagsHandler(&resp.Diagnostics, MsgProviderBadConfigure)
 
 	var config IdmcProviderModel
 	diags.Append(req.Config.Get(ctx, &config)...)
@@ -135,7 +132,7 @@ func (p *IdmcProvider) Configure(
 	httpClient := &http.Client{}
 	baseApiUrl, sessionId, loginErr := doLogin(ctx, authHost, authUser, authPass, httpClient)
 	if loginErr != nil {
-		errHandler(loginErr)
+		diags.HandleError(loginErr)
 		return
 	}
 
@@ -144,12 +141,11 @@ func (p *IdmcProvider) Configure(
 		common.WithRequestEditorFn(LogHttpRequest),
 		common.WithApiResponseEditorFn(LogApiResponse),
 	)
-	if idmcApiErr != nil {
-		errHandler(idmcApiErr)
+	if diags.HandleError(idmcApiErr) {
 		return
 	}
 	if idmcApi == nil {
-		errHandler(fmt.Errorf("IDMC API not correctly initialised"))
+		diags.HandleErrMsg("IDMC API not correctly initialised")
 		return
 	}
 

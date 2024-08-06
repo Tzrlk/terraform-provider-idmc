@@ -35,7 +35,33 @@ func (d DiagsHandler) WithPath(path paths.Path) DiagsHandler {
 	}
 }
 
-func (d DiagsHandler) HandleErr(err error) bool {
+func (d DiagsHandler) WithTitle(title string) DiagsHandler {
+	return DiagsHandler{
+		Diagnostics: d.Diagnostics,
+		Title:       title,
+		Path:        d.Path,
+	}
+}
+
+func (d DiagsHandler) HandleErrMsg(msg string, args ...any) {
+	detail := fmt.Sprintf(msg, args...)
+	if d.Path.Equal(paths.Empty()) {
+		d.Diagnostics.AddError(d.Title, detail)
+	} else {
+		d.Diagnostics.AddAttributeError(d.Path, d.Title, detail)
+	}
+}
+
+func (d DiagsHandler) HandleWarnMsg(msg string, args ...any) {
+	detail := fmt.Sprintf(msg, args...)
+	if d.Path.Equal(paths.Empty()) {
+		d.Diagnostics.AddWarning(d.Title, detail)
+	} else {
+		d.Diagnostics.AddAttributeWarning(d.Path, d.Title, detail)
+	}
+}
+
+func (d DiagsHandler) HandleError(err error) bool {
 	if err != nil {
 		d.HandleErrMsg(err.Error())
 		return true
@@ -43,17 +69,19 @@ func (d DiagsHandler) HandleErr(err error) bool {
 	return d.HasError()
 }
 
-func (d DiagsHandler) HandleErrMsg(msg string, args ...any) {
-	detail := fmt.Sprintf(msg, args...)
-	if d.Path.Equal(paths.Empty()) {
-		d.AddError(d.Title, detail)
-	} else {
-		d.AddAttributeError(d.Path, d.Title, detail)
-	}
-}
-
 func (d DiagsHandler) HandleDiags(diags diag.Diagnostics) bool {
-	d.Append(diags...)
+
+	// If we're at the root, we don't need to cook anything.
+	if d.Path.Equal(paths.Empty()) {
+		d.Diagnostics.Append(diags...)
+		return d.HasError()
+	}
+
+	// Otherwise, modify all incoming diags to be pathed.
+	for _, diagItem := range diags {
+		d.Diagnostics.Append(diag.WithPath(d.Path, diagItem))
+	}
+
 	return d.HasError()
 }
 
@@ -62,110 +90,68 @@ func (d DiagsHandler) HandlePanic(panicData any) {
 		return
 	}
 	if err, ok := panicData.(error); ok {
-		d.HandleErr(fmt.Errorf("code panic: %w", err))
+		d.HandleError(fmt.Errorf("code panic: %w", err))
 		return
 	}
 	d.HandleErrMsg("code panic: %s", panicData)
 }
 
-// Overrides ///////////////////////////////////////////////////////////////////
+// Path Navigation /////////////////////////////////////////////////////////////
 
-// OLD /////////////////////////////////////////////////////////////////////////
+func (d DiagsHandler) AtListIndex(index int) DiagsHandler {
+	return d.WithPath(d.Path.AtListIndex(index))
+}
 
-func UnwrapDiag[T any](
-	target *diag.Diagnostics,
-	path paths.Path,
-	operation func() (T, diag.Diagnostics),
-) T {
-	result, source := operation()
+func (d DiagsHandler) AtMapKey(key string) DiagsHandler {
+	return d.WithPath(d.Path.AtMapKey(key))
+}
 
-	// Append any and all issues to the main diagnostics array.
-	for _, diagItem := range source {
-		target.Append(diag.WithPath(path, diagItem))
-	}
+func (d DiagsHandler) AtName(name string) DiagsHandler {
+	return d.WithPath(d.Path.AtName(name))
+}
 
+func (d DiagsHandler) AtSetValue(value attr.Value) DiagsHandler {
+	return d.WithPath(d.Path.AtSetValue(value))
+}
+
+func (d DiagsHandler) AtTupleIndex(index int) DiagsHandler {
+	return d.WithPath(d.Path.AtTupleIndex(index))
+}
+
+// Diags Unwrapping ////////////////////////////////////////////////////////////
+
+func (d DiagsHandler) SetValue(elementType attr.Type, elements []attr.Value) types.Set {
+	result, diags := types.SetValue(elementType, elements)
+	d.HandleDiags(diags)
 	return result
-
 }
 
-func UnwrapNewRFC3339PointerValue(
-	diagnostics *diag.Diagnostics,
-	path paths.Path,
-	value *string,
-) timetypes.RFC3339 {
-	return UnwrapDiag(diagnostics, path, func() (timetypes.RFC3339, diag.Diagnostics) {
-		return timetypes.NewRFC3339PointerValue(value)
-	})
+func (d DiagsHandler) ListValue(elementType attr.Type, elements []attr.Value) types.List {
+	result, diags := types.ListValue(elementType, elements)
+	d.HandleDiags(diags)
+	return result
 }
 
-func UnwrapObjectValue(
-	diagnostics *diag.Diagnostics,
-	path paths.Path,
-	attributeTypes map[string]attr.Type,
-	attributes map[string]attr.Value,
-) types.Object {
-	return UnwrapDiag(diagnostics, path, func() (types.Object, diag.Diagnostics) {
-		return types.ObjectValue(attributeTypes, attributes)
-	})
+func (d DiagsHandler) MapValue(elementType attr.Type, elements map[string]attr.Value) types.Map {
+	result, diags := types.MapValue(elementType, elements)
+	d.HandleDiags(diags)
+	return result
 }
 
-func UnwrapMapValue(
-	diagnostics *diag.Diagnostics,
-	path paths.Path,
-	elementType attr.Type,
-	elements map[string]attr.Value,
-) types.Map {
-	return UnwrapDiag(diagnostics, path, func() (types.Map, diag.Diagnostics) {
-		return types.MapValue(elementType, elements)
-	})
+func (d DiagsHandler) ObjectValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) types.Object {
+	result, diags := types.ObjectValue(attributeTypes, attributes)
+	d.HandleDiags(diags)
+	return result
 }
 
-func UnwrapSetValue(
-	diagnostics *diag.Diagnostics,
-	path paths.Path,
-	elementType attr.Type,
-	elements []attr.Value,
-) types.Set {
-	return UnwrapDiag(diagnostics, path, func() (types.Set, diag.Diagnostics) {
-		return types.SetValue(elementType, elements)
-	})
+func (d DiagsHandler) TimeValue(text string) timetypes.RFC3339 {
+	result, diags := timetypes.NewRFC3339Value(text)
+	d.HandleDiags(diags)
+	return result
 }
 
-func UnwrapListValue(
-	diagnostics *diag.Diagnostics,
-	path paths.Path,
-	elementType attr.Type,
-	elements []attr.Value,
-) types.List {
-	return UnwrapDiag(diagnostics, path, func() (types.List, diag.Diagnostics) {
-		return types.ListValue(elementType, elements)
-	})
-}
-
-func DiagsErrHandler(diags *diag.Diagnostics, title string) func(error) bool {
-	return func(err error) bool {
-		if err != nil {
-			diags.AddError(title, err.Error())
-			return true
-		}
-		return diags.HasError()
-	}
-}
-
-func DiagsHandleRecover(errHandler func(err error) bool, panicData any) {
-	if panicData == nil {
-		return
-	}
-	if err, ok := panicData.(error); ok {
-		errHandler(fmt.Errorf("code panic: %w", err))
-		return
-	}
-	errHandler(fmt.Errorf("code panic: %s", panicData))
-}
-
-func DiagsValHandler[T any](errHandler func(error)) func(T, error) T {
-	return func(val T, err error) T {
-		errHandler(err)
-		return val
-	}
+func (d DiagsHandler) TimePointer(text *string) timetypes.RFC3339 {
+	result, diags := timetypes.NewRFC3339PointerValue(text)
+	d.HandleDiags(diags)
+	return result
 }

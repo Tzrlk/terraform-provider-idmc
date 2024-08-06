@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"terraform-provider-idmc/internal/idmc/v3"
@@ -161,25 +160,6 @@ var rolesDataRolesPrivilegeType = types.ObjectType{
 		"status":      types.StringType,
 	},
 }
-var rolesDataRolesType = types.ObjectType{
-	AttrTypes: map[string]attr.Type{
-		"id":                  types.StringType,
-		"name":                types.StringType,
-		"display_name":        types.StringType,
-		"org_id":              types.StringType,
-		"description":         types.StringType,
-		"display_description": types.StringType,
-		"system_role":         types.BoolType,
-		"status":              types.StringType,
-		"created_by":          types.StringType,
-		"updated_by":          types.StringType,
-		"created_time":        timetypes.RFC3339Type{},
-		"updated_time":        timetypes.RFC3339Type{},
-		"privileges": types.MapType{
-			ElemType: rolesDataRolesPrivilegeType,
-		},
-	},
-}
 
 func (d *RoleDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
 	diags := NewDiagsHandler(&resp.Diagnostics, MsgDataSourceBadRead)
@@ -208,7 +188,7 @@ func (d *RoleDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadRe
 
 	// Perform the API request.
 	apiRes, apiErr := client.GetRolesWithResponse(ctx, params)
-	if diags.HandleErr(apiErr) {
+	if diags.HandleError(apiErr) {
 		return
 	}
 
@@ -224,7 +204,7 @@ func (d *RoleDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadRe
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			diags.HandleErr(RequireHttpStatus(&apiRes.ClientResponse, 200))
+			diags.HandleError(RequireHttpStatus(&apiRes.ClientResponse, 200))
 		}
 		return
 	}
@@ -249,24 +229,32 @@ func (d *RoleDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadRe
 	config.Status = types.StringPointerValue((*string)(item.Status))
 	config.CreatedBy = types.StringPointerValue(item.CreatedBy)
 	config.UpdatedBy = types.StringPointerValue(item.UpdatedBy)
-	config.CreatedTime = UnwrapNewRFC3339PointerValue(diags.Diagnostics, path.Root("created_time"), item.CreateTime)
-	config.UpdatedTime = UnwrapNewRFC3339PointerValue(diags.Diagnostics, path.Root("updated_time"), item.UpdateTime)
-	config.Privileges = convertRoleGetResponsePrivileges(diags.Diagnostics, path.Root("privileges"), item.Privileges)
+	config.CreatedTime = diags.AtName("created_time").TimePointer(item.CreateTime)
+	config.UpdatedTime = diags.AtName("updated_time").TimePointer(item.UpdateTime)
+
+	// Handle more sketchy config data
+	if config.setPrivileges(diags, item.Privileges) {
+		return
+	}
 
 	// Update the state and add the result
-	diags.Append(resp.State.Set(ctx, &config)...)
+	diags.HandleDiags(resp.State.Set(ctx, &config))
 
 }
 
-func convertRoleGetResponsePrivileges(diags *diag.Diagnostics, path path.Path, items *[]v3.RolePrivilegeItem) types.List {
+func (r *RoleDataSourceModel) setPrivileges(diags DiagsHandler, items *[]v3.RolePrivilegeItem) bool {
+	diags = diags.AtName("privileges")
+
 	if items == nil {
-		return types.ListNull(rolesDataRolesPrivilegeType)
+		diags.WithTitle("Issue reading datasource.").HandleWarnMsg(
+			"Expected API response to contain role list.")
+		r.Privileges = types.ListNull(rolesDataRolesPrivilegeType)
+		return false
 	}
 
-	privileges := make([]attr.Value, len(*items))
+	privAttrs := make([]attr.Value, len(*items))
 	for index, item := range *items {
-		itemPath := path.AtListIndex(index)
-		privileges[index] = UnwrapObjectValue(diags, itemPath, rolesDataRolesPrivilegeType.AttrTypes, map[string]attr.Value{
+		privAttrs[index] = diags.AtListIndex(index).ObjectValue(rolesDataRolesPrivilegeType.AttrTypes, map[string]attr.Value{
 			"id":          types.StringPointerValue(item.Id),
 			"name":        types.StringPointerValue(item.Name),
 			"description": types.StringPointerValue(item.Description),
@@ -275,5 +263,12 @@ func convertRoleGetResponsePrivileges(diags *diag.Diagnostics, path path.Path, i
 		})
 	}
 
-	return UnwrapListValue(diags, path, rolesDataRolesPrivilegeType, privileges)
+	privAttr := diags.ListValue(rolesDataRolesPrivilegeType, privAttrs)
+	if diags.HasError() {
+		return true
+	}
+
+	r.Privileges = privAttr
+	return false
+
 }

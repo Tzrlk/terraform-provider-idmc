@@ -124,7 +124,7 @@ func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReques
 
 	// Load configuration from plan.
 	var data RuntimeEnvironmentResourceModel
-	diags.Append(req.Plan.Get(ctx, &data)...)
+	diags.HandleDiags(req.Plan.Get(ctx, &data))
 	if diags.HasError() {
 		return
 	}
@@ -136,7 +136,7 @@ func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReques
 	}
 
 	apiRes, apiErr := client.CreateRuntimeEnvironmentWithResponse(ctx, reqBody)
-	if diags.HandleErr(apiErr) {
+	if diags.HandleError(apiErr) {
 		return
 	}
 
@@ -152,7 +152,7 @@ func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReques
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			diags.HandleErr(RequireHttpStatus(&apiRes.ClientResponse, 200))
+			diags.HandleError(RequireHttpStatus(&apiRes.ClientResponse, 200))
 		}
 		return
 	}
@@ -162,7 +162,7 @@ func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReques
 	}
 
 	// Save result back to state.
-	diags.Append(resp.State.Set(ctx, &data)...)
+	diags.HandleDiags(resp.State.Set(ctx, &data))
 
 }
 
@@ -192,7 +192,7 @@ func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, r
 
 	// Perform the API request.
 	apiRes, apiErr := client.GetRuntimeEnvironmentWithResponse(ctx, data.Id.ValueString())
-	if diags.HandleErr(apiErr) {
+	if diags.HandleError(apiErr) {
 		return
 	}
 
@@ -214,7 +214,7 @@ func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, r
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			diags.HandleErr(RequireHttpStatus(&apiRes.ClientResponse, 200))
+			diags.HandleError(RequireHttpStatus(&apiRes.ClientResponse, 200))
 		}
 		return
 	}
@@ -272,7 +272,7 @@ func (r RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateReques
 	}
 
 	apiRes, apiErr := client.UpdateRuntimeEnvironmentWithResponse(ctx, plan.Id.ValueString(), reqBody)
-	if diags.HandleErr(apiErr) {
+	if diags.HandleError(apiErr) {
 		return
 	}
 
@@ -288,7 +288,7 @@ func (r RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateReques
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			diags.HandleErr(RequireHttpStatus(&apiRes.ClientResponse, 200))
+			diags.HandleError(RequireHttpStatus(&apiRes.ClientResponse, 200))
 		}
 		return
 	}
@@ -322,7 +322,7 @@ func (r RuntimeEnvironmentResource) Delete(ctx context.Context, req DeleteReques
 	}
 
 	apiRes, apiErr := client.DeleteRuntimeEnvironmentWithResponse(ctx, data.Id.ValueString())
-	if diags.HandleErr(apiErr) {
+	if diags.HandleError(apiErr) {
 		return
 	}
 
@@ -338,7 +338,7 @@ func (r RuntimeEnvironmentResource) Delete(ctx context.Context, req DeleteReques
 			apiRes.JSON503,
 		)
 		if !diags.HasError() {
-			diags.HandleErr(RequireHttpStatus(&apiRes.ClientResponse, 200))
+			diags.HandleError(RequireHttpStatus(&apiRes.ClientResponse, 200))
 		}
 		return
 	}
@@ -357,7 +357,7 @@ func (r RuntimeEnvironmentResource) updateRuntimeEnvironmentState(
 ) bool {
 	if data == nil {
 		diags.HandleErrMsg("no runtime environment response data provided")
-		return false
+		return true
 	}
 
 	// Update the configured state so instabilities can be detected.
@@ -374,15 +374,26 @@ func (r RuntimeEnvironmentResource) updateRuntimeEnvironmentState(
 	state.UpdatedTime = types.StringPointerValue(data.UpdateTime)
 	state.FederatedId = types.StringPointerValue(data.FederatedId)
 
+	agentsDiags := diags.AtName("agents")
 	if data.Agents == nil {
-		state.Agents = types.SetUnknown(types.StringType)
-	} else {
-		agents := make([]attr.Value, len(*data.Agents))
-		for index, agent := range *data.Agents {
-			agents[index] = types.StringPointerValue(agent.Id)
-		}
-		state.Agents = UnwrapSetValue(diags.Diagnostics, path.Root("agents"), types.StringType, agents)
+		diags.WithTitle("Issue handling API response").HandleWarnMsg(
+			"Runtime Environment is expected to have at least an empty list of agents.")
+		state.Agents = types.SetNull(types.StringType)
+		return diags.HasError()
 	}
 
-	return !diags.HasError()
+	agentsAttrs := make([]attr.Value, len(*data.Agents))
+	for index, agent := range *data.Agents {
+		agentsAttrs[index] = types.StringPointerValue(agent.Id)
+	}
+
+	agentsAttr := agentsDiags.SetValue(types.StringType, agentsAttrs)
+	if diags.HasError() {
+		state.Agents = types.SetUnknown(types.StringType)
+		return true
+	}
+
+	state.Agents = agentsAttr
+	return diags.HasError()
+
 }
