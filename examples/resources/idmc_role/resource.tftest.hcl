@@ -3,11 +3,11 @@ variables {
   role_description = "Role specifically for testing the IDMC terraform provider"
   role_privileges  = [
 
-#     "view.cdmp.DeliveryTargets",
-    "0EBevfPsSRnjOEeM9kNvMz",
+#     "view.mcp.DataSets",
+    "exFj1vewI6Ye1i5YhFMN6Z",
 
-#     "view.apim.apic.asset.api",
-    "03N6cwkjyQhjbVRQEwtAMJ",
+#     "view.mcp.TechnicalAssets",
+    "7g6cuRBQQc0lpwvredqaMI",
 
   ]
 }
@@ -28,7 +28,7 @@ run "create" {
 
 run "remove_privilege" {
   variables {
-    role_privileges = [var.role_privileges[0]]
+    role_privileges = ["view.mcp.DataSets"]
   }
 
   assert {

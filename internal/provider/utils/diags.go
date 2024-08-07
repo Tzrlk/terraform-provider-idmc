@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -11,13 +12,15 @@ import (
 )
 
 type DiagsHandler struct {
+	Ctx   context.Context
 	diags *diag.Diagnostics
 	title string
 	path  paths.Path
 }
 
-func NewDiagsHandler(diags *diag.Diagnostics, title string) DiagsHandler {
+func NewDiagsHandler(ctx context.Context, diags *diag.Diagnostics, title string) DiagsHandler {
 	return DiagsHandler{
+		Ctx:   ctx,
 		diags: diags,
 		title: title,
 		path:  paths.Empty(),
@@ -92,6 +95,7 @@ func (d DiagsHandler) HandlePanic(panicData any) {
 // provided path. All error/warning appending will be attribute-based.
 func (d DiagsHandler) WithPath(path paths.Path) DiagsHandler {
 	return DiagsHandler{
+		Ctx:   d.Ctx,
 		diags: d.diags,
 		title: d.title,
 		path:  path,
@@ -100,6 +104,7 @@ func (d DiagsHandler) WithPath(path paths.Path) DiagsHandler {
 
 func (d DiagsHandler) WithTitle(title string) DiagsHandler {
 	return DiagsHandler{
+		Ctx:   d.Ctx,
 		diags: d.diags,
 		title: title,
 		path:  d.path,
@@ -142,6 +147,12 @@ func (d DiagsHandler) ListValue(elementType attr.Type, elements []attr.Value) ty
 	return result
 }
 
+func (d DiagsHandler) ListValueFrom(elementType attr.Type, elements any) types.List {
+	result, diags := types.ListValueFrom(d.Ctx, elementType, elements)
+	d.Append(diags)
+	return result
+}
+
 func (d DiagsHandler) MapValue(elementType attr.Type, elements map[string]attr.Value) types.Map {
 	result, diags := types.MapValue(elementType, elements)
 	d.Append(diags)
@@ -150,6 +161,12 @@ func (d DiagsHandler) MapValue(elementType attr.Type, elements map[string]attr.V
 
 func (d DiagsHandler) ObjectValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) types.Object {
 	result, diags := types.ObjectValue(attributeTypes, attributes)
+	d.Append(diags)
+	return result
+}
+
+func (d DiagsHandler) ObjectValueFrom(attributeTypes map[string]attr.Type, attributes any) types.Object {
+	result, diags := types.ObjectValueFrom(d.Ctx, attributeTypes, attributes)
 	d.Append(diags)
 	return result
 }

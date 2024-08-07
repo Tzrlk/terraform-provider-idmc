@@ -1,6 +1,6 @@
 run "data" {
   variables {
-    role_name = "Data Preview"
-    role_id   = "2RCvfqSxBlUkVZDqnVbwer"
+    role_name = "Governance User"
+    role_id   = "4Wq01QkBTGliEzbFvKlLQp"
   }
 }

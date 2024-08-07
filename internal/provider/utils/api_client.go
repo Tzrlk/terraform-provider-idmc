@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"golang.org/x/exp/slices"
+	"strconv"
 	"strings"
 
 	"terraform-provider-idmc/internal/idmc/common"
@@ -18,10 +19,12 @@ const (
 )
 
 func RequireHttpStatus(apiRes *common.ClientResponse, statuses ...int) error {
-	if !slices.Contains(statuses, apiRes.HTTPResponse.StatusCode) {
-		return fmt.Errorf("received http %s but expected %+q", apiRes.HTTPResponse.Status, statuses)
+	if slices.Contains(statuses, apiRes.HTTPResponse.StatusCode) {
+		return nil
 	}
-	return nil
+	statusList := strings.Join(TransformSlice(statuses, strconv.Itoa), "/")
+	return fmt.Errorf("received http %s but expected %s",
+		apiRes.HTTPResponse.Status, statusList)
 }
 
 func CheckApiErrorV2(diags DiagsHandler, apiErrors ...*v2.ApiErrorResponse) {

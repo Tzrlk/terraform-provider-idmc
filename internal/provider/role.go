@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"terraform-provider-idmc/internal/idmc/v3"
+	"terraform-provider-idmc/internal/provider/models"
 
 	. "github.com/hashicorp/terraform-plugin-framework/resource"
 	. "terraform-provider-idmc/internal/provider/utils"
@@ -32,7 +32,7 @@ type RoleResourceModel struct {
 	Id                 types.String `tfsdk:"id"`
 	Name               types.String `tfsdk:"name"`
 	Description        types.String `tfsdk:"description"`
-	Privileges         types.Set    `tfsdk:"privileges"`
+	Privileges         types.List   `tfsdk:"privileges"`
 	OrgId              types.String `tfsdk:"org_id"`
 	DisplayName        types.String `tfsdk:"display_name"`
 	DisplayDescription types.String `tfsdk:"display_description"`
@@ -68,6 +68,7 @@ func (r RoleResource) Schema(_ context.Context, _ SchemaRequest, resp *SchemaRes
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"description": schema.StringAttribute{
@@ -75,12 +76,36 @@ func (r RoleResource) Schema(_ context.Context, _ SchemaRequest, resp *SchemaRes
 				Optional:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"privileges": schema.SetAttribute{
+			"privileges": schema.ListNestedAttribute{
 				Description: "The privileges assigned to the role.",
 				Required:    true,
-				ElementType: types.StringType,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.StringAttribute{
+							Description: "Privilege ID.",
+							Optional:    true,
+						},
+						"name": schema.StringAttribute{
+							Description: "Name of the privilege.",
+							Computed:    true,
+						},
+						"description": schema.StringAttribute{
+							Description: "Description of the privilege.",
+							Computed:    true,
+						},
+						"service": schema.StringAttribute{
+							Description: "Service the privilege applies to.",
+							Computed:    true,
+						},
+						"status": schema.StringAttribute{
+							Description: "Status of the privilege (Enabled/Disabled).",
+							Computed:    true,
+						},
+					},
+				},
 			},
 			"org_id": schema.StringAttribute{
 				Description: "ID of the organization the role belongs to.",
@@ -126,7 +151,7 @@ func (r RoleResource) Schema(_ context.Context, _ SchemaRequest, resp *SchemaRes
 
 // Create <editor-fold desc="Create" defaultstate="collapsed">
 func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *CreateResponse) {
-	diags := NewDiagsHandler(&resp.Diagnostics, MsgResourceBadCreate)
+	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadCreate)
 	defer func() { diags.HandlePanic(recover()) }()
 
 	client := r.GetApiClientV3(diags)
@@ -135,13 +160,14 @@ func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *Creat
 	}
 
 	// Load configuration from plan.
-	var data RoleResourceModel
+	var data models.RoleValue
 	if diags.Append(req.Plan.Get(ctx, &data)) {
 		return
 	}
 
 	// Convert privilege set
-	rolePrivileges := data.getPrivileges(diags)
+
+	rolePrivileges := models.NewRolePrivilegeListValueFromList(diags.AtName("privileges"), data.Privileges)
 	if diags.HasError() {
 		return
 	}
@@ -149,7 +175,7 @@ func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *Creat
 	apiRes, apiErr := client.CreateRoleWithResponse(ctx, v3.CreateRoleJSONRequestBody{
 		Name:        data.Name.ValueStringPointer(),
 		Description: data.Description.ValueStringPointer(),
-		Privileges:  Ptr(rolePrivileges.ToSlice()),
+		Privileges:  Ptr(rolePrivileges.GetIds(diags).ToSlice()),
 	})
 	if diags.HandleError(apiErr) {
 		return
@@ -201,7 +227,7 @@ func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *Creat
 
 // Create <editor-fold desc="Read" defaultstate="collapsed">
 func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
-	diags := NewDiagsHandler(&resp.Diagnostics, MsgResourceBadRead)
+	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadRead)
 	defer func() { diags.HandlePanic(recover()) }()
 
 	client := r.GetApiClientV3(diags)
@@ -285,7 +311,7 @@ func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadRespo
 
 // Update <editor-fold desc="Update" defaultstate="collapsed">
 func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *UpdateResponse) {
-	diags := NewDiagsHandler(&resp.Diagnostics, MsgResourceBadDelete)
+	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadDelete)
 	defer func() { diags.HandlePanic(recover()) }()
 
 	client := r.GetApiClientV3(diags)
@@ -391,7 +417,7 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 
 // Delete <editor-fold desc="Delete" defaultstate="collapsed">
 func (r RoleResource) Delete(ctx context.Context, req DeleteRequest, resp *DeleteResponse) {
-	diags := NewDiagsHandler(&resp.Diagnostics, MsgResourceBadDelete)
+	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadDelete)
 	defer func() { diags.HandlePanic(recover()) }()
 
 	client := r.GetApiClientV3(diags)
@@ -421,19 +447,10 @@ func (r RoleResource) Delete(ctx context.Context, req DeleteRequest, resp *Delet
 
 // </editor-fold>
 
-func (r RoleResourceModel) getPrivileges(diags DiagsHandler) *HashSet[string] {
-	privilegesPath := path.Root("privileges")
-	return NewHashSetAfter(func(set *HashSet[string]) {
-		for _, element := range r.Privileges.Elements() {
-			elementAttr, castOk := element.(types.String)
-			if castOk && !elementAttr.IsNull() && !elementAttr.IsUnknown() {
-				set.Add(elementAttr.ValueString())
-				continue
-			}
-			diags.WithPath(privilegesPath.AtSetValue(element)).AddError(
-				"Encountered a bad value loading set data: %s", element)
-		}
-	})
+func (r RoleResourceModel) getPrivileges(diags DiagsHandler) models.RolePrivilegeListValue {
+	diags = diags.AtName("privileges")
+	var result models.RolePrivilegeListValue
+	return result.NewRolePrivilegeListValueFromList(diags, r.Privileges)
 }
 
 func (r RoleResourceModel) setPrivileges(diags DiagsHandler, items *[]v3.RolePrivilegeItem) bool {

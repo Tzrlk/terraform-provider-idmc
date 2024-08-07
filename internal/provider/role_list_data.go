@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"terraform-provider-idmc/internal/idmc/v3"
+	"terraform-provider-idmc/internal/provider/models"
 
 	. "github.com/hashicorp/terraform-plugin-framework/datasource"
 	. "terraform-provider-idmc/internal/provider/utils"
@@ -98,23 +99,6 @@ func (d *RoleListDataSource) Schema(_ context.Context, _ SchemaRequest, resp *Sc
 	}
 }
 
-var roleListDataRoleType = types.ObjectType{
-	AttrTypes: map[string]attr.Type{
-		"id":                  types.StringType,
-		"name":                types.StringType,
-		"display_name":        types.StringType,
-		"org_id":              types.StringType,
-		"description":         types.StringType,
-		"display_description": types.StringType,
-		"system_role":         types.BoolType,
-		"status":              types.StringType,
-		"created_by":          types.StringType,
-		"updated_by":          types.StringType,
-		"created_time":        timetypes.RFC3339Type{},
-		"updated_time":        timetypes.RFC3339Type{},
-	},
-}
-
 func (d *RoleListDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
 	diags := NewDiagsHandler(&resp.Diagnostics, MsgDataSourceBadRead)
 	defer func() { diags.HandlePanic(recover()) }()
@@ -167,14 +151,14 @@ func (r *RoleListDataSourceModel) setRoles(diags DiagsHandler, items *[]v3.GetRo
 	if items == nil {
 		diags.WithTitle("Issue reading datasource.").AddWarning(
 			"Expected API response to contain role list.")
-		r.Roles = types.ListNull(roleListDataRoleType)
+		r.Roles = types.ListNull(models.RoleType)
 		return false
 	}
 
 	roleAttrs := make([]attr.Value, len(*items))
 	for index, item := range *items {
 		itemDiags := diags.AtListIndex(index)
-		roleAttrs[index] = itemDiags.ObjectValue(roleListDataRoleType.AttrTypes, map[string]attr.Value{
+		roleAttrs[index] = itemDiags.ObjectValue(models.RoleType.AttrTypes, map[string]attr.Value{
 			"id":                  types.StringPointerValue(item.Id),
 			"name":                types.StringPointerValue(item.RoleName),
 			"display_name":        types.StringPointerValue(item.DisplayName),
@@ -190,7 +174,7 @@ func (r *RoleListDataSourceModel) setRoles(diags DiagsHandler, items *[]v3.GetRo
 		})
 	}
 
-	roleAttr := diags.ListValue(roleListDataRoleType, roleAttrs)
+	roleAttr := diags.ListValue(models.RoleType, roleAttrs)
 	if diags.HasError() {
 		return true
 	}

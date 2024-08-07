@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"terraform-provider-idmc/internal/provider/models"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
@@ -44,12 +45,6 @@ type RoleDataSourceModel struct {
 	CreatedTime        timetypes.RFC3339 `tfsdk:"created_time"`
 	UpdatedTime        timetypes.RFC3339 `tfsdk:"updated_time"`
 	Privileges         types.List        `tfsdk:"privileges"`
-}
-type RoleDataSourceModelPrivilege struct {
-	Name        types.String `tfsdk:"name"`
-	Description types.String `tfsdk:"description"`
-	Service     types.String `tfsdk:"service"`
-	Status      types.String `tfsdk:"status"`
 }
 
 func (d *RoleDataSource) Metadata(_ context.Context, req MetadataRequest, resp *MetadataResponse) {
@@ -162,7 +157,7 @@ var rolesDataRolesPrivilegeType = types.ObjectType{
 }
 
 func (d *RoleDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
-	diags := NewDiagsHandler(&resp.Diagnostics, MsgDataSourceBadRead)
+	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgDataSourceBadRead)
 	defer func() { diags.HandlePanic(recover()) }()
 
 	client := d.GetApiClientV3(diags)
@@ -254,7 +249,7 @@ func (r *RoleDataSourceModel) setPrivileges(diags DiagsHandler, items *[]v3.Role
 
 	privAttrs := make([]attr.Value, len(*items))
 	for index, item := range *items {
-		privAttrs[index] = diags.AtListIndex(index).ObjectValue(rolesDataRolesPrivilegeType.AttrTypes, map[string]attr.Value{
+		privAttrs[index] = diags.AtListIndex(index).ObjectValue(models.RolePrivilegeType.AttrTypes, map[string]attr.Value{
 			"id":          types.StringPointerValue(item.Id),
 			"name":        types.StringPointerValue(item.Name),
 			"description": types.StringPointerValue(item.Description),
