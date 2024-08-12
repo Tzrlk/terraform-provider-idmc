@@ -3,11 +3,11 @@ variables {
   role_description = "Role specifically for testing the IDMC terraform provider"
   role_privileges  = [
 
-#     "view.cdmp.DeliveryTargets",
-    "0EBevfPsSRnjOEeM9kNvMz",
+#     "view.mcp.DataSets",
+    "exFj1vewI6Ye1i5YhFMN6Z",
 
-#     "view.apim.apic.asset.api",
-    "03N6cwkjyQhjbVRQEwtAMJ",
+#     "view.mcp.TechnicalAssets",
+    "7g6cuRBQQc0lpwvredqaMI",
 
   ]
 }
@@ -52,7 +52,7 @@ run "add_privilege" {
 
 run "force_recreate" {
   variables {
-    description = format("%s with a changed description", var.role_description)
+    role_description = format("%s with a changed description", var.role_description)
   }
 
   assert {

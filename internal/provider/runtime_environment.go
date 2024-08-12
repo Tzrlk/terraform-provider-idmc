@@ -118,13 +118,10 @@ func (r RuntimeEnvironmentResource) Schema(ctx context.Context, req SchemaReques
 
 // Create <editor-fold desc="Create" defaultstate="collapsed">
 func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateRequest, resp *CreateResponse) {
-	diags := NewDiagsHandler(&resp.Diagnostics, MsgResourceBadCreate)
+	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadCreate)
 	defer func() { diags.HandlePanic(recover()) }()
 
-	client := r.GetApiClientV2(diags)
-	if diags.HasError() {
-		return
-	}
+	client := r.GetApi().V2.Client
 
 	// Load configuration from plan.
 	var data RuntimeEnvironmentResourceModel
@@ -174,13 +171,10 @@ func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReques
 
 // Create <editor-fold desc="Read" defaultstate="collapsed">
 func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
-	diags := NewDiagsHandler(&resp.Diagnostics, MsgResourceBadRead)
+	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadRead)
 	defer func() { diags.HandlePanic(recover()) }()
 
-	client := r.GetApiClientV2(diags)
-	if diags.HasError() {
-		return
-	}
+	client := r.GetApi().V2.Client
 
 	// Load configuration from plan.
 	var data RuntimeEnvironmentResourceModel
@@ -236,13 +230,10 @@ func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, r
 
 // Update <editor-fold desc="Update" defaultstate="collapsed">
 func (r RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateRequest, resp *UpdateResponse) {
-	diags := NewDiagsHandler(&resp.Diagnostics, MsgResourceBadUpdate)
+	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadUpdate)
 	defer func() { diags.HandlePanic(recover()) }()
 
-	client := r.GetApiClientV2(diags)
-	if diags.HasError() {
-		return
-	}
+	client := r.GetApi().V2.Client
 
 	// Load config from state for comparison.
 	var state RuntimeEnvironmentResourceModel
@@ -310,13 +301,10 @@ func (r RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateReques
 
 // Delete <editor-fold desc="Delete" defaultstate="collapsed">
 func (r RuntimeEnvironmentResource) Delete(ctx context.Context, req DeleteRequest, resp *DeleteResponse) {
-	diags := NewDiagsHandler(&resp.Diagnostics, MsgResourceBadDelete)
+	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadDelete)
 	defer func() { diags.HandlePanic(recover()) }()
 
-	client := r.GetApiClientV2(diags)
-	if diags.HasError() {
-		return
-	}
+	client := r.GetApi().V2.Client
 
 	// Load configuration from plan.
 	var data RuntimeEnvironmentResourceModel

@@ -162,13 +162,10 @@ var rolesDataRolesPrivilegeType = types.ObjectType{
 }
 
 func (d *RoleDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
-	diags := NewDiagsHandler(&resp.Diagnostics, MsgDataSourceBadRead)
+	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgDataSourceBadRead)
 	defer func() { diags.HandlePanic(recover()) }()
 
-	client := d.GetApiClientV3(diags)
-	if diags.HasError() {
-		return
-	}
+	client := d.GetApi().V3.Client
 
 	// Load the previous state if present.
 	var config RoleDataSourceModel
@@ -255,11 +252,11 @@ func (r *RoleDataSourceModel) setPrivileges(diags DiagsHandler, items *[]v3.Role
 	privAttrs := make([]attr.Value, len(*items))
 	for index, item := range *items {
 		privAttrs[index] = diags.AtListIndex(index).ObjectValue(rolesDataRolesPrivilegeType.AttrTypes, map[string]attr.Value{
-			"id":          types.StringPointerValue(item.Id),
-			"name":        types.StringPointerValue(item.Name),
+			"id":          types.StringValue(item.Id),
+			"name":        types.StringValue(item.Name),
 			"description": types.StringPointerValue(item.Description),
-			"service":     types.StringPointerValue(item.Service),
-			"status":      types.StringPointerValue((*string)(item.Status)),
+			"service":     types.StringValue(item.Service),
+			"status":      types.StringValue((string)(item.Status)),
 		})
 	}
 

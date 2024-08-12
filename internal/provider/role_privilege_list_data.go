@@ -2,7 +2,7 @@ package provider
 
 import (
 	"context"
-	"fmt"
+	"golang.org/x/exp/maps"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -93,13 +93,10 @@ var privilegeDataItemType = types.ObjectType{
 }
 
 func (d *RolePrivilegeListDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
-	diags := NewDiagsHandler(&resp.Diagnostics, MsgDataSourceBadRead)
+	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgDataSourceBadRead)
 	defer func() { diags.HandlePanic(recover()) }()
 
-	client := d.GetApiClientV3(diags)
-	if diags.HasError() {
-		return
-	}
+	apiV3 := d.GetApi().V3
 
 	// Load the previous state if present.
 	var config RolePrivilegeListDataSourceModel
@@ -107,36 +104,14 @@ func (d *RolePrivilegeListDataSource) Read(ctx context.Context, req ReadRequest,
 		return
 	}
 
-	// Obtain request parameters from config.
-	params := &v3.ListPrivilegesParams{}
-	if !config.Status.IsNull() {
-		params.Q = utils.Ptr(fmt.Sprintf("status==\"%s\"", config.Status.ValueString()))
-	}
-
-	// Perform the API request.
-	apiRes, apiErr := client.ListPrivilegesWithResponse(ctx, params)
-	if diags.HandleError(apiErr) {
+	// Load up default query privileges
+	privMap, err := apiV3.GetRolePrivileges(ctx, config.Status.ValueStringPointer())
+	if diags.HandleError(err) {
 		return
 	}
 
-	// Handle error responses.
-	if apiRes.StatusCode() != 200 {
-		CheckApiErrorV3(diags,
-			apiRes.JSON400,
-			apiRes.JSON401,
-			apiRes.JSON403,
-			apiRes.JSON404,
-			apiRes.JSON500,
-			apiRes.JSON502,
-			apiRes.JSON503,
-		)
-		if !diags.HasError() {
-			diags.HandleError(RequireHttpStatus(&apiRes.ClientResponse, 200))
-		}
-		return
-	}
-
-	if config.setPrivileges(diags, apiRes.JSON200) {
+	// Set the privileges from the map values.
+	if config.setPrivileges(diags, utils.Ptr(maps.Values(privMap))) {
 		return
 	}
 
@@ -157,11 +132,11 @@ func (r *RolePrivilegeListDataSourceModel) setPrivileges(diags DiagsHandler, ite
 	privileges := make([]attr.Value, len(*items))
 	for index, item := range *items {
 		privileges[index] = diags.AtListIndex(index).ObjectValue(privilegeDataItemType.AttrTypes, map[string]attr.Value{
-			"id":          types.StringPointerValue(item.Id),
-			"name":        types.StringPointerValue(item.Name),
+			"id":          types.StringValue(item.Id),
+			"name":        types.StringValue(item.Name),
 			"description": types.StringPointerValue(item.Description),
-			"service":     types.StringPointerValue(item.Service),
-			"status":      types.StringPointerValue((*string)(item.Status)),
+			"service":     types.StringValue(item.Service),
+			"status":      types.StringValue((string)(item.Status)),
 		})
 	}
 

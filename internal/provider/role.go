@@ -126,13 +126,10 @@ func (r RoleResource) Schema(_ context.Context, _ SchemaRequest, resp *SchemaRes
 
 // Create <editor-fold desc="Create" defaultstate="collapsed">
 func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *CreateResponse) {
-	diags := NewDiagsHandler(&resp.Diagnostics, MsgResourceBadCreate)
+	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadCreate)
 	defer func() { diags.HandlePanic(recover()) }()
 
-	client := r.GetApiClientV3(diags)
-	if diags.HasError() {
-		return
-	}
+	client := r.GetApi().V3.Client
 
 	// Load configuration from plan.
 	var data RoleResourceModel
@@ -201,13 +198,10 @@ func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *Creat
 
 // Create <editor-fold desc="Read" defaultstate="collapsed">
 func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
-	diags := NewDiagsHandler(&resp.Diagnostics, MsgResourceBadRead)
+	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadRead)
 	defer func() { diags.HandlePanic(recover()) }()
 
-	client := r.GetApiClientV3(diags)
-	if diags.HasError() {
-		return
-	}
+	client := r.GetApi().V3.Client
 
 	// Load configuration from plan.
 	var data RoleResourceModel
@@ -272,9 +266,17 @@ func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadRespo
 	data.UpdatedTime = types.StringPointerValue(apiItems[0].UpdateTime)
 
 	// Handle more sketchy data
-	if data.setPrivileges(diags, apiItems[0].Privileges) {
-		return
-	}
+	data.Privileges = diags.SetValuePointerFromFn(types.StringType, func() *[]attr.Value {
+		if apiItems[0].Privileges == nil {
+			diags.WithTitle("Issue handling resource API response").AddWarning(
+				"Expected role privilege data, but received nothing.")
+			return nil
+		}
+
+		return Ptr(TransformSlice(*apiItems[0].Privileges, func(item v3.RolePrivilegeItem) attr.Value {
+			return types.StringValue(item.Id)
+		}))
+	})
 
 	// Save creation result back to state.
 	diags.Append(resp.State.Set(ctx, &data))
@@ -285,13 +287,8 @@ func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadRespo
 
 // Update <editor-fold desc="Update" defaultstate="collapsed">
 func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *UpdateResponse) {
-	diags := NewDiagsHandler(&resp.Diagnostics, MsgResourceBadDelete)
+	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadDelete)
 	defer func() { diags.HandlePanic(recover()) }()
-
-	client := r.GetApiClientV3(diags)
-	if diags.HasError() {
-		return
-	}
 
 	// Load configuration from plan and extract privileges.
 	var plan RoleResourceModel
@@ -317,73 +314,36 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 	privDiags := diags.AtName("privileges")
 
 	// Add all the privileges that need to be added
-	if privs := planPrivileges.Without(statePrivileges); privs.Size() > 0 {
-		apiRes, apiErr := client.AddRolePrivilegesWithResponse(
-			ctx,
-			plan.Id.ValueString(),
-			&v3.AddRolePrivilegesParams{},
-			v3.AddRolePrivilegesJSONRequestBody{
-				Privileges: privs.ToSlice(),
-			},
-		)
-		if privDiags.HandleError(apiErr) {
+	privsToAdd := planPrivileges.Without(statePrivileges)
+	if privsToAdd.Size() > 0 {
+		err := r.Api.V3.AddRolePrivileges(ctx, plan.Id.ValueString(), privsToAdd.ToSlice())
+		if privDiags.HandleError(err) {
 			return
 		}
-
-		// Handle error responses.
-		if apiRes.StatusCode() != 200 {
-			CheckApiErrorV3(privDiags,
-				apiRes.JSON400,
-				apiRes.JSON401,
-				apiRes.JSON403,
-				apiRes.JSON404,
-				apiRes.JSON500,
-				apiRes.JSON502,
-				apiRes.JSON503,
-			)
-			if !privDiags.HasError() {
-				privDiags.HandleError(RequireHttpStatus(&apiRes.ClientResponse, 200))
-			}
+		// Save update result back to state.
+		state.Privileges = diags.SetValueFromFn(types.StringType, func() []attr.Value {
+			return TransformSlice(statePrivileges.Union(privsToAdd).ToSlice(), func(from string) attr.Value {
+				return types.StringValue(from)
+			})
+		})
+		if diags.HasError() {
 			return
 		}
-
+		// Update the state so a failure to remove doesn't break things.
+		diags.Append(resp.State.Set(ctx, &state))
 	}
 
 	// Remove all the privileges that need to be removed
-	if privs := statePrivileges.Without(planPrivileges); privs.Size() > 0 {
-		apiRes, apiErr := client.RemoveRolePrivilegesWithResponse(
-			ctx,
-			plan.Id.ValueString(),
-			&v3.RemoveRolePrivilegesParams{},
-			v3.RemoveRolePrivilegesJSONRequestBody{
-				Privileges: privs.ToSlice(),
-			},
-		)
-		if privDiags.HandleError(apiErr) {
+	privsToRem := statePrivileges.Without(planPrivileges)
+	if privsToRem.Size() > 0 {
+		err := r.Api.V3.RemoveRolePrivileges(ctx, plan.Id.ValueString(), privsToRem.ToSlice())
+		if privDiags.HandleError(err) {
 			return
 		}
-
-		// Handle error responses.
-		if apiRes.StatusCode() != 200 {
-			CheckApiErrorV3(privDiags,
-				apiRes.JSON400,
-				apiRes.JSON401,
-				apiRes.JSON403,
-				apiRes.JSON404,
-				apiRes.JSON500,
-				apiRes.JSON502,
-				apiRes.JSON503,
-			)
-			if !privDiags.HasError() {
-				privDiags.HandleError(RequireHttpStatus(&apiRes.ClientResponse, 200))
-			}
-			return
-		}
-
+		state.Privileges = plan.Privileges
+		// Save update result back to state.
+		diags.Append(resp.State.Set(ctx, &state))
 	}
-
-	// Save update result back to state.
-	diags.Append(resp.State.Set(ctx, &plan))
 
 }
 
@@ -391,13 +351,10 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 
 // Delete <editor-fold desc="Delete" defaultstate="collapsed">
 func (r RoleResource) Delete(ctx context.Context, req DeleteRequest, resp *DeleteResponse) {
-	diags := NewDiagsHandler(&resp.Diagnostics, MsgResourceBadDelete)
+	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadDelete)
 	defer func() { diags.HandlePanic(recover()) }()
 
-	client := r.GetApiClientV3(diags)
-	if diags.HasError() {
-		return
-	}
+	client := r.GetApi().V3.Client
 
 	// Load configuration from plan.
 	var data RoleResourceModel
@@ -434,32 +391,6 @@ func (r RoleResourceModel) getPrivileges(diags DiagsHandler) *HashSet[string] {
 				"Encountered a bad value loading set data: %s", element)
 		}
 	})
-}
-
-func (r RoleResourceModel) setPrivileges(diags DiagsHandler, items *[]v3.RolePrivilegeItem) bool {
-	diags = diags.AtName("privileges")
-
-	if items == nil {
-		diags.WithTitle("Issue handling resource API response").AddWarning(
-			"Expected role privilege data, but received nothing.")
-		r.Privileges = types.SetNull(types.StringType)
-		return diags.HasError()
-	}
-
-	privAttrs := make([]attr.Value, len(*items))
-	for index, item := range *items {
-		privAttrs[index] = types.StringPointerValue(item.Id)
-	}
-
-	privAttr := diags.SetValue(types.StringType, privAttrs)
-	if diags.HasError() {
-		r.Privileges = types.SetUnknown(types.StringType)
-		return true
-	}
-
-	r.Privileges = privAttr
-	return diags.HasError()
-
 }
 
 //func (r RoleResource) updateRoleState(

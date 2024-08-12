@@ -267,20 +267,20 @@ type RolePrivilegeItem struct {
 	Description *string `json:"description,omitempty"`
 
 	// Id Privilege ID.
-	Id *string `json:"id,omitempty"`
+	Id string `json:"id"`
 
 	// Name Name of the privilege.
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// Service The Informatica Intelligent Cloud Services service that applies to the privilege.
-	Service *string `json:"service,omitempty"`
+	Service string `json:"service"`
 
 	// Status Status of the privilege. Returns one of the following values:
 	// * Enabled: License to use the privilege is valid.
 	// * Disabled: License to use the privilege has expired.
 	// * Unassigned: No license to use this privilege.
 	// * Default: Privilege included by default.
-	Status *RolePrivilegeItemStatus `json:"status,omitempty"`
+	Status RolePrivilegeItemStatus `json:"status"`
 }
 
 // RolePrivilegeItemStatus Status of the privilege. Returns one of the following values:
@@ -350,7 +350,7 @@ type RolePrivileges = UpdateRoleRequestBody
 // ListPrivilegesParams defines parameters for ListPrivileges.
 type ListPrivilegesParams struct {
 	// Q The query string used to filter results.
-	Q *string `form:"q,omitempty" json:"q,omitempty"`
+	Q *string `json:"q,omitempty"`
 }
 
 // GetRolesParams defines parameters for GetRoles.
@@ -582,7 +582,7 @@ func NewListPrivilegesRequest(server string, params *ListPrivilegesParams) (*htt
 
 		if params.Q != nil {
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "q", runtime.ParamLocationQuery, *params.Q); err != nil {
+			if queryFrag, err := runtime.StyleParamWithLocation("simple", true, "q", runtime.ParamLocationQuery, *params.Q); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -1134,6 +1134,7 @@ func (r DeleteRoleResponse) BodyData() []byte {
 
 type AddRolePrivilegesResponse struct {
 	common.ClientResponse
+	JSON204 *N204
 	JSON400 *N400
 	JSON401 *N401
 	JSON403 *N403
@@ -1171,6 +1172,7 @@ func (r AddRolePrivilegesResponse) BodyData() []byte {
 
 type RemoveRolePrivilegesResponse struct {
 	common.ClientResponse
+	JSON204 *N204
 	JSON400 *N400
 	JSON401 *N401
 	JSON403 *N403
@@ -1790,6 +1792,13 @@ func ParseAddRolePrivilegesResponse(rsp *http.Response) (*AddRolePrivilegesRespo
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 204:
+		var dest N204
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON204 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest N400
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -1860,6 +1869,13 @@ func ParseRemoveRolePrivilegesResponse(rsp *http.Response) (*RemoveRolePrivilege
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 204:
+		var dest N204
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON204 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest N400
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {

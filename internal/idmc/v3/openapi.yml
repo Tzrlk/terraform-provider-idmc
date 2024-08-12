@@ -41,12 +41,13 @@ paths:
 
   /public/core/v3/privileges:
     parameters:
-      - name: q
-        in:   query
-        description: |-
-          The query string used to filter results.
+      - name:  q
+        in:    query
+        style: simple
         schema:
           type: string
+        description: |-
+          The query string used to filter results.
         example: |-
           /public/core/v3/privileges?q=status==All
     get:
@@ -203,8 +204,8 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/rolePrivileges'
       responses:
-        200:
-          description: Successfully added privileges.
+        204:
+          $ref: '#/components/responses/204'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -234,8 +235,8 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/rolePrivileges'
       responses:
-        200:
-          description: Successfully removed privileges.
+        204:
+          $ref: '#/components/responses/204'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -286,7 +287,7 @@ components:
 
     204:
       description: |-
-        No content. Only good when attempting to delete a resource.
+        Successful operation with no response data.
       content:
         application/json:
           schema:
@@ -636,6 +637,11 @@ components:
             - Disabled
             - Default
             - Unassigned
+      required:
+        - id
+        - name
+        - service
+        - status
 
     withPrivilegeRefs:
       type: object

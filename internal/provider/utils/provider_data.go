@@ -3,55 +3,20 @@ package utils
 import (
 	"fmt"
 	"terraform-provider-idmc/internal/idmc"
-	"terraform-provider-idmc/internal/idmc/v2"
-	"terraform-provider-idmc/internal/idmc/v3"
 )
 
 type IdmcProviderData struct {
 	Api *idmc.IdmcApi
 }
 
-func (r *IdmcProviderData) GetApi(diags DiagsHandler) *idmc.IdmcApi {
+func (r *IdmcProviderData) GetApi() idmc.IdmcApi {
 	if r == nil {
-		diags.AddError("The provider (and therefore IDMC api client) has not been configured yet.")
-		return nil
+		panic("the provider has not been configured yet")
 	}
 	if r.Api == nil {
-		diags.AddError("The provider has not properly initialised the api client.")
+		panic("the provider has not properly initialised the Api client")
 	}
-	return r.Api
-}
-
-func (r *IdmcProviderData) GetApiClientV2(diags DiagsHandler) *v2.ClientWithResponses {
-	api := r.GetApi(diags)
-	if api == nil {
-		return nil
-	}
-	if api.V2 == nil {
-		diags.AddError("The V2 api client wrapper has not been initialised.")
-		return nil
-	}
-	if api.V2.Client == nil {
-		diags.AddError("The V2 api client has not been initialised.")
-		return nil
-	}
-	return api.V2.Client
-}
-
-func (r *IdmcProviderData) GetApiClientV3(diags DiagsHandler) *v3.ClientWithResponses {
-	api := r.GetApi(diags)
-	if api == nil {
-		return nil
-	}
-	if api.V3 == nil {
-		diags.AddError("The V3 api client wrapper has not been initialised.")
-		return nil
-	}
-	if api.V3.Client == nil {
-		diags.AddError("The V3 api client has not been initialised.")
-		return nil
-	}
-	return api.V3.Client
+	return *r.Api
 }
 
 func GetProviderData(diags DiagsHandler, data any) *IdmcProviderData {

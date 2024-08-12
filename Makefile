@@ -99,15 +99,10 @@ codegen: ${API_GEN_FILES}
 ${API_GEN_FILES}: %/client.gen.go: \
 		%/openapi.yml \
 		%/codegen.yml \
+		${API_TPL_FILES} \
+		tools/tools.go \
 		go.sum
-	${CMD_OAPI_CODEGEN} \
-			-config $(word 2,${^}) \
-			${<}
-
-# Set up a dependency on the template files.
-${API_CFG_FILES}: %/codegen.yml: \
-		${API_TPL_FILES}
-	touch ${@}
+	go generate ${@D}/api.go
 
 ################################################################################
 #: Format module sources.

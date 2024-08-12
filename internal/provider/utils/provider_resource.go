@@ -19,7 +19,7 @@ type IdmcProviderResource struct {
 }
 
 func (r *IdmcProviderResource) Configure(ctx context.Context, req ConfigureRequest, res *ConfigureResponse) {
-	diags := NewDiagsHandler(&res.Diagnostics, MsgResourceBadConfig)
+	diags := NewDiagsHandler(ctx, &res.Diagnostics, MsgResourceBadConfig)
 	r.IdmcProviderData = GetProviderData(diags, req.ProviderData)
 	if r.IdmcProviderData == nil && req.ProviderData != nil {
 		diags.AddError("GetProviderData returned nil, but the original value isn't.")

@@ -56,13 +56,10 @@ func (d *AgentInstallerDataSource) Schema(_ context.Context, _ SchemaRequest, re
 }
 
 func (d *AgentInstallerDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
-	diags := NewDiagsHandler(&resp.Diagnostics, MsgDataSourceBadRead)
+	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgDataSourceBadRead)
 	defer func() { diags.HandlePanic(recover()) }()
 
-	client := d.GetApiClientV2(diags)
-	if diags.HasError() {
-		return
-	}
+	client := d.GetApi().V2.Client
 
 	// Load the previous state if present.
 	var config AgentInstallerDataSourceModel

@@ -111,7 +111,7 @@ func (p *IdmcProvider) Configure(
 	req provider.ConfigureRequest,
 	resp *provider.ConfigureResponse,
 ) {
-	diags := NewDiagsHandler(&resp.Diagnostics, MsgProviderBadConfigure)
+	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgProviderBadConfigure)
 
 	var config IdmcProviderModel
 	diags.Append(req.Config.Get(ctx, &config))

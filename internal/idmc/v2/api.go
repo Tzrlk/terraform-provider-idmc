@@ -7,8 +7,11 @@ import (
 	"terraform-provider-idmc/internal/utils"
 )
 
+//go:generate -command oapi-codegen go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
+//go:generate oapi-codegen -config ./codegen.yml ./openapi.yml
+
 type IdmcAdminV2Api struct {
-	Client *ClientWithResponses
+	Client ClientWithResponses
 }
 
 func NewIdmcAdminV2Api(baseUrl string, sessionId *string, opts ...common.ClientOption) (*IdmcAdminV2Api, error) {
@@ -28,7 +31,7 @@ func NewIdmcAdminV2Api(baseUrl string, sessionId *string, opts ...common.ClientO
 	}
 
 	return utils.OkPtr(&IdmcAdminV2Api{
-		Client: apiClient,
+		Client: *apiClient,
 	})
 
 }

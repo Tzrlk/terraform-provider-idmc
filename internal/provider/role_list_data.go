@@ -116,13 +116,10 @@ var roleListDataRoleType = types.ObjectType{
 }
 
 func (d *RoleListDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
-	diags := NewDiagsHandler(&resp.Diagnostics, MsgDataSourceBadRead)
+	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgDataSourceBadRead)
 	defer func() { diags.HandlePanic(recover()) }()
 
-	client := d.GetApiClientV3(diags)
-	if diags.HasError() {
-		return
-	}
+	client := d.GetApi().V3.Client
 
 	// Load the previous state if present.
 	var config RoleListDataSourceModel

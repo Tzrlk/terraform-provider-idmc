@@ -11,7 +11,6 @@ import (
 )
 
 // Run "go generate" to format example terraform files and generate the docs for the registry/website
-//go:generate make codegen
 //go:generate make docs
 
 var (

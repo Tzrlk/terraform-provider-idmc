@@ -62,7 +62,7 @@ func GetHttpResponseCtx(ctx context.Context, res *http.Response) (context.Contex
 
 func GetApiResponseCtx(ctx context.Context, apiRes *common.ClientResponse) (context.Context, error) {
 	if apiRes == nil {
-		return ctx, fmt.Errorf("unable to get context for nil api response")
+		return ctx, fmt.Errorf("unable to get context for nil Api response")
 	}
 
 	resBody := apiRes.Body
