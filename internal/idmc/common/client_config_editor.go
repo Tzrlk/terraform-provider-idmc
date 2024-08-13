@@ -6,10 +6,10 @@ import (
 	"terraform-provider-idmc/internal/utils"
 )
 
-// RequestEditorFn  is the function signature for the RequestEditor callback function
+// RequestEditorFn  is the function signature for the RequestEditor callback function.
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
 
-// ResponseEditorFn  is the function signature for the ResponseEditor callback function
+// ResponseEditorFn  is the function signature for the ResponseEditor callback function.
 type ResponseEditorFn func(ctx context.Context, res *http.Response) error
 
 // ApiResponseEditorFn are functions that inspect or alter api-wrapped http responses.

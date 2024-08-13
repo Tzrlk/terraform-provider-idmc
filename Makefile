@@ -248,7 +248,7 @@ $(addsuffix local_override.tf,${TF_SRC_DIRS}): %/local_override.tf: \
 #: Generate documentation.
 docs: \
 	docs/*
-phony: docs
+.PHONY: docs
 
 docs/*: \
 	docs/data-sources/* \
@@ -258,7 +258,8 @@ docs/*: \
 # Define relationships between docs and their source files (actually pointless).
 docs/index.md: \
 		examples/provider/provider.tf \
-		internal/provider/provider.go
+		internal/provider/provider.go \
+		templates/index.md.tmpl
 docs/data-sources/%: \
 		examples/data-sources/idmc_$$(basename %)/data-source.tf \
 		internal/provider/$$(basename %).go

@@ -81,7 +81,7 @@ func (i *IdmcAdminV3Api) GetRolePrivileges(ctx context.Context, status *string) 
 		}
 
 		return nil, fmt.Errorf(MsgGetRolePrivilegesFailed,
-			fmt.Errorf("recieved api error response: %s", *errBody))
+			fmt.Errorf("received api error response: %s", *errBody))
 
 	}
 
@@ -107,7 +107,7 @@ func (i *IdmcAdminV3Api) GetRolePrivileges(ctx context.Context, status *string) 
 func (i *IdmcAdminV3Api) lookupRolePrivilegeNames(ctx context.Context, privIds []string) ([]string, error) {
 
 	// Exit early if we don't have anything to do.
-	if privIds == nil || len(privIds) == 0 {
+	if len(privIds) == 0 {
 		return make([]string, 0), nil
 	}
 
@@ -131,7 +131,7 @@ const MsgAddRolePrivilegesFailed = "unable to add %d privileges to role %s: %v"
 func (i *IdmcAdminV3Api) AddRolePrivileges(ctx context.Context, roleId string, privIds []string) error {
 
 	// Exit early if we don't have anything to do.
-	if privIds == nil || len(privIds) == 0 {
+	if len(privIds) == 0 {
 		return nil
 	}
 
@@ -173,7 +173,7 @@ func (i *IdmcAdminV3Api) AddRolePrivileges(ctx context.Context, roleId string, p
 	}
 
 	return fmt.Errorf(MsgAddRolePrivilegesFailed, len(privIds), roleId,
-		fmt.Errorf("recieved api error response: %s", *errBody))
+		fmt.Errorf("received api error response: %s", *errBody))
 
 }
 
@@ -182,7 +182,7 @@ const MsgRemoveRolePrivilegesFailed = "unable to remove %d privileges from role 
 func (i *IdmcAdminV3Api) RemoveRolePrivileges(ctx context.Context, roleId string, privIds []string) error {
 
 	// Exit early if we don't have anything to do.
-	if privIds == nil || len(privIds) == 0 {
+	if len(privIds) == 0 {
 		return nil
 	}
 
@@ -224,7 +224,7 @@ func (i *IdmcAdminV3Api) RemoveRolePrivileges(ctx context.Context, roleId string
 	}
 
 	return fmt.Errorf(MsgRemoveRolePrivilegesFailed, len(privIds), roleId,
-		fmt.Errorf("recieved api error response: %s", *errBody))
+		fmt.Errorf("received api error response: %s", *errBody))
 
 }
 

@@ -23,7 +23,7 @@ type ClientConfig struct {
 	Editors ClientConfigEditor
 }
 
-// NewClientConfig sets up a new ClientConfig with reasonable defaults
+// NewClientConfig sets up a new ClientConfig with reasonable defaults.
 func NewClientConfig(server string, opts ...ClientOption) (*ClientConfig, error) {
 	config := ClientConfig{
 		Server: server,
@@ -34,19 +34,19 @@ func NewClientConfig(server string, opts ...ClientOption) (*ClientConfig, error)
 		},
 	}
 
-	// mutate client and add all optional params
+	// mutate client and add all optional params.
 	for _, opt := range opts {
 		if err := opt(&config); err != nil {
 			return nil, err
 		}
 	}
 
-	// ensure the server URL always has a trailing slash
+	// ensure the server URL always has a trailing slash.
 	if !strings.HasSuffix(config.Server, "/") {
 		config.Server += "/"
 	}
 
-	// create httpClient, if not already present
+	// create httpClient, if not already present.
 	if config.Client == nil {
 		config.Client = &http.Client{}
 	}
@@ -66,7 +66,7 @@ func (c *ClientConfig) HandleRequest(
 		return nil, err
 	}
 
-	// Enrich request with
+	// Enrich request with the current context.
 	req = req.WithContext(ctx)
 
 	// Merge editors for this request in prep for usage.
@@ -77,17 +77,17 @@ func (c *ClientConfig) HandleRequest(
 		return nil, err
 	}
 
-	// Perform the request
+	// Perform the request.
 	res, err := c.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 
-	// Apply response editors
+	// Apply response editors.
 	if err := editor.EditHttpResponse(ctx, res); err != nil {
 		return nil, err
 	}
 
-	// Return the response
+	// Return the response.
 	return res, nil
 }

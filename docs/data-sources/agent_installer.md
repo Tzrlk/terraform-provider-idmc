@@ -1,5 +1,5 @@
----
 # Had to mess with description rendering because it was failing with a weird error.
+# https://github.com/hashicorp/terraform-plugin-docs/blob/main/internal/provider/template.go
 page_title: "idmc_agent_installer Data Source - idmc"
 subcategory: ""
 description: |-
@@ -15,12 +15,12 @@ https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-
 ```terraform
 # Linux
 data "idmc_agent_installer" "linux" {
-  platform = "linux"
+  platform = "linux64"
 }
 
 # Windows
 data "idmc_agent_installer" "windows" {
-  platform = "windows"
+  platform = "win64"
 }
 ```
 

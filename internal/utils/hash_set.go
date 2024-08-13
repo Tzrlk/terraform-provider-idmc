@@ -103,7 +103,7 @@ func (set *HashSet[T]) put(item T) {
 // Filter returns a subset, that contains only the values that satisfies the given filter.
 func (set *HashSet[T]) Filter(filter func(item T) bool) *HashSet[T] {
 	result := NewHashSet[T]()
-	for item, _ := range set.table {
+	for item := range set.table {
 		if filter(item) {
 			result.table[item] = struct{}{}
 		}
@@ -116,12 +116,12 @@ func (set *HashSet[T]) Union(other *HashSet[T]) *HashSet[T] {
 	result := NewHashSet[T]()
 
 	// First add all the items from the first table
-	for item, _ := range set.table {
+	for item := range set.table {
 		result.table[item] = struct{}{}
 	}
 
 	// Then do the same for the second.
-	for item, _ := range other.table {
+	for item := range other.table {
 		result.table[item] = struct{}{}
 	}
 

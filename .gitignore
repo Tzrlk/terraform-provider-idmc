@@ -32,3 +32,6 @@ dist/
 *.tfstate
 *.tfstate.backup
 *.tfvars
+
+# Examples
+examples/**/*.json
