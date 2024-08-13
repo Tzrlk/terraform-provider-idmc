@@ -1,3 +1,4 @@
+---
 # Had to mess with description rendering because it was failing with a weird error.
 # https://github.com/hashicorp/terraform-plugin-docs/blob/main/internal/provider/template.go
 page_title: "idmc Provider"
