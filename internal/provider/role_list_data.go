@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"strings"
 	"terraform-provider-idmc/internal/idmc/v3"
 
 	. "github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -34,7 +35,13 @@ func (d *RoleListDataSource) Metadata(_ context.Context, req MetadataRequest, re
 
 func (d *RoleListDataSource) Schema(_ context.Context, _ SchemaRequest, resp *SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/roles/getting-role-details.html",
+		MarkdownDescription: strings.TrimSpace(`
+Will fetch a list of all roles in the organisation. Uses [the role details fetching API][getting-role-details] under the covers.
+
+While privilege information is available when fetching singular entries, the full list does not include it.
+
+[getting-role-details]: https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/roles/getting-role-details.html
+`),
 		Attributes: map[string]schema.Attribute{
 			"roles": schema.ListNestedAttribute{
 				Description: "The query results",

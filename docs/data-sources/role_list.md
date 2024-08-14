@@ -4,12 +4,20 @@
 page_title: "idmc_role_list Data Source - idmc"
 subcategory: ""
 description: |-
-  https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/roles/getting-role-details.html
+  Will fetch a list of all roles in the organisation. Uses [the role details fetching API][getting-role-details] under the covers.
+  
+  While privilege information is available when fetching singular entries, the full list does not include it.
+  
+  [getting-role-details]: https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/roles/getting-role-details.html
 ---
 
 # idmc_role_list (Data Source)
 
-https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/roles/getting-role-details.html
+Will fetch a list of all roles in the organisation. Uses [the role details fetching API][getting-role-details] under the covers.
+
+While privilege information is available when fetching singular entries, the full list does not include it.
+
+[getting-role-details]: https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-3-resources/roles/getting-role-details.html
 
 ## Example Usage
 
