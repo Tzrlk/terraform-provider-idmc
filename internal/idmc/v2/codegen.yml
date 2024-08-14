@@ -1,10 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/oapi-codegen/oapi-codegen/HEAD/configuration-schema.json
 ---
-output:  ./client.gen.go
 package: v2
-generate:
-  client: true
-  models: true
 compatibility:
   always-prefix-enum-values: true
 additional-imports:
@@ -13,11 +9,17 @@ additional-imports:
 output-options:
   nullable-type: true
   user-templates: # https://github.com/oapi-codegen/oapi-codegen/tree/main/pkg/codegen/templates
-    client-with-responses.tmpl: ../templates/client-with-responses.go.tmpl
-    client.tmpl:                ../templates/client.go.tmpl
-    constants.tmpl:             ../templates/constants.go.tmpl
-    param-types.tmpl:           ../templates/param-types.go.tmpl
-    request-bodies.tmpl:        ../templates/request-bodies.go.tmpl
+    additional-properties.tmpl:           ../templates/additional-properties.go.tmpl
+    client.tmpl:                          ../templates/client.go.tmpl
+    client-with-responses.tmpl:           ../templates/client-with-responses.go.tmpl
+    constants.tmpl:                       ../templates/constants.go.tmpl
+    imports.tmpl:                         ../templates/imports.go.tmpl
+    inline.tmpl:                          ../templates/inline.go.tmpl
+    param-types.tmpl:                     ../templates/param-types.go.tmpl
+    request-bodies.tmpl:                  ../templates/request-bodies.go.tmpl
+    typedef.tmpl:                         ../templates/typedef.go.tmpl
+    union.tmpl:                           ../templates/union.go.tmpl
+    union-and-additional-properties.tmpl: ../templates/union-and-additional-properties.go.tmpl
 import-mapping:
   ../common/openapi.yml: terraform-provider-idmc/internal/idmc/common
-  ../v3/openapi.yml: terraform-provider-idmc/internal/idmc/v3
+  ../v3/openapi.yml:     terraform-provider-idmc/internal/idmc/v3
