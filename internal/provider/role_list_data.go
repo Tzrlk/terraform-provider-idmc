@@ -142,7 +142,7 @@ func (d *RoleListDataSource) Read(ctx context.Context, req ReadRequest, resp *Re
 	}
 
 	// Handle error responses.
-	if apiRes.StatusCode() != 200 {
+	if apiRes.StatusCode != 200 {
 		CheckApiErrorV3(diags,
 			apiRes.JSON400,
 			apiRes.JSON401,

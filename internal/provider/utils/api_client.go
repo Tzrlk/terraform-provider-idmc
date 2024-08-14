@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"golang.org/x/exp/slices"
 	"strconv"
 	"strings"
 
@@ -19,12 +18,14 @@ const (
 )
 
 func RequireHttpStatus(apiRes *common.ClientResponse, statuses ...int) error {
-	if slices.Contains(statuses, apiRes.HTTPResponse.StatusCode) {
-		return nil
+	for _, status := range statuses {
+		if apiRes.StatusCode == status {
+			return nil
+		}
 	}
 	statusList := strings.Join(TransformSlice(statuses, strconv.Itoa), "/")
 	return fmt.Errorf("received http %s but expected %s",
-		apiRes.HTTPResponse.Status, statusList)
+		apiRes.Status, statusList)
 }
 
 func CheckApiErrorV2(diags DiagsHandler, apiErrors ...*v2.ApiErrorResponse) {

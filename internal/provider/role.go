@@ -153,7 +153,7 @@ func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *Creat
 	}
 
 	// Handle error responses.
-	if apiRes.StatusCode() != 201 {
+	if apiRes.StatusCode != 201 {
 		CheckApiErrorV3(diags,
 			apiRes.JSON400,
 			apiRes.JSON401,

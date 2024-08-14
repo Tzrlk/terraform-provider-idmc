@@ -74,7 +74,7 @@ func (d *AgentInstallerDataSource) Read(ctx context.Context, req ReadRequest, re
 	}
 
 	// Handle error responses.
-	if apiRes.StatusCode() != 200 {
+	if apiRes.StatusCode != 200 {
 		CheckApiErrorV2(diags,
 			apiRes.JSON400,
 			apiRes.JSON401,

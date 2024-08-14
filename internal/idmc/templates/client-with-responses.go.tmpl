@@ -41,32 +41,6 @@ type {{genResponseTypeName $opid | ucFirst}} struct {
 	{{- end}}
 }
 
-// Status returns HTTPResponse.Status
-func (r {{genResponseTypeName $opid | ucFirst}}) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r {{genResponseTypeName $opid | ucFirst}}) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r {{genResponseTypeName $opid | ucFirst}}) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r {{genResponseTypeName $opid | ucFirst}}) BodyData() []byte {
-	return r.Body
-}
-
 {{end}}
 
 
@@ -129,8 +103,8 @@ func Parse{{genResponseTypeName $opid | ucFirst}}(rsp *http.Response) (*{{genRes
 
 	response := &{{genResponseTypeName $opid}}{
 		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
+			Response: rsp,
+			Body:     bodyBytes,
 		},
 	}
 

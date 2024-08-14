@@ -446,32 +446,6 @@ type GetAgentInstallerInfoResponse struct {
 	JSON503 *N503
 }
 
-// Status returns HTTPResponse.Status
-func (r GetAgentInstallerInfoResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetAgentInstallerInfoResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r GetAgentInstallerInfoResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r GetAgentInstallerInfoResponse) BodyData() []byte {
-	return r.Body
-}
-
 type ListRuntimeEnvironmentsResponse struct {
 	common.ClientResponse
 	JSON400 *N400
@@ -481,32 +455,6 @@ type ListRuntimeEnvironmentsResponse struct {
 	JSON500 *N500
 	JSON502 *N502
 	JSON503 *N503
-}
-
-// Status returns HTTPResponse.Status
-func (r ListRuntimeEnvironmentsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r ListRuntimeEnvironmentsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r ListRuntimeEnvironmentsResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r ListRuntimeEnvironmentsResponse) BodyData() []byte {
-	return r.Body
 }
 
 type CreateRuntimeEnvironmentResponse struct {
@@ -521,32 +469,6 @@ type CreateRuntimeEnvironmentResponse struct {
 	JSON503 *N503
 }
 
-// Status returns HTTPResponse.Status
-func (r CreateRuntimeEnvironmentResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r CreateRuntimeEnvironmentResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r CreateRuntimeEnvironmentResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r CreateRuntimeEnvironmentResponse) BodyData() []byte {
-	return r.Body
-}
-
 type DeleteRuntimeEnvironmentResponse struct {
 	common.ClientResponse
 	JSON400 *N400
@@ -556,32 +478,6 @@ type DeleteRuntimeEnvironmentResponse struct {
 	JSON500 *N500
 	JSON502 *N502
 	JSON503 *N503
-}
-
-// Status returns HTTPResponse.Status
-func (r DeleteRuntimeEnvironmentResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r DeleteRuntimeEnvironmentResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r DeleteRuntimeEnvironmentResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r DeleteRuntimeEnvironmentResponse) BodyData() []byte {
-	return r.Body
 }
 
 type GetRuntimeEnvironmentResponse struct {
@@ -596,32 +492,6 @@ type GetRuntimeEnvironmentResponse struct {
 	JSON503 *N503
 }
 
-// Status returns HTTPResponse.Status
-func (r GetRuntimeEnvironmentResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetRuntimeEnvironmentResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r GetRuntimeEnvironmentResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r GetRuntimeEnvironmentResponse) BodyData() []byte {
-	return r.Body
-}
-
 type UpdateRuntimeEnvironmentResponse struct {
 	common.ClientResponse
 	JSON200 *RuntimeEnvironment
@@ -634,32 +504,6 @@ type UpdateRuntimeEnvironmentResponse struct {
 	JSON503 *N503
 }
 
-// Status returns HTTPResponse.Status
-func (r UpdateRuntimeEnvironmentResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r UpdateRuntimeEnvironmentResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r UpdateRuntimeEnvironmentResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r UpdateRuntimeEnvironmentResponse) BodyData() []byte {
-	return r.Body
-}
-
 type LoginResponse struct {
 	common.ClientResponse
 	JSON200 *LoginResponseBody
@@ -670,32 +514,6 @@ type LoginResponse struct {
 	JSON500 *N500
 	JSON502 *N502
 	JSON503 *N503
-}
-
-// Status returns HTTPResponse.Status
-func (r LoginResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r LoginResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r LoginResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r LoginResponse) BodyData() []byte {
-	return r.Body
 }
 
 // GetAgentInstallerInfoWithResponse request returning *GetAgentInstallerInfoResponse
@@ -875,8 +693,8 @@ func ParseGetAgentInstallerInfoResponse(rsp *http.Response) (*GetAgentInstallerI
 
 	response := &GetAgentInstallerInfoResponse{
 		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
+			Response: rsp,
+			Body:     bodyBytes,
 		},
 	}
 
@@ -952,8 +770,8 @@ func ParseListRuntimeEnvironmentsResponse(rsp *http.Response) (*ListRuntimeEnvir
 
 	response := &ListRuntimeEnvironmentsResponse{
 		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
+			Response: rsp,
+			Body:     bodyBytes,
 		},
 	}
 
@@ -1022,8 +840,8 @@ func ParseCreateRuntimeEnvironmentResponse(rsp *http.Response) (*CreateRuntimeEn
 
 	response := &CreateRuntimeEnvironmentResponse{
 		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
+			Response: rsp,
+			Body:     bodyBytes,
 		},
 	}
 
@@ -1099,8 +917,8 @@ func ParseDeleteRuntimeEnvironmentResponse(rsp *http.Response) (*DeleteRuntimeEn
 
 	response := &DeleteRuntimeEnvironmentResponse{
 		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
+			Response: rsp,
+			Body:     bodyBytes,
 		},
 	}
 
@@ -1169,8 +987,8 @@ func ParseGetRuntimeEnvironmentResponse(rsp *http.Response) (*GetRuntimeEnvironm
 
 	response := &GetRuntimeEnvironmentResponse{
 		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
+			Response: rsp,
+			Body:     bodyBytes,
 		},
 	}
 
@@ -1246,8 +1064,8 @@ func ParseUpdateRuntimeEnvironmentResponse(rsp *http.Response) (*UpdateRuntimeEn
 
 	response := &UpdateRuntimeEnvironmentResponse{
 		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
+			Response: rsp,
+			Body:     bodyBytes,
 		},
 	}
 
@@ -1323,8 +1141,8 @@ func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
 
 	response := &LoginResponse{
 		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
+			Response: rsp,
+			Body:     bodyBytes,
 		},
 	}
 

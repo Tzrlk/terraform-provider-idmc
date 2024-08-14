@@ -65,7 +65,7 @@ func (i *IdmcAdminV3Api) GetRolePrivileges(ctx context.Context, status *string) 
 	}
 
 	// Handle error responses.
-	if apiRes.StatusCode() != 200 {
+	if apiRes.StatusCode != 200 {
 		errBody := Coalesce(
 			apiRes.JSON400,
 			apiRes.JSON401,
@@ -78,7 +78,7 @@ func (i *IdmcAdminV3Api) GetRolePrivileges(ctx context.Context, status *string) 
 
 		if errBody == nil {
 			return nil, fmt.Errorf(MsgGetRolePrivilegesFailed,
-				fmt.Errorf("received http %s but expected %d", apiRes.Status(), 200))
+				fmt.Errorf("received http %s but expected %d", apiRes.Status, 200))
 		}
 
 		return nil, fmt.Errorf(MsgGetRolePrivilegesFailed,
@@ -154,7 +154,7 @@ func (i *IdmcAdminV3Api) AddRolePrivileges(ctx context.Context, roleId string, p
 	}
 
 	// Return early if everything was successful.
-	if apiRes.StatusCode() == 204 {
+	if apiRes.StatusCode == 204 {
 		return nil
 	}
 
@@ -170,7 +170,7 @@ func (i *IdmcAdminV3Api) AddRolePrivileges(ctx context.Context, roleId string, p
 
 	if errBody == nil {
 		return fmt.Errorf(MsgAddRolePrivilegesFailed, len(privIds), roleId,
-			fmt.Errorf("received http %s but expected %d", apiRes.Status(), 200))
+			fmt.Errorf("received http %s but expected %d", apiRes.Status, 200))
 	}
 
 	return fmt.Errorf(MsgAddRolePrivilegesFailed, len(privIds), roleId,
@@ -205,7 +205,7 @@ func (i *IdmcAdminV3Api) RemoveRolePrivileges(ctx context.Context, roleId string
 	}
 
 	// Return early if everything was successful.
-	if apiRes.StatusCode() == 204 {
+	if apiRes.StatusCode == 204 {
 		return nil
 	}
 
@@ -221,7 +221,7 @@ func (i *IdmcAdminV3Api) RemoveRolePrivileges(ctx context.Context, roleId string
 
 	if errBody == nil {
 		return fmt.Errorf(MsgRemoveRolePrivilegesFailed, len(privIds), roleId,
-			fmt.Errorf("received http %s but expected %d", apiRes.Status(), 200))
+			fmt.Errorf("received http %s but expected %d", apiRes.Status, 200))
 	}
 
 	return fmt.Errorf(MsgRemoveRolePrivilegesFailed, len(privIds), roleId,

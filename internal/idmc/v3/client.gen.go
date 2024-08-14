@@ -574,32 +574,6 @@ type LoginResponse struct {
 	JSON503 *N503
 }
 
-// Status returns HTTPResponse.Status
-func (r LoginResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r LoginResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r LoginResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r LoginResponse) BodyData() []byte {
-	return r.Body
-}
-
 type ListPrivilegesResponse struct {
 	common.ClientResponse
 	JSON200 *[]RolePrivilegeItem
@@ -610,32 +584,6 @@ type ListPrivilegesResponse struct {
 	JSON500 *N500
 	JSON502 *N502
 	JSON503 *N503
-}
-
-// Status returns HTTPResponse.Status
-func (r ListPrivilegesResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r ListPrivilegesResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r ListPrivilegesResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r ListPrivilegesResponse) BodyData() []byte {
-	return r.Body
 }
 
 type GetRolesResponse struct {
@@ -650,32 +598,6 @@ type GetRolesResponse struct {
 	JSON503 *N503
 }
 
-// Status returns HTTPResponse.Status
-func (r GetRolesResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetRolesResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r GetRolesResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r GetRolesResponse) BodyData() []byte {
-	return r.Body
-}
-
 type CreateRoleResponse struct {
 	common.ClientResponse
 	JSON201 *CreateRoleResponseBody
@@ -686,32 +608,6 @@ type CreateRoleResponse struct {
 	JSON500 *N500
 	JSON502 *N502
 	JSON503 *N503
-}
-
-// Status returns HTTPResponse.Status
-func (r CreateRoleResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r CreateRoleResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r CreateRoleResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r CreateRoleResponse) BodyData() []byte {
-	return r.Body
 }
 
 type DeleteRoleResponse struct {
@@ -726,32 +622,6 @@ type DeleteRoleResponse struct {
 	JSON503 *N503
 }
 
-// Status returns HTTPResponse.Status
-func (r DeleteRoleResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r DeleteRoleResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r DeleteRoleResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r DeleteRoleResponse) BodyData() []byte {
-	return r.Body
-}
-
 type AddRolePrivilegesResponse struct {
 	common.ClientResponse
 	JSON204 *N204
@@ -764,32 +634,6 @@ type AddRolePrivilegesResponse struct {
 	JSON503 *N503
 }
 
-// Status returns HTTPResponse.Status
-func (r AddRolePrivilegesResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r AddRolePrivilegesResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r AddRolePrivilegesResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r AddRolePrivilegesResponse) BodyData() []byte {
-	return r.Body
-}
-
 type RemoveRolePrivilegesResponse struct {
 	common.ClientResponse
 	JSON204 *N204
@@ -800,32 +644,6 @@ type RemoveRolePrivilegesResponse struct {
 	JSON500 *N500
 	JSON502 *N502
 	JSON503 *N503
-}
-
-// Status returns HTTPResponse.Status
-func (r RemoveRolePrivilegesResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r RemoveRolePrivilegesResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r RemoveRolePrivilegesResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r RemoveRolePrivilegesResponse) BodyData() []byte {
-	return r.Body
 }
 
 // LoginWithBodyWithResponse request with arbitrary body returning *LoginResponse
@@ -1021,8 +839,8 @@ func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
 
 	response := &LoginResponse{
 		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
+			Response: rsp,
+			Body:     bodyBytes,
 		},
 	}
 
@@ -1098,8 +916,8 @@ func ParseListPrivilegesResponse(rsp *http.Response) (*ListPrivilegesResponse, e
 
 	response := &ListPrivilegesResponse{
 		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
+			Response: rsp,
+			Body:     bodyBytes,
 		},
 	}
 
@@ -1175,8 +993,8 @@ func ParseGetRolesResponse(rsp *http.Response) (*GetRolesResponse, error) {
 
 	response := &GetRolesResponse{
 		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
+			Response: rsp,
+			Body:     bodyBytes,
 		},
 	}
 
@@ -1252,8 +1070,8 @@ func ParseCreateRoleResponse(rsp *http.Response) (*CreateRoleResponse, error) {
 
 	response := &CreateRoleResponse{
 		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
+			Response: rsp,
+			Body:     bodyBytes,
 		},
 	}
 
@@ -1329,8 +1147,8 @@ func ParseDeleteRoleResponse(rsp *http.Response) (*DeleteRoleResponse, error) {
 
 	response := &DeleteRoleResponse{
 		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
+			Response: rsp,
+			Body:     bodyBytes,
 		},
 	}
 
@@ -1406,8 +1224,8 @@ func ParseAddRolePrivilegesResponse(rsp *http.Response) (*AddRolePrivilegesRespo
 
 	response := &AddRolePrivilegesResponse{
 		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
+			Response: rsp,
+			Body:     bodyBytes,
 		},
 	}
 
@@ -1483,8 +1301,8 @@ func ParseRemoveRolePrivilegesResponse(rsp *http.Response) (*RemoveRolePrivilege
 
 	response := &RemoveRolePrivilegesResponse{
 		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
+			Response: rsp,
+			Body:     bodyBytes,
 		},
 	}
 

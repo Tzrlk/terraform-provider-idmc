@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -190,7 +189,7 @@ func (d *RoleDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadRe
 	}
 
 	// Handle error responses.
-	if apiRes.StatusCode() != 200 {
+	if apiRes.StatusCode != 200 {
 		CheckApiErrorV3(diags,
 			apiRes.JSON400,
 			apiRes.JSON401,

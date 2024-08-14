@@ -142,7 +142,7 @@ func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReques
 	}
 
 	// Handle error responses.
-	if apiRes.StatusCode() != 200 {
+	if apiRes.StatusCode != 200 {
 		CheckApiErrorV2(diags,
 			apiRes.JSON400,
 			apiRes.JSON401,
@@ -195,13 +195,13 @@ func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, r
 	}
 
 	// Remove the resource if not found.
-	if apiRes.StatusCode() == 404 {
+	if apiRes.StatusCode == 404 {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
 	// Handle remaining error responses.
-	if apiRes.StatusCode() != 200 {
+	if apiRes.StatusCode != 200 {
 		CheckApiErrorV2(diags,
 			apiRes.JSON400,
 			apiRes.JSON401,
@@ -272,7 +272,7 @@ func (r RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateReques
 	}
 
 	// Handle error responses.
-	if apiRes.StatusCode() != 200 {
+	if apiRes.StatusCode != 200 {
 		CheckApiErrorV2(diags,
 			apiRes.JSON400,
 			apiRes.JSON401,
@@ -319,7 +319,7 @@ func (r RuntimeEnvironmentResource) Delete(ctx context.Context, req DeleteReques
 	}
 
 	// Handle error responses.
-	if apiRes.StatusCode() != 200 {
+	if apiRes.StatusCode != 200 {
 		CheckApiErrorV2(diags,
 			apiRes.JSON400,
 			apiRes.JSON401,
