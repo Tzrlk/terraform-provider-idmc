@@ -10,7 +10,8 @@ import (
 )
 
 //go:generate -command oapi-codegen go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
-//go:generate oapi-codegen -config ./codegen.yml ./openapi.yml
+//go:generate oapi-codegen -config ./codegen.yml -generate types -o ./types.gen.go ./openapi.yml
+//go:generate oapi-codegen -config ./codegen.yml -generate client -o ./client.gen.go ./openapi.yml
 
 type IdmcAdminV3Api struct {
 	Client         ClientWithResponses

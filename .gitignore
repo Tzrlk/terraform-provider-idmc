@@ -8,9 +8,6 @@ dist/
 *.dll
 *.exe
 
-# Keep windows files with windows line endings
-*.winfile eol=crlf
-
 # Mac
 .DS_Store
 
