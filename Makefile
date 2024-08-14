@@ -246,38 +246,23 @@ $(addsuffix local_override.tf,${TF_SRC_DIRS}): %/local_override.tf: \
 
 ################################################################################
 #: Generate documentation.
-docs: \
-	docs/*
+docs: ${DOC_OUT_FILES}
 .PHONY: docs
 
-docs/*: \
-	docs/data-sources/* \
-	docs/resources/* \
-	docs/functions/*
+DOC_OUT_TPLS  := $(wildcard templates/*.md.tmpl)
+DOC_OUT_FILES := $(sort \
+	docs/index.md \
+	$(addsuffix .md,$(patsubst examples/data-sources/idmc_%,docs/data-sources/%,${TF_SRC_DIRS_DAT})) \
+	$(addsuffix .md,$(patsubst examples/resources/idmc_%,docs/resources/%,${TF_SRC_DIRS_DAT})) \
+	$(addsuffix .md,$(patsubst examples/functions/idmc_%,docs/functions/%,${TF_SRC_DIRS_DAT})) \
+)
 
-# Define relationships between docs and their source files (actually pointless).
-docs/index.md: \
-		examples/provider/provider.tf \
-		internal/provider/provider.go \
-		templates/index.md.tmpl
-docs/data-sources/%: \
-		examples/data-sources/idmc_$$(basename %)/data-source.tf \
-		internal/provider/$$(basename %).go
-docs/resources/%: \
-		examples/resources/idmc_$$(basename %)/resource.tf \
-		internal/provider/$$(basename %).go
-docs/functions/%: \
-		examples/functions/$$(basename %)/function.tf \
-		internal/provider/$$(basename %).go
-
-docs/index.md docs/data-sources/* docs/resources/* docs/functions/* &: \
+${DOC_OUT_FILES} &: \
 		${GO_SRC_FILES} \
 		${TF_SRC_FILES} \
+		${DOC_OUT_TPLS} \
 		| .build/
 	${CMD_TFPLUGINDOCS} \
 		generate \
 		--provider-name idmc \
 		--website-temp-dir .build/tfplugindocs
-#		--providers-schema ??? (need to generate first)
-
-# TODO: Use the examples as an indication of what documentation is going to be generated.
