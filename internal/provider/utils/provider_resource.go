@@ -3,6 +3,8 @@ package utils
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
+
 	. "github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
@@ -14,6 +16,8 @@ const (
 	MsgResourceBadCreate = "Unable to create resource"
 )
 
+// IdmcProviderResource wraps IdmcProviderData and partially implements the Resource interface to support common
+// functionality between all resources.
 type IdmcProviderResource struct {
 	*IdmcProviderData
 }
@@ -24,4 +28,9 @@ func (r *IdmcProviderResource) Configure(ctx context.Context, req ConfigureReque
 	if r.IdmcProviderData == nil && req.ProviderData != nil {
 		diags.AddError("GetProviderData returned nil, but the original value isn't.")
 	}
+}
+
+// ImportState implements ResourceWithImportState for all resources unless overridden.
+func (r *IdmcProviderResource) ImportState(ctx context.Context, req ImportStateRequest, res *ImportStateResponse) {
+	ImportStatePassthroughID(ctx, path.Root("id"), req, res)
 }
