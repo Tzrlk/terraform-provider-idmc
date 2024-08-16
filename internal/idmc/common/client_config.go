@@ -2,7 +2,9 @@ package common
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"reflect"
 	"strings"
 )
 
@@ -90,4 +92,46 @@ func (c *ClientConfig) HandleRequest(
 
 	// Return the response.
 	return res, nil
+}
+
+func HandleAction[T any](
+	client ClientConfig,
+	ctx context.Context,
+	editors []ClientConfigEditor,
+	parser func(rsp *http.Response) (*T, error),
+	action func(ctx context.Context) (*http.Response, error),
+) (*T, error) {
+
+	// Perform the provided action.
+	rsp, err := action(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse the response payload.
+	apiRes, err := parser(rsp)
+	if err != nil {
+		return nil, err
+	}
+
+	// Sketchy reflection because we can't have nice things.
+	apiResVal := reflect.ValueOf(apiRes).Elem()
+	clientRspVal := apiResVal.FieldByName("ClientResponse")
+
+	clientResp, ok := clientRspVal.Interface().(ClientResponse)
+	if !ok {
+		return nil, errors.New("failed to convert apiRes field to ClientResponse")
+	}
+
+	// Apply API response editors.
+	editor := client.Editors.Merge(editors...)
+	if err := editor.EditApiResponse(ctx, &clientResp); err != nil {
+		return nil, err
+	}
+
+	clientRspVal.Set(reflect.ValueOf(clientResp))
+
+	// Success.
+	return apiRes, nil
+
 }
