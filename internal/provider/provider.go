@@ -162,6 +162,7 @@ func (p *IdmcProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewRoleResource,
 		NewRuntimeEnvironmentResource,
+		NewUserResource,
 	}
 }
 
