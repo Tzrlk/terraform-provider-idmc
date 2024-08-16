@@ -91,27 +91,24 @@ func (c *{{ $clientTypeName }}WithResponses) {{$opid}}{{.Suffix}}WithResponse(ct
 {{end}}{{/* operations */}}
 
 {{/* Generate parse functions for responses*/}}
-{{range .}}{{$opid := .OperationId}}
+{{ range . }}
+{{- $responseTypeName := genResponseTypeName .OperationId }}
 
-// Parse{{genResponseTypeName $opid | ucFirst}} parses an HTTP response from a {{$opid}}WithResponse call
-func Parse{{genResponseTypeName $opid | ucFirst}}(rsp *http.Response) (*{{genResponseTypeName $opid}}, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+// Parse{{ $responseTypeName | ucFirst }} parses an HTTP response from a {{ .OperationId }}WithResponse call.
+func Parse{{ $responseTypeName | ucFirst }}(rsp *http.Response) (*{{ $responseTypeName }}, error) {
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &{{ $responseTypeName }}{ ClientResponse: clientResponse }
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &{{genResponseTypeName $opid}}{
-		ClientResponse: common.ClientResponse{
-			Response: rsp,
-			Body:     bodyBytes,
-		},
-	}
-
-	{{genResponseUnmarshal .}}
+	bodyBytes := response.Body
+	{{ genResponseUnmarshal . }}
 
 	return response, nil
 }
-{{end}}{{/* range . $opid := .OperationId */}}
+{{ end }}
 
 // </editor-fold> //////////////////////////////////////////////////////////////

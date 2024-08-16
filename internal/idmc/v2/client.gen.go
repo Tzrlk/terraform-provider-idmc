@@ -683,21 +683,17 @@ func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJ
 	return apiRes, nil
 }
 
-// ParseGetAgentInstallerInfoResponse parses an HTTP response from a GetAgentInstallerInfoWithResponse call
+// ParseGetAgentInstallerInfoResponse parses an HTTP response from a GetAgentInstallerInfoWithResponse call.
 func ParseGetAgentInstallerInfoResponse(rsp *http.Response) (*GetAgentInstallerInfoResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &GetAgentInstallerInfoResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &GetAgentInstallerInfoResponse{
-		ClientResponse: common.ClientResponse{
-			Response: rsp,
-			Body:     bodyBytes,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest GetAgentInstallerInfoResponseBody
@@ -760,21 +756,17 @@ func ParseGetAgentInstallerInfoResponse(rsp *http.Response) (*GetAgentInstallerI
 	return response, nil
 }
 
-// ParseListRuntimeEnvironmentsResponse parses an HTTP response from a ListRuntimeEnvironmentsWithResponse call
+// ParseListRuntimeEnvironmentsResponse parses an HTTP response from a ListRuntimeEnvironmentsWithResponse call.
 func ParseListRuntimeEnvironmentsResponse(rsp *http.Response) (*ListRuntimeEnvironmentsResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &ListRuntimeEnvironmentsResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &ListRuntimeEnvironmentsResponse{
-		ClientResponse: common.ClientResponse{
-			Response: rsp,
-			Body:     bodyBytes,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest N400
@@ -830,21 +822,17 @@ func ParseListRuntimeEnvironmentsResponse(rsp *http.Response) (*ListRuntimeEnvir
 	return response, nil
 }
 
-// ParseCreateRuntimeEnvironmentResponse parses an HTTP response from a CreateRuntimeEnvironmentWithResponse call
+// ParseCreateRuntimeEnvironmentResponse parses an HTTP response from a CreateRuntimeEnvironmentWithResponse call.
 func ParseCreateRuntimeEnvironmentResponse(rsp *http.Response) (*CreateRuntimeEnvironmentResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &CreateRuntimeEnvironmentResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &CreateRuntimeEnvironmentResponse{
-		ClientResponse: common.ClientResponse{
-			Response: rsp,
-			Body:     bodyBytes,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest RuntimeEnvironment
@@ -907,21 +895,17 @@ func ParseCreateRuntimeEnvironmentResponse(rsp *http.Response) (*CreateRuntimeEn
 	return response, nil
 }
 
-// ParseDeleteRuntimeEnvironmentResponse parses an HTTP response from a DeleteRuntimeEnvironmentWithResponse call
+// ParseDeleteRuntimeEnvironmentResponse parses an HTTP response from a DeleteRuntimeEnvironmentWithResponse call.
 func ParseDeleteRuntimeEnvironmentResponse(rsp *http.Response) (*DeleteRuntimeEnvironmentResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &DeleteRuntimeEnvironmentResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &DeleteRuntimeEnvironmentResponse{
-		ClientResponse: common.ClientResponse{
-			Response: rsp,
-			Body:     bodyBytes,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest N400
@@ -977,21 +961,17 @@ func ParseDeleteRuntimeEnvironmentResponse(rsp *http.Response) (*DeleteRuntimeEn
 	return response, nil
 }
 
-// ParseGetRuntimeEnvironmentResponse parses an HTTP response from a GetRuntimeEnvironmentWithResponse call
+// ParseGetRuntimeEnvironmentResponse parses an HTTP response from a GetRuntimeEnvironmentWithResponse call.
 func ParseGetRuntimeEnvironmentResponse(rsp *http.Response) (*GetRuntimeEnvironmentResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &GetRuntimeEnvironmentResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &GetRuntimeEnvironmentResponse{
-		ClientResponse: common.ClientResponse{
-			Response: rsp,
-			Body:     bodyBytes,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest RuntimeEnvironment
@@ -1054,21 +1034,17 @@ func ParseGetRuntimeEnvironmentResponse(rsp *http.Response) (*GetRuntimeEnvironm
 	return response, nil
 }
 
-// ParseUpdateRuntimeEnvironmentResponse parses an HTTP response from a UpdateRuntimeEnvironmentWithResponse call
+// ParseUpdateRuntimeEnvironmentResponse parses an HTTP response from a UpdateRuntimeEnvironmentWithResponse call.
 func ParseUpdateRuntimeEnvironmentResponse(rsp *http.Response) (*UpdateRuntimeEnvironmentResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &UpdateRuntimeEnvironmentResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &UpdateRuntimeEnvironmentResponse{
-		ClientResponse: common.ClientResponse{
-			Response: rsp,
-			Body:     bodyBytes,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest RuntimeEnvironment
@@ -1131,21 +1107,17 @@ func ParseUpdateRuntimeEnvironmentResponse(rsp *http.Response) (*UpdateRuntimeEn
 	return response, nil
 }
 
-// ParseLoginResponse parses an HTTP response from a LoginWithResponse call
+// ParseLoginResponse parses an HTTP response from a LoginWithResponse call.
 func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &LoginResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &LoginResponse{
-		ClientResponse: common.ClientResponse{
-			Response: rsp,
-			Body:     bodyBytes,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest LoginResponseBody
