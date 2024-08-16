@@ -71,7 +71,7 @@ func (d DiagsHandler) Append(diags diag.Diagnostics) bool {
 
 func (d DiagsHandler) HandleError(err error) bool {
 	if err != nil {
-		d.AddError(err.Error())
+		d.AddError("%s", err.Error())
 		return true
 	}
 	return d.diags.HasError()

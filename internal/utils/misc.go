@@ -15,6 +15,10 @@ func ValOr[T any](ptr *T, or T) T {
 	return or
 }
 
+func BadVal[T any](err error, val T) (T, error) {
+	return val, err
+}
+
 func OkVal[T any](val T) (T, error) {
 	return val, nil
 }

@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"terraform-provider-idmc/internal/idmc"
 )
 
@@ -32,10 +31,10 @@ func GetProviderData(diags DiagsHandler, data any) *IdmcProviderData {
 	}
 
 	// Really, this should never happen.
-	diags.AddError(fmt.Sprintf(
+	diags.AddError(
 		"Expected *IdmcProviderData, got: %T. Please report this issue to the provider developers.",
 		data,
-	))
+	)
 	return nil
 
 }

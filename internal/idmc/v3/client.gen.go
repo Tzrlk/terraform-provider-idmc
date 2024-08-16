@@ -574,32 +574,6 @@ type LoginResponse struct {
 	JSON503 *N503
 }
 
-// Status returns HTTPResponse.Status
-func (r LoginResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r LoginResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r LoginResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r LoginResponse) BodyData() []byte {
-	return r.Body
-}
-
 type ListPrivilegesResponse struct {
 	common.ClientResponse
 	JSON200 *[]RolePrivilegeItem
@@ -610,32 +584,6 @@ type ListPrivilegesResponse struct {
 	JSON500 *N500
 	JSON502 *N502
 	JSON503 *N503
-}
-
-// Status returns HTTPResponse.Status
-func (r ListPrivilegesResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r ListPrivilegesResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r ListPrivilegesResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r ListPrivilegesResponse) BodyData() []byte {
-	return r.Body
 }
 
 type GetRolesResponse struct {
@@ -650,32 +598,6 @@ type GetRolesResponse struct {
 	JSON503 *N503
 }
 
-// Status returns HTTPResponse.Status
-func (r GetRolesResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetRolesResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r GetRolesResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r GetRolesResponse) BodyData() []byte {
-	return r.Body
-}
-
 type CreateRoleResponse struct {
 	common.ClientResponse
 	JSON201 *CreateRoleResponseBody
@@ -686,32 +608,6 @@ type CreateRoleResponse struct {
 	JSON500 *N500
 	JSON502 *N502
 	JSON503 *N503
-}
-
-// Status returns HTTPResponse.Status
-func (r CreateRoleResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r CreateRoleResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r CreateRoleResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r CreateRoleResponse) BodyData() []byte {
-	return r.Body
 }
 
 type DeleteRoleResponse struct {
@@ -726,32 +622,6 @@ type DeleteRoleResponse struct {
 	JSON503 *N503
 }
 
-// Status returns HTTPResponse.Status
-func (r DeleteRoleResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r DeleteRoleResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r DeleteRoleResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r DeleteRoleResponse) BodyData() []byte {
-	return r.Body
-}
-
 type AddRolePrivilegesResponse struct {
 	common.ClientResponse
 	JSON204 *N204
@@ -762,32 +632,6 @@ type AddRolePrivilegesResponse struct {
 	JSON500 *N500
 	JSON502 *N502
 	JSON503 *N503
-}
-
-// Status returns HTTPResponse.Status
-func (r AddRolePrivilegesResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r AddRolePrivilegesResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r AddRolePrivilegesResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r AddRolePrivilegesResponse) BodyData() []byte {
-	return r.Body
 }
 
 type RemoveRolePrivilegesResponse struct {
@@ -802,230 +646,90 @@ type RemoveRolePrivilegesResponse struct {
 	JSON503 *N503
 }
 
-// Status returns HTTPResponse.Status
-func (r RemoveRolePrivilegesResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r RemoveRolePrivilegesResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r RemoveRolePrivilegesResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r RemoveRolePrivilegesResponse) BodyData() []byte {
-	return r.Body
-}
-
 // LoginWithBodyWithResponse request with arbitrary body returning *LoginResponse
 func (c *ClientWithResponses) LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*LoginResponse, error) {
-	rsp, err := c.LoginWithBody(ctx, contentType, body, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseLoginResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseLoginResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.LoginWithBody(ctx, contentType, body, editors...)
+	})
 }
 
 func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, editors ...common.ClientConfigEditor) (*LoginResponse, error) {
-	rsp, err := c.Login(ctx, body, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseLoginResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseLoginResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.Login(ctx, body, editors...)
+	})
 }
 
 // ListPrivilegesWithResponse request returning *ListPrivilegesResponse
 func (c *ClientWithResponses) ListPrivilegesWithResponse(ctx context.Context, params *ListPrivilegesParams, editors ...common.ClientConfigEditor) (*ListPrivilegesResponse, error) {
-	rsp, err := c.ListPrivileges(ctx, params, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseListPrivilegesResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseListPrivilegesResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.ListPrivileges(ctx, params, editors...)
+	})
 }
 
 // GetRolesWithResponse request returning *GetRolesResponse
 func (c *ClientWithResponses) GetRolesWithResponse(ctx context.Context, params *GetRolesParams, editors ...common.ClientConfigEditor) (*GetRolesResponse, error) {
-	rsp, err := c.GetRoles(ctx, params, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseGetRolesResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseGetRolesResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.GetRoles(ctx, params, editors...)
+	})
 }
 
 // CreateRoleWithBodyWithResponse request with arbitrary body returning *CreateRoleResponse
 func (c *ClientWithResponses) CreateRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*CreateRoleResponse, error) {
-	rsp, err := c.CreateRoleWithBody(ctx, contentType, body, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseCreateRoleResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseCreateRoleResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.CreateRoleWithBody(ctx, contentType, body, editors...)
+	})
 }
 
 func (c *ClientWithResponses) CreateRoleWithResponse(ctx context.Context, body CreateRoleJSONRequestBody, editors ...common.ClientConfigEditor) (*CreateRoleResponse, error) {
-	rsp, err := c.CreateRole(ctx, body, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseCreateRoleResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseCreateRoleResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.CreateRole(ctx, body, editors...)
+	})
 }
 
 // DeleteRoleWithResponse request returning *DeleteRoleResponse
 func (c *ClientWithResponses) DeleteRoleWithResponse(ctx context.Context, roleRef PathRole, params *DeleteRoleParams, editors ...common.ClientConfigEditor) (*DeleteRoleResponse, error) {
-	rsp, err := c.DeleteRole(ctx, roleRef, params, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseDeleteRoleResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseDeleteRoleResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.DeleteRole(ctx, roleRef, params, editors...)
+	})
 }
 
 // AddRolePrivilegesWithBodyWithResponse request with arbitrary body returning *AddRolePrivilegesResponse
 func (c *ClientWithResponses) AddRolePrivilegesWithBodyWithResponse(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*AddRolePrivilegesResponse, error) {
-	rsp, err := c.AddRolePrivilegesWithBody(ctx, roleRef, params, contentType, body, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseAddRolePrivilegesResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseAddRolePrivilegesResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.AddRolePrivilegesWithBody(ctx, roleRef, params, contentType, body, editors...)
+	})
 }
 
 func (c *ClientWithResponses) AddRolePrivilegesWithResponse(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, body AddRolePrivilegesJSONRequestBody, editors ...common.ClientConfigEditor) (*AddRolePrivilegesResponse, error) {
-	rsp, err := c.AddRolePrivileges(ctx, roleRef, params, body, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseAddRolePrivilegesResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseAddRolePrivilegesResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.AddRolePrivileges(ctx, roleRef, params, body, editors...)
+	})
 }
 
 // RemoveRolePrivilegesWithBodyWithResponse request with arbitrary body returning *RemoveRolePrivilegesResponse
 func (c *ClientWithResponses) RemoveRolePrivilegesWithBodyWithResponse(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*RemoveRolePrivilegesResponse, error) {
-	rsp, err := c.RemoveRolePrivilegesWithBody(ctx, roleRef, params, contentType, body, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseRemoveRolePrivilegesResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseRemoveRolePrivilegesResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.RemoveRolePrivilegesWithBody(ctx, roleRef, params, contentType, body, editors...)
+	})
 }
 
 func (c *ClientWithResponses) RemoveRolePrivilegesWithResponse(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody, editors ...common.ClientConfigEditor) (*RemoveRolePrivilegesResponse, error) {
-	rsp, err := c.RemoveRolePrivileges(ctx, roleRef, params, body, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseRemoveRolePrivilegesResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseRemoveRolePrivilegesResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.RemoveRolePrivileges(ctx, roleRef, params, body, editors...)
+	})
 }
 
-// ParseLoginResponse parses an HTTP response from a LoginWithResponse call
+// ParseLoginResponse parses an HTTP response from a LoginWithResponse call.
 func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &LoginResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &LoginResponse{
-		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest LoginResponseBody
@@ -1088,21 +792,17 @@ func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
 	return response, nil
 }
 
-// ParseListPrivilegesResponse parses an HTTP response from a ListPrivilegesWithResponse call
+// ParseListPrivilegesResponse parses an HTTP response from a ListPrivilegesWithResponse call.
 func ParseListPrivilegesResponse(rsp *http.Response) (*ListPrivilegesResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &ListPrivilegesResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &ListPrivilegesResponse{
-		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest []RolePrivilegeItem
@@ -1165,21 +865,17 @@ func ParseListPrivilegesResponse(rsp *http.Response) (*ListPrivilegesResponse, e
 	return response, nil
 }
 
-// ParseGetRolesResponse parses an HTTP response from a GetRolesWithResponse call
+// ParseGetRolesResponse parses an HTTP response from a GetRolesWithResponse call.
 func ParseGetRolesResponse(rsp *http.Response) (*GetRolesResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &GetRolesResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &GetRolesResponse{
-		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest GetRolesResponseBody
@@ -1242,21 +938,17 @@ func ParseGetRolesResponse(rsp *http.Response) (*GetRolesResponse, error) {
 	return response, nil
 }
 
-// ParseCreateRoleResponse parses an HTTP response from a CreateRoleWithResponse call
+// ParseCreateRoleResponse parses an HTTP response from a CreateRoleWithResponse call.
 func ParseCreateRoleResponse(rsp *http.Response) (*CreateRoleResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &CreateRoleResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &CreateRoleResponse{
-		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
 		var dest CreateRoleResponseBody
@@ -1319,21 +1011,17 @@ func ParseCreateRoleResponse(rsp *http.Response) (*CreateRoleResponse, error) {
 	return response, nil
 }
 
-// ParseDeleteRoleResponse parses an HTTP response from a DeleteRoleWithResponse call
+// ParseDeleteRoleResponse parses an HTTP response from a DeleteRoleWithResponse call.
 func ParseDeleteRoleResponse(rsp *http.Response) (*DeleteRoleResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &DeleteRoleResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &DeleteRoleResponse{
-		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 204:
 		var dest N204
@@ -1396,21 +1084,17 @@ func ParseDeleteRoleResponse(rsp *http.Response) (*DeleteRoleResponse, error) {
 	return response, nil
 }
 
-// ParseAddRolePrivilegesResponse parses an HTTP response from a AddRolePrivilegesWithResponse call
+// ParseAddRolePrivilegesResponse parses an HTTP response from a AddRolePrivilegesWithResponse call.
 func ParseAddRolePrivilegesResponse(rsp *http.Response) (*AddRolePrivilegesResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &AddRolePrivilegesResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &AddRolePrivilegesResponse{
-		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 204:
 		var dest N204
@@ -1473,21 +1157,17 @@ func ParseAddRolePrivilegesResponse(rsp *http.Response) (*AddRolePrivilegesRespo
 	return response, nil
 }
 
-// ParseRemoveRolePrivilegesResponse parses an HTTP response from a RemoveRolePrivilegesWithResponse call
+// ParseRemoveRolePrivilegesResponse parses an HTTP response from a RemoveRolePrivilegesWithResponse call.
 func ParseRemoveRolePrivilegesResponse(rsp *http.Response) (*RemoveRolePrivilegesResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &RemoveRolePrivilegesResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &RemoveRolePrivilegesResponse{
-		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 204:
 		var dest N204

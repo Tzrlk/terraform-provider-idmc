@@ -446,32 +446,6 @@ type GetAgentInstallerInfoResponse struct {
 	JSON503 *N503
 }
 
-// Status returns HTTPResponse.Status
-func (r GetAgentInstallerInfoResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetAgentInstallerInfoResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r GetAgentInstallerInfoResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r GetAgentInstallerInfoResponse) BodyData() []byte {
-	return r.Body
-}
-
 type ListRuntimeEnvironmentsResponse struct {
 	common.ClientResponse
 	JSON400 *N400
@@ -481,32 +455,6 @@ type ListRuntimeEnvironmentsResponse struct {
 	JSON500 *N500
 	JSON502 *N502
 	JSON503 *N503
-}
-
-// Status returns HTTPResponse.Status
-func (r ListRuntimeEnvironmentsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r ListRuntimeEnvironmentsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r ListRuntimeEnvironmentsResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r ListRuntimeEnvironmentsResponse) BodyData() []byte {
-	return r.Body
 }
 
 type CreateRuntimeEnvironmentResponse struct {
@@ -521,32 +469,6 @@ type CreateRuntimeEnvironmentResponse struct {
 	JSON503 *N503
 }
 
-// Status returns HTTPResponse.Status
-func (r CreateRuntimeEnvironmentResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r CreateRuntimeEnvironmentResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r CreateRuntimeEnvironmentResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r CreateRuntimeEnvironmentResponse) BodyData() []byte {
-	return r.Body
-}
-
 type DeleteRuntimeEnvironmentResponse struct {
 	common.ClientResponse
 	JSON400 *N400
@@ -556,32 +478,6 @@ type DeleteRuntimeEnvironmentResponse struct {
 	JSON500 *N500
 	JSON502 *N502
 	JSON503 *N503
-}
-
-// Status returns HTTPResponse.Status
-func (r DeleteRuntimeEnvironmentResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r DeleteRuntimeEnvironmentResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r DeleteRuntimeEnvironmentResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r DeleteRuntimeEnvironmentResponse) BodyData() []byte {
-	return r.Body
 }
 
 type GetRuntimeEnvironmentResponse struct {
@@ -596,32 +492,6 @@ type GetRuntimeEnvironmentResponse struct {
 	JSON503 *N503
 }
 
-// Status returns HTTPResponse.Status
-func (r GetRuntimeEnvironmentResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetRuntimeEnvironmentResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r GetRuntimeEnvironmentResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r GetRuntimeEnvironmentResponse) BodyData() []byte {
-	return r.Body
-}
-
 type UpdateRuntimeEnvironmentResponse struct {
 	common.ClientResponse
 	JSON200 *RuntimeEnvironment
@@ -632,32 +502,6 @@ type UpdateRuntimeEnvironmentResponse struct {
 	JSON500 *N500
 	JSON502 *N502
 	JSON503 *N503
-}
-
-// Status returns HTTPResponse.Status
-func (r UpdateRuntimeEnvironmentResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r UpdateRuntimeEnvironmentResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r UpdateRuntimeEnvironmentResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r UpdateRuntimeEnvironmentResponse) BodyData() []byte {
-	return r.Body
 }
 
 type LoginResponse struct {
@@ -672,214 +516,84 @@ type LoginResponse struct {
 	JSON503 *N503
 }
 
-// Status returns HTTPResponse.Status
-func (r LoginResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r LoginResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// HttpResponse returns HTTPResponse
-func (r LoginResponse) HttpResponse() *http.Response {
-	return r.HTTPResponse
-}
-
-// BodyData returns HTTPResponse.Body
-func (r LoginResponse) BodyData() []byte {
-	return r.Body
-}
-
 // GetAgentInstallerInfoWithResponse request returning *GetAgentInstallerInfoResponse
 func (c *ClientWithResponses) GetAgentInstallerInfoWithResponse(ctx context.Context, platform string, editors ...common.ClientConfigEditor) (*GetAgentInstallerInfoResponse, error) {
-	rsp, err := c.GetAgentInstallerInfo(ctx, platform, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseGetAgentInstallerInfoResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseGetAgentInstallerInfoResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.GetAgentInstallerInfo(ctx, platform, editors...)
+	})
 }
 
 // ListRuntimeEnvironmentsWithResponse request returning *ListRuntimeEnvironmentsResponse
 func (c *ClientWithResponses) ListRuntimeEnvironmentsWithResponse(ctx context.Context, editors ...common.ClientConfigEditor) (*ListRuntimeEnvironmentsResponse, error) {
-	rsp, err := c.ListRuntimeEnvironments(ctx, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseListRuntimeEnvironmentsResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseListRuntimeEnvironmentsResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.ListRuntimeEnvironments(ctx, editors...)
+	})
 }
 
 // CreateRuntimeEnvironmentWithBodyWithResponse request with arbitrary body returning *CreateRuntimeEnvironmentResponse
 func (c *ClientWithResponses) CreateRuntimeEnvironmentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*CreateRuntimeEnvironmentResponse, error) {
-	rsp, err := c.CreateRuntimeEnvironmentWithBody(ctx, contentType, body, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseCreateRuntimeEnvironmentResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseCreateRuntimeEnvironmentResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.CreateRuntimeEnvironmentWithBody(ctx, contentType, body, editors...)
+	})
 }
 
 func (c *ClientWithResponses) CreateRuntimeEnvironmentWithResponse(ctx context.Context, body CreateRuntimeEnvironmentJSONRequestBody, editors ...common.ClientConfigEditor) (*CreateRuntimeEnvironmentResponse, error) {
-	rsp, err := c.CreateRuntimeEnvironment(ctx, body, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseCreateRuntimeEnvironmentResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseCreateRuntimeEnvironmentResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.CreateRuntimeEnvironment(ctx, body, editors...)
+	})
 }
 
 // DeleteRuntimeEnvironmentWithResponse request returning *DeleteRuntimeEnvironmentResponse
 func (c *ClientWithResponses) DeleteRuntimeEnvironmentWithResponse(ctx context.Context, id string, editors ...common.ClientConfigEditor) (*DeleteRuntimeEnvironmentResponse, error) {
-	rsp, err := c.DeleteRuntimeEnvironment(ctx, id, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseDeleteRuntimeEnvironmentResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseDeleteRuntimeEnvironmentResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.DeleteRuntimeEnvironment(ctx, id, editors...)
+	})
 }
 
 // GetRuntimeEnvironmentWithResponse request returning *GetRuntimeEnvironmentResponse
 func (c *ClientWithResponses) GetRuntimeEnvironmentWithResponse(ctx context.Context, id string, editors ...common.ClientConfigEditor) (*GetRuntimeEnvironmentResponse, error) {
-	rsp, err := c.GetRuntimeEnvironment(ctx, id, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseGetRuntimeEnvironmentResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseGetRuntimeEnvironmentResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.GetRuntimeEnvironment(ctx, id, editors...)
+	})
 }
 
 // UpdateRuntimeEnvironmentWithBodyWithResponse request with arbitrary body returning *UpdateRuntimeEnvironmentResponse
 func (c *ClientWithResponses) UpdateRuntimeEnvironmentWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*UpdateRuntimeEnvironmentResponse, error) {
-	rsp, err := c.UpdateRuntimeEnvironmentWithBody(ctx, id, contentType, body, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseUpdateRuntimeEnvironmentResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseUpdateRuntimeEnvironmentResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.UpdateRuntimeEnvironmentWithBody(ctx, id, contentType, body, editors...)
+	})
 }
 
 func (c *ClientWithResponses) UpdateRuntimeEnvironmentWithResponse(ctx context.Context, id string, body UpdateRuntimeEnvironmentJSONRequestBody, editors ...common.ClientConfigEditor) (*UpdateRuntimeEnvironmentResponse, error) {
-	rsp, err := c.UpdateRuntimeEnvironment(ctx, id, body, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseUpdateRuntimeEnvironmentResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseUpdateRuntimeEnvironmentResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.UpdateRuntimeEnvironment(ctx, id, body, editors...)
+	})
 }
 
 // LoginWithBodyWithResponse request with arbitrary body returning *LoginResponse
 func (c *ClientWithResponses) LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*LoginResponse, error) {
-	rsp, err := c.LoginWithBody(ctx, contentType, body, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseLoginResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseLoginResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.LoginWithBody(ctx, contentType, body, editors...)
+	})
 }
 
 func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, editors ...common.ClientConfigEditor) (*LoginResponse, error) {
-	rsp, err := c.Login(ctx, body, editors...)
-	if err != nil {
-		return nil, err
-	}
-	apiRes, err := ParseLoginResponse(rsp)
-	if err != nil {
-		return nil, err
-	}
-	editor := c.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &apiRes.ClientResponse); err != nil {
-		return nil, err
-	}
-	return apiRes, nil
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseLoginResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.Login(ctx, body, editors...)
+	})
 }
 
-// ParseGetAgentInstallerInfoResponse parses an HTTP response from a GetAgentInstallerInfoWithResponse call
+// ParseGetAgentInstallerInfoResponse parses an HTTP response from a GetAgentInstallerInfoWithResponse call.
 func ParseGetAgentInstallerInfoResponse(rsp *http.Response) (*GetAgentInstallerInfoResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &GetAgentInstallerInfoResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &GetAgentInstallerInfoResponse{
-		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest GetAgentInstallerInfoResponseBody
@@ -942,21 +656,17 @@ func ParseGetAgentInstallerInfoResponse(rsp *http.Response) (*GetAgentInstallerI
 	return response, nil
 }
 
-// ParseListRuntimeEnvironmentsResponse parses an HTTP response from a ListRuntimeEnvironmentsWithResponse call
+// ParseListRuntimeEnvironmentsResponse parses an HTTP response from a ListRuntimeEnvironmentsWithResponse call.
 func ParseListRuntimeEnvironmentsResponse(rsp *http.Response) (*ListRuntimeEnvironmentsResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &ListRuntimeEnvironmentsResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &ListRuntimeEnvironmentsResponse{
-		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest N400
@@ -1012,21 +722,17 @@ func ParseListRuntimeEnvironmentsResponse(rsp *http.Response) (*ListRuntimeEnvir
 	return response, nil
 }
 
-// ParseCreateRuntimeEnvironmentResponse parses an HTTP response from a CreateRuntimeEnvironmentWithResponse call
+// ParseCreateRuntimeEnvironmentResponse parses an HTTP response from a CreateRuntimeEnvironmentWithResponse call.
 func ParseCreateRuntimeEnvironmentResponse(rsp *http.Response) (*CreateRuntimeEnvironmentResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &CreateRuntimeEnvironmentResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &CreateRuntimeEnvironmentResponse{
-		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest RuntimeEnvironment
@@ -1089,21 +795,17 @@ func ParseCreateRuntimeEnvironmentResponse(rsp *http.Response) (*CreateRuntimeEn
 	return response, nil
 }
 
-// ParseDeleteRuntimeEnvironmentResponse parses an HTTP response from a DeleteRuntimeEnvironmentWithResponse call
+// ParseDeleteRuntimeEnvironmentResponse parses an HTTP response from a DeleteRuntimeEnvironmentWithResponse call.
 func ParseDeleteRuntimeEnvironmentResponse(rsp *http.Response) (*DeleteRuntimeEnvironmentResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &DeleteRuntimeEnvironmentResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &DeleteRuntimeEnvironmentResponse{
-		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest N400
@@ -1159,21 +861,17 @@ func ParseDeleteRuntimeEnvironmentResponse(rsp *http.Response) (*DeleteRuntimeEn
 	return response, nil
 }
 
-// ParseGetRuntimeEnvironmentResponse parses an HTTP response from a GetRuntimeEnvironmentWithResponse call
+// ParseGetRuntimeEnvironmentResponse parses an HTTP response from a GetRuntimeEnvironmentWithResponse call.
 func ParseGetRuntimeEnvironmentResponse(rsp *http.Response) (*GetRuntimeEnvironmentResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &GetRuntimeEnvironmentResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &GetRuntimeEnvironmentResponse{
-		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest RuntimeEnvironment
@@ -1236,21 +934,17 @@ func ParseGetRuntimeEnvironmentResponse(rsp *http.Response) (*GetRuntimeEnvironm
 	return response, nil
 }
 
-// ParseUpdateRuntimeEnvironmentResponse parses an HTTP response from a UpdateRuntimeEnvironmentWithResponse call
+// ParseUpdateRuntimeEnvironmentResponse parses an HTTP response from a UpdateRuntimeEnvironmentWithResponse call.
 func ParseUpdateRuntimeEnvironmentResponse(rsp *http.Response) (*UpdateRuntimeEnvironmentResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &UpdateRuntimeEnvironmentResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &UpdateRuntimeEnvironmentResponse{
-		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest RuntimeEnvironment
@@ -1313,21 +1007,17 @@ func ParseUpdateRuntimeEnvironmentResponse(rsp *http.Response) (*UpdateRuntimeEn
 	return response, nil
 }
 
-// ParseLoginResponse parses an HTTP response from a LoginWithResponse call
+// ParseLoginResponse parses an HTTP response from a LoginWithResponse call.
 func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &LoginResponse{ClientResponse: clientResponse}
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	response := &LoginResponse{
-		ClientResponse: common.ClientResponse{
-			Body:         bodyBytes,
-			HTTPResponse: rsp,
-		},
-	}
-
+	bodyBytes := response.Body
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest LoginResponseBody

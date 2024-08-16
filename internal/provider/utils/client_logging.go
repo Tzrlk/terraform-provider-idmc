@@ -68,7 +68,7 @@ func GetApiResponseCtx(ctx context.Context, apiRes *common.ClientResponse) (cont
 	resBody := apiRes.Body
 	ctx = tflog.SetField(ctx, "http.response.body", string(resBody))
 
-	return GetHttpResponseCtx(ctx, apiRes.HTTPResponse)
+	return GetHttpResponseCtx(ctx, apiRes.Response)
 }
 
 func LogHttpRequest(ctx context.Context, req *http.Request) error {

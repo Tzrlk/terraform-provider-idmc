@@ -1,9 +1,10 @@
-{{range .Types}}
+// <editor-fold desc="union-and-additional-properties" defaultstate="collapsed">
 
-{{$addType := .Schema.AdditionalPropertiesType.TypeDecl}}
-{{$typeName := .TypeName -}}
-{{$discriminator := .Schema.Discriminator}}
-{{$properties := .Schema.Properties -}}
+{{ range .Types }}
+{{- $addType := .Schema.AdditionalPropertiesType.TypeDecl }}
+{{- $typeName := .TypeName }}
+{{- $discriminator := .Schema.Discriminator }}
+{{- $properties := .Schema.Properties }}
 
 // Override default JSON handling for {{.TypeName}} to handle AdditionalProperties and union
 func (a *{{.TypeName}}) UnmarshalJSON(b []byte) error {
@@ -69,6 +70,6 @@ func (a {{.TypeName}}) MarshalJSON() ([]byte, error) {
 	}
 	return json.Marshal(object)
 }
-{{end}}
+{{ end }}
 
 // </editor-fold> //////////////////////////////////////////////////////////////

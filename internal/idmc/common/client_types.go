@@ -14,17 +14,6 @@ type HttpRequestDoer interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-type ApiRequest interface {
-	HttpRequest() *http.Request
-}
-
-type ApiResponse interface {
-	Status() string
-	StatusCode() int
-	HttpResponse() *http.Response
-	BodyData() []byte
-}
-
 // Client provides access to client configuration.
 type Client interface {
 	Config() *ClientConfig
