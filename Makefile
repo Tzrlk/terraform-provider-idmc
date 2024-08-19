@@ -86,9 +86,17 @@ TF_LOG_FILES := $(sort \
 	${TF_LOG_FILES_FUN} \
 )
 
+DOC_OUT_TPLS  := $(wildcard templates/*.md.tmpl)
+DOC_OUT_FILES := $(sort \
+	docs/index.md \
+	$(patsubst %/,%.md,$(patsubst examples/data-sources/idmc_%,docs/data-sources/%,${TF_SRC_DIRS_DAT})) \
+	$(patsubst %/,%.md,$(patsubst examples/resources/idmc_%,docs/resources/%,${TF_SRC_DIRS_DAT})) \
+	$(patsubst %/,%.md,$(patsubst examples/functions/idmc_%,docs/functions/%,${TF_SRC_DIRS_DAT})) \
+)
+
 #: Used to debug variable resolution.
 debug:
-	@echo "${GO_SRC_FILES}" | tr ' ' '\n'
+	@echo "${DOC_OUT_FILES}" | tr ' ' '\n'
 .PHONY: debug
 
 ################################################################################
@@ -249,14 +257,6 @@ $(addsuffix local_override.tf,${TF_SRC_DIRS}): %/local_override.tf: \
 docs: ${DOC_OUT_FILES}
 .PHONY: docs
 
-DOC_OUT_TPLS  := $(wildcard templates/*.md.tmpl)
-DOC_OUT_FILES := $(sort \
-	docs/index.md \
-	$(addsuffix .md,$(patsubst examples/data-sources/idmc_%,docs/data-sources/%,${TF_SRC_DIRS_DAT})) \
-	$(addsuffix .md,$(patsubst examples/resources/idmc_%,docs/resources/%,${TF_SRC_DIRS_DAT})) \
-	$(addsuffix .md,$(patsubst examples/functions/idmc_%,docs/functions/%,${TF_SRC_DIRS_DAT})) \
-)
-
 ${DOC_OUT_FILES} &: \
 		${GO_SRC_FILES} \
 		${TF_SRC_FILES} \
@@ -265,4 +265,5 @@ ${DOC_OUT_FILES} &: \
 	${CMD_TFPLUGINDOCS} \
 		generate \
 		--provider-name idmc \
+		--rendered-provider-name IDMC \
 		--website-temp-dir .build/tfplugindocs
