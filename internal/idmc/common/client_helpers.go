@@ -1,6 +1,10 @@
 package common
 
-import "net/url"
+import (
+	"context"
+	"net/http"
+	"net/url"
+)
 
 // WithHTTPClient allows overriding the default Doer, which is
 // automatically created using http.Client. This is useful for tests.
@@ -46,5 +50,12 @@ func WithBaseURL(baseURL string) ClientOption {
 			config.Server = newBaseURL.String()
 		}
 		return err
+	}
+}
+
+func NewSessionHeaderRequestEditor(name string) RequestEditorFn {
+	return func(ctx context.Context, cfg *ClientConfig, req *http.Request) error {
+		req.Header[name] = []string{cfg.SessionId}
+		return nil
 	}
 }

@@ -168,44 +168,44 @@ type LoginRequestBody struct {
 // LoginResponseBody defines model for loginResponseBody.
 type LoginResponseBody struct {
 	// Products Subscribed Informatica products.
-	Products *[]LoginResponseBodyProduct `json:"products,omitempty"`
-	UserInfo *LoginResponseBodyUserInfo  `json:"userInfo,omitempty"`
+	Products []LoginResponseBodyProduct `json:"products"`
+	UserInfo LoginResponseBodyUserInfo  `json:"userInfo"`
 }
 
 // LoginResponseBodyProduct defines model for loginResponseBodyProduct.
 type LoginResponseBodyProduct struct {
 	// BaseApiUrl Base API URL for the product. Use in REST API requests.
-	BaseApiUrl *string `json:"baseApiUrl,omitempty"`
+	BaseApiUrl string `json:"baseApiUrl"`
 
 	// Name Product name.
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 }
 
 // LoginResponseBodyUserInfo defines model for loginResponseBodyUserInfo.
 type LoginResponseBodyUserInfo struct {
 	// Groups User group information for the user.
-	Groups *map[string]interface{} `json:"groups,omitempty"`
+	Groups map[string]interface{} `json:"groups"`
 
 	// Id User ID.
-	Id *string `json:"id,omitempty"`
+	Id string `json:"id"`
 
 	// Name User name.
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// OrgId ID of the organization the user belongs to.
-	OrgId *string `json:"orgId,omitempty"`
+	OrgId string `json:"orgId"`
 
 	// OrgName Organization name.
-	OrgName *string `json:"orgName,omitempty"`
+	OrgName string `json:"orgName"`
 
 	// ParentOrgId Organization ID for the parent.
-	ParentOrgId *string `json:"parentOrgId,omitempty"`
+	ParentOrgId string `json:"parentOrgId"`
 
 	// SessionId REST API session ID for the current session. Use in most REST API request headers.
-	SessionId *string `json:"sessionId,omitempty"`
+	SessionId string `json:"sessionId"`
 
 	// Status Status of the user.
-	Status *LoginResponseBodyUserInfoStatus `json:"status,omitempty"`
+	Status LoginResponseBodyUserInfoStatus `json:"status"`
 }
 
 // LoginResponseBodyUserInfoStatus Status of the user.

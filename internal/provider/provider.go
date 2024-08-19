@@ -16,8 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"terraform-provider-idmc/internal/idmc"
 	"terraform-provider-idmc/internal/idmc/common"
-	"terraform-provider-idmc/internal/idmc/v3"
-
 	. "terraform-provider-idmc/internal/provider/utils"
 )
 
@@ -113,12 +111,14 @@ func (p *IdmcProvider) Configure(
 ) {
 	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgProviderBadConfigure)
 
+	// Load the provider config
 	var config IdmcProviderModel
 	diags.Append(req.Config.Get(ctx, &config))
 	if diags.HasError() {
 		return
 	}
 
+	// Don't re-create the api if it already exists.
 	if p.Api != nil {
 		tflog.Debug(ctx, "Re-using previously configured api.")
 		resp.DataSourceData = p.IdmcProviderData
@@ -134,99 +134,27 @@ func (p *IdmcProvider) Configure(
 		return
 	}
 
-	tflog.Debug(ctx, "Setting-up IDMC api client", map[string]any{
-		"auth_host": authHost,
-		"auth_user": authUser,
-	})
-
-	httpClient := &http.Client{}
-
-	// TODO: Cache this with something like bitcask or just save the response json to file.
-	baseApiUrl, sessionId, loginErr := doLogin(ctx, authHost, authUser, authPass, httpClient)
-	if loginErr != nil {
-		diags.HandleError(loginErr)
-		return
-	}
-
-	idmcApi, idmcApiErr := idmc.NewIdmcApi(baseApiUrl, sessionId,
-		common.WithHTTPClient(httpClient),
+	// Initialise a new IDMC api client.
+	idmcApi, err := idmc.NewIdmcApi(
+		fmt.Sprintf("https://%s/saas/", authHost),
+		common.WithHTTPClient(&http.Client{}),
 		common.WithRequestEditorFn(LogHttpRequest),
 		common.WithApiResponseEditorFn(LogApiResponse),
 	)
-	if diags.HandleError(idmcApiErr) {
-		return
-	}
-	if idmcApi == nil {
-		diags.AddError("IDMC API not correctly initialised")
+	if diags.HandleError(err) {
 		return
 	}
 
+	// Perform a login to get the api to be functional.
+	err = idmcApi.V3.Login(ctx, authUser, authPass)
+	if diags.HandleError(err) {
+		return
+	}
+
+	// Save the api and set the provider data
 	p.Api = idmcApi
 	resp.DataSourceData = p.IdmcProviderData
 	resp.ResourceData = p.IdmcProviderData
-
-}
-
-func doLogin(ctx context.Context, authHost string, authUser string, authPass string, httpClient common.HttpRequestDoer) (string, string, error) {
-	var apiUrl = fmt.Sprintf("https://%s/saas", authHost)
-
-	// First set up a client configured for api login (without logging requests).
-	client, clientErr := v3.NewClientWithResponses(apiUrl,
-		common.WithHTTPClient(httpClient),
-		common.WithRequestEditorFn(func(httpCtx context.Context, req *http.Request) error {
-			req.Header["Accept"] = []string{"application/json"}
-			return nil
-		}),
-		common.WithApiResponseEditorFn(LogApiResponse),
-	)
-	if clientErr != nil {
-		return apiUrl, "", clientErr
-	}
-
-	// Perform the login operation with the provided credentials.
-	res, resErr := client.LoginWithResponse(ctx, v3.LoginJSONRequestBody{
-		Username: authUser,
-		Password: authPass,
-	})
-	if resErr != nil {
-		return apiUrl, "", resErr
-	}
-
-	// We only want 200 responses.
-	if err := RequireHttpStatus(&res.ClientResponse, 200); err != nil {
-		return apiUrl, "", err
-	}
-	// TODO: Handle other responses.
-
-	// Extract the key information from the login response
-	if res.JSON200 == nil {
-		return apiUrl, "", fmt.Errorf("response data has not been parsed")
-	}
-	resData := *res.JSON200
-
-	if resData.UserInfo == nil {
-		return apiUrl, "", fmt.Errorf("no user data found in response")
-	}
-	userData := *resData.UserInfo
-
-	if userData.SessionId == nil {
-		return apiUrl, "", fmt.Errorf("no sessionId found in response")
-	}
-	sessionId := *userData.SessionId
-
-	if resData.Products == nil {
-		return apiUrl, sessionId, fmt.Errorf("no products found in response")
-	}
-	products := *resData.Products
-
-	for _, product := range products {
-		if product.Name != nil && *product.Name == "Integration Cloud" {
-			apiUrl = *product.BaseApiUrl
-			return apiUrl, sessionId, nil
-		}
-	}
-
-	return apiUrl, sessionId, fmt.Errorf("no api url found in response")
 
 }
 

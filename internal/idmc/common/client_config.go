@@ -3,7 +3,9 @@ package common
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strings"
 )
@@ -15,6 +17,10 @@ type ClientConfig struct {
 	// to the server, such as https://api.deepmap.com/dev-test, and all the
 	// paths in the swagger spec will be appended to the server.
 	Server string
+
+	// The session id acquired from a successful login operation. Should be
+	// passed along on every request if not blank.
+	SessionId string
 
 	// Doer for performing requests, typically a *http.Client with any
 	// customized settings, such as certificate chains.
@@ -28,12 +34,8 @@ type ClientConfig struct {
 // NewClientConfig sets up a new ClientConfig with reasonable defaults.
 func NewClientConfig(server string, opts ...ClientOption) (*ClientConfig, error) {
 	config := ClientConfig{
-		Server: server,
-		Editors: ClientConfigEditor{
-			RequestEditors:     make([]RequestEditorFn, 0),
-			ResponseEditors:    make([]ResponseEditorFn, 0),
-			ApiResponseEditors: make([]ApiResponseEditorFn, 0),
-		},
+		Server:  server,
+		Editors: ClientConfigEditor{},
 	}
 
 	// mutate client and add all optional params.
@@ -56,6 +58,24 @@ func NewClientConfig(server string, opts ...ClientOption) (*ClientConfig, error)
 	return &config, nil
 }
 
+func (c *ClientConfig) SetServer(server string) error {
+
+	newBaseURL, err := url.Parse(server)
+	if err != nil {
+		return fmt.Errorf("unable to set server url to %s: %v", server, err)
+	}
+
+	newBaseURL.Scheme = "https" // Ensure we're using https at all times.
+	c.Server = newBaseURL.String()
+
+	// ensure the server URL always has a trailing slash.
+	if !strings.HasSuffix(c.Server, "/") {
+		c.Server += "/"
+	}
+
+	return nil
+}
+
 func (c *ClientConfig) HandleRequest(
 	ctx context.Context,
 	editors []ClientConfigEditor,
@@ -75,7 +95,7 @@ func (c *ClientConfig) HandleRequest(
 	editor := c.Editors.Merge(editors...)
 
 	// Apply request editors
-	if err := editor.EditHttpRequest(ctx, req); err != nil {
+	if err := editor.EditHttpRequest(ctx, c, req); err != nil {
 		return nil, err
 	}
 
@@ -86,7 +106,7 @@ func (c *ClientConfig) HandleRequest(
 	}
 
 	// Apply response editors.
-	if err := editor.EditHttpResponse(ctx, res); err != nil {
+	if err := editor.EditHttpResponse(ctx, c, res); err != nil {
 		return nil, err
 	}
 
@@ -95,7 +115,7 @@ func (c *ClientConfig) HandleRequest(
 }
 
 func HandleAction[T any](
-	client ClientConfig,
+	client *ClientConfig,
 	ctx context.Context,
 	editors []ClientConfigEditor,
 	parser func(rsp *http.Response) (*T, error),
@@ -125,7 +145,7 @@ func HandleAction[T any](
 
 	// Apply API response editors.
 	editor := client.Editors.Merge(editors...)
-	if err := editor.EditApiResponse(ctx, &clientResp); err != nil {
+	if err := editor.EditApiResponse(ctx, client, &clientResp); err != nil {
 		return nil, err
 	}
 

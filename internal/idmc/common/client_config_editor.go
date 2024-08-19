@@ -6,14 +6,20 @@ import (
 	"terraform-provider-idmc/internal/utils"
 )
 
+// Typedefs ////////////////////////////////////////////////////////////////////
+
+type EditorFn[T any] func(ctx context.Context, cfg *ClientConfig, subject *T) error
+
 // RequestEditorFn  is the function signature for the RequestEditor callback function.
-type RequestEditorFn func(ctx context.Context, req *http.Request) error
+type RequestEditorFn = EditorFn[http.Request]
 
 // ResponseEditorFn  is the function signature for the ResponseEditor callback function.
-type ResponseEditorFn func(ctx context.Context, res *http.Response) error
+type ResponseEditorFn = EditorFn[http.Response]
 
 // ApiResponseEditorFn are functions that inspect or alter api-wrapped http responses.
-type ApiResponseEditorFn func(ctx context.Context, apiRes *ClientResponse) error
+type ApiResponseEditorFn = EditorFn[ClientResponse]
+
+// Editor //////////////////////////////////////////////////////////////////////
 
 // ClientConfigEditor
 // Combines some number of request, response, and/or apiResponse editors into
@@ -24,27 +30,36 @@ type ClientConfigEditor struct {
 	ApiResponseEditors []ApiResponseEditorFn
 }
 
-func (c ClientConfigEditor) Merge(other ...ClientConfigEditor) ClientConfigEditor {
-	otherCount := len(other)
+func (c ClientConfigEditor) AsSlice(others ...ClientConfigEditor) []ClientConfigEditor {
+	result := make([]ClientConfigEditor, 1+len(others))
+	result[0] = c
+	for index, item := range others {
+		result[1+index] = item
+	}
+	return result
+}
+
+func (c ClientConfigEditor) Merge(others ...ClientConfigEditor) ClientConfigEditor {
+	otherCount := len(others)
 	if otherCount < 1 {
 		return c
 	}
 	next := ClientConfigEditor{
-		RequestEditors:     utils.NewSliceFrom(c.RequestEditors, other[0].RequestEditors),
-		ResponseEditors:    utils.NewSliceFrom(c.ResponseEditors, other[0].ResponseEditors),
-		ApiResponseEditors: utils.NewSliceFrom(c.ApiResponseEditors, other[0].ApiResponseEditors),
+		RequestEditors:     utils.NewSliceFrom(c.RequestEditors, others[0].RequestEditors),
+		ResponseEditors:    utils.NewSliceFrom(c.ResponseEditors, others[0].ResponseEditors),
+		ApiResponseEditors: utils.NewSliceFrom(c.ApiResponseEditors, others[0].ApiResponseEditors),
 	}
 	if otherCount < 2 {
 		return next
 	}
-	return c.Merge(other[1:]...)
+	return next.Merge(others[1:]...)
 }
 
 // EditHttpRequest
 // Performs any needed manipulations to the api request before sending it.
-func (c ClientConfigEditor) EditHttpRequest(ctx context.Context, req *http.Request) error {
+func (c ClientConfigEditor) EditHttpRequest(ctx context.Context, cfg *ClientConfig, req *http.Request) error {
 	for _, editor := range c.RequestEditors {
-		if err := editor(ctx, req); err != nil {
+		if err := editor(ctx, cfg, req); err != nil {
 			return err
 		}
 	}
@@ -53,9 +68,9 @@ func (c ClientConfigEditor) EditHttpRequest(ctx context.Context, req *http.Reque
 
 // EditHttpResponse
 // Performs any needed manipulations to the api response after receiving it.
-func (c ClientConfigEditor) EditHttpResponse(ctx context.Context, res *http.Response) error {
+func (c ClientConfigEditor) EditHttpResponse(ctx context.Context, cfg *ClientConfig, res *http.Response) error {
 	for _, editor := range c.ResponseEditors {
-		if err := editor(ctx, res); err != nil {
+		if err := editor(ctx, cfg, res); err != nil {
 			return err
 		}
 	}
@@ -64,9 +79,9 @@ func (c ClientConfigEditor) EditHttpResponse(ctx context.Context, res *http.Resp
 
 // EditApiResponse
 // Performs any needed manipulations to the api response after parsing it.
-func (c ClientConfigEditor) EditApiResponse(ctx context.Context, apiRes *ClientResponse) error {
+func (c ClientConfigEditor) EditApiResponse(ctx context.Context, cfg *ClientConfig, apiRes *ClientResponse) error {
 	for _, editor := range c.ApiResponseEditors {
-		if err := editor(ctx, apiRes); err != nil {
+		if err := editor(ctx, cfg, apiRes); err != nil {
 			return err
 		}
 	}

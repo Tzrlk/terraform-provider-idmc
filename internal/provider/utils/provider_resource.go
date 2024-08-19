@@ -20,6 +20,11 @@ const (
 // functionality between all resources.
 type IdmcProviderResource struct {
 	*IdmcProviderData
+	Name string
+}
+
+func (r *IdmcProviderResource) Metadata(_ context.Context, req MetadataRequest, resp *MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_" + r.Name
 }
 
 func (r *IdmcProviderResource) Configure(ctx context.Context, req ConfigureRequest, res *ConfigureResponse) {

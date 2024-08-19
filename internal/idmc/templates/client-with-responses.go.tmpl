@@ -4,17 +4,16 @@
 
 // {{ $clientTypeName }}WithResponses builds on {{ $clientTypeName }} to offer response payloads
 type {{ $clientTypeName }}WithResponses struct {
-	*{{ $clientTypeName }}
+	{{ $clientTypeName }}
 }
 
 // New{{ $clientTypeName }}WithResponses creates a new {{ $clientTypeName }}WithResponses, which wraps
 // Client with return type handling
-func New{{ $clientTypeName }}WithResponses(server string, opts ...common.ClientOption) (*{{ $clientTypeName }}WithResponses, error) {
-	client, err := New{{ $clientTypeName }}(server, opts...)
-	if err != nil {
-		return nil, err
+func New{{ $clientTypeName }}WithResponses(config *common.ClientConfig, editors common.ClientConfigEditor) {{ $clientTypeName }}WithResponses {
+	client := New{{ $clientTypeName }}(config, editors)
+	return {{ $clientTypeName }}WithResponses{
+		{{ $clientTypeName }}: client,
 	}
-	return &{{ $clientTypeName }}WithResponses{client}, nil
 }
 
 // {{ $clientTypeName }}WithResponsesInterface is the interface specification for the client with responses above.

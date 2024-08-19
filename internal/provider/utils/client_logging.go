@@ -71,7 +71,7 @@ func GetApiResponseCtx(ctx context.Context, apiRes *common.ClientResponse) (cont
 	return GetHttpResponseCtx(ctx, apiRes.Response)
 }
 
-func LogHttpRequest(ctx context.Context, req *http.Request) error {
+func LogHttpRequest(ctx context.Context, _ *common.ClientConfig, req *http.Request) error {
 	reqCtx, ctxErr := GetHttpRequestCtx(ctx, req)
 	if ctxErr == nil {
 		tflog.Trace(reqCtx, "Sending IDMC HTTP request.")
@@ -79,7 +79,7 @@ func LogHttpRequest(ctx context.Context, req *http.Request) error {
 	return ctxErr
 }
 
-func LogHttpResponse(ctx context.Context, res *http.Response) error {
+func LogHttpResponse(ctx context.Context, _ *common.ClientConfig, res *http.Response) error {
 	resCtx, ctxErr := GetHttpResponseCtx(ctx, res)
 	if ctxErr == nil {
 		tflog.Trace(resCtx, "Receiving IDMC HTTP response.")
@@ -87,7 +87,7 @@ func LogHttpResponse(ctx context.Context, res *http.Response) error {
 	return ctxErr
 }
 
-func LogApiResponse(ctx context.Context, apiRes *common.ClientResponse) error {
+func LogApiResponse(ctx context.Context, _ *common.ClientConfig, apiRes *common.ClientResponse) error {
 	apiResCtx, apiResCtxErr := GetApiResponseCtx(ctx, apiRes)
 	if apiResCtxErr == nil {
 		tflog.Trace(apiResCtx, "Receiving IDMC API response.")

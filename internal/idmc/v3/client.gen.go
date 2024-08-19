@@ -25,19 +25,16 @@ import (
 
 // Client which conforms to the OpenAPI3 specification for this service.
 type Client struct {
-	common.ClientConfig
+	*common.ClientConfig
+	Editors common.ClientConfigEditor
 }
 
 // Creates a new Client, with reasonable defaults
-func NewClient(server string, opts ...common.ClientOption) (*Client, error) {
-	config, err := common.NewClientConfig(server, opts...)
-	return &Client{*config}, err
-}
-
-var _ common.Client = &Client{}
-
-func (c *Client) Config() *common.ClientConfig {
-	return &c.ClientConfig
+func NewClient(config *common.ClientConfig, editors common.ClientConfigEditor) Client {
+	return Client{
+		ClientConfig: config,
+		Editors:      editors,
+	}
 }
 
 // The interface specification for the client above.
@@ -73,67 +70,67 @@ type ClientInterface interface {
 }
 
 func (c *Client) LoginWithBody(ctx context.Context, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewLoginRequestWithBody(c.Server, contentType, body)
 	})
 }
 
 func (c *Client) Login(ctx context.Context, body LoginJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewLoginRequest(c.Server, body)
 	})
 }
 
 func (c *Client) ListPrivileges(ctx context.Context, params *ListPrivilegesParams, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewListPrivilegesRequest(c.Server, params)
 	})
 }
 
 func (c *Client) GetRoles(ctx context.Context, params *GetRolesParams, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewGetRolesRequest(c.Server, params)
 	})
 }
 
 func (c *Client) CreateRoleWithBody(ctx context.Context, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewCreateRoleRequestWithBody(c.Server, contentType, body)
 	})
 }
 
 func (c *Client) CreateRole(ctx context.Context, body CreateRoleJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewCreateRoleRequest(c.Server, body)
 	})
 }
 
 func (c *Client) DeleteRole(ctx context.Context, roleRef PathRole, params *DeleteRoleParams, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewDeleteRoleRequest(c.Server, roleRef, params)
 	})
 }
 
 func (c *Client) AddRolePrivilegesWithBody(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewAddRolePrivilegesRequestWithBody(c.Server, roleRef, params, contentType, body)
 	})
 }
 
 func (c *Client) AddRolePrivileges(ctx context.Context, roleRef PathRole, params *AddRolePrivilegesParams, body AddRolePrivilegesJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewAddRolePrivilegesRequest(c.Server, roleRef, params, body)
 	})
 }
 
 func (c *Client) RemoveRolePrivilegesWithBody(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewRemoveRolePrivilegesRequestWithBody(c.Server, roleRef, params, contentType, body)
 	})
 }
 
 func (c *Client) RemoveRolePrivileges(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewRemoveRolePrivilegesRequest(c.Server, roleRef, params, body)
 	})
 }
@@ -517,17 +514,16 @@ func NewRemoveRolePrivilegesRequestWithBody(server string, roleRef PathRole, par
 
 // ClientWithResponses builds on Client to offer response payloads
 type ClientWithResponses struct {
-	*Client
+	Client
 }
 
 // NewClientWithResponses creates a new ClientWithResponses, which wraps
 // Client with return type handling
-func NewClientWithResponses(server string, opts ...common.ClientOption) (*ClientWithResponses, error) {
-	client, err := NewClient(server, opts...)
-	if err != nil {
-		return nil, err
+func NewClientWithResponses(config *common.ClientConfig, editors common.ClientConfigEditor) ClientWithResponses {
+	client := NewClient(config, editors)
+	return ClientWithResponses{
+		Client: client,
 	}
-	return &ClientWithResponses{client}, nil
 }
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.

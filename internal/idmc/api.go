@@ -1,7 +1,10 @@
 package idmc
 
 import (
+	"context"
 	"fmt"
+	"net/http"
+
 	"terraform-provider-idmc/internal/idmc/common"
 	"terraform-provider-idmc/internal/idmc/v2"
 	"terraform-provider-idmc/internal/idmc/v3"
@@ -13,21 +16,33 @@ type IdmcApi struct {
 	V3 v3.IdmcAdminV3Api
 }
 
-func NewIdmcApi(baseUrl string, sessionId string, opts ...common.ClientOption) (*IdmcApi, error) {
+const msgInitFailed = "unable to initialise api for %s: %v"
 
-	apiV2, err := v2.NewIdmcAdminV2Api(baseUrl, &sessionId, opts...)
+func NewIdmcApi(baseUrl string, opts ...common.ClientOption) (*IdmcApi, error) {
+
+	// Add a request editor to add common api headers on all requests.
+	opts = append(opts, common.WithRequestEditorFn(func(ctx context.Context, cfg *common.ClientConfig, req *http.Request) error {
+		req.Header["Accept"] = []string{"application/json"}
+		return nil
+	}))
+
+	// Set up the common client configuration.
+	config, err := common.NewClientConfig(baseUrl, opts...)
 	if err != nil {
-		return nil, fmt.Errorf("unable to initialise api for %s: %v", baseUrl, err)
+		return nil, fmt.Errorf(msgInitFailed, baseUrl,
+			fmt.Errorf("failed to create common client config: %v", err))
 	}
 
-	apiV3, err := v3.NewIdmcAdminV3Api(baseUrl, &sessionId, opts...)
-	if err != nil {
-		return nil, fmt.Errorf("unable to initialise api for %s: %v", baseUrl, err)
-	}
+	// Initialise the v2 api.
+	apiV2 := v2.NewIdmcAdminV2Api(config)
 
+	// Initialise the v3 api.
+	apiV3 := v3.NewIdmcAdminV3Api(config)
+
+	// Construct the api now everything is ok.
 	return utils.OkPtr(&IdmcApi{
-		V2: *apiV2,
-		V3: *apiV3,
+		V2: apiV2,
+		V3: apiV3,
 	})
 
 }

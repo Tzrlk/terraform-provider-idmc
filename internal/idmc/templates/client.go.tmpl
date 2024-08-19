@@ -4,18 +4,16 @@
 
 // {{ $clientTypeName }} which conforms to the OpenAPI3 specification for this service.
 type {{ $clientTypeName }} struct {
-	common.ClientConfig
+	*common.ClientConfig
+	Editors common.ClientConfigEditor
 }
 
 // Creates a new {{ $clientTypeName }}, with reasonable defaults
-func New{{ $clientTypeName }}(server string, opts ...common.ClientOption) (*{{ $clientTypeName }}, error) {
-	config, err := common.NewClientConfig(server, opts...)
-	return &{{ $clientTypeName }}{*config}, err
-}
-
-var _ common.Client = &{{ $clientTypeName }}{}
-func (c *{{ $clientTypeName }}) Config() *common.ClientConfig {
-	return &c.ClientConfig
+func New{{ $clientTypeName }}(config *common.ClientConfig, editors common.ClientConfigEditor) {{ $clientTypeName }} {
+	return {{ $clientTypeName }}{
+		ClientConfig: config,
+		Editors:      editors,
+	}
 }
 
 // The interface specification for the client above.
@@ -42,15 +40,15 @@ type ClientInterface interface {
 {{$opid := .OperationId -}}
 
 func (c *{{ $clientTypeName }}) {{$opid}}{{if .HasBody}}WithBody{{end}}(ctx context.Context{{genParamArgs $pathParams}}{{if $hasParams}}, params *{{$opid}}Params{{end}}{{if .HasBody}}, contentType string, body io.Reader{{end}}, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return New{{$opid}}Request{{if .HasBody}}WithBody{{end}}(c.Server{{genParamNames .PathParams}}{{if $hasParams}}, params{{end}}{{if .HasBody}}, contentType, body{{end}})
 	})
 }
 
 {{range .Bodies}}
 {{if .IsSupportedByClient -}}
-func (c *{{ $clientTypeName }}) {{$opid}}{{.Suffix}}(ctx context.Context{{genParamArgs $pathParams}}{{if $hasParams}}, params *{{$opid}}Params{{end}}, body {{$opid}}{{.NameTag}}RequestBody, editors... common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+func (c *{{ $clientTypeName }}) {{$opid}}{{.Suffix}}(ctx context.Context{{genParamArgs $pathParams}}{{if $hasParams}}, params *{{$opid}}Params{{end}}, body {{$opid}}{{.NameTag}}RequestBody, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return New{{$opid}}Request{{.Suffix}}(c.Server{{genParamNames $pathParams}}{{if $hasParams}}, params{{end}}, body)
 	})
 }

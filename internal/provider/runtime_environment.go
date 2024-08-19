@@ -19,12 +19,14 @@ import (
 var _ ResourceWithConfigure = &RuntimeEnvironmentResource{}
 
 type RuntimeEnvironmentResource struct {
-	*IdmcProviderResource
+	IdmcProviderResource
 }
 
 func NewRuntimeEnvironmentResource() Resource {
 	return &RuntimeEnvironmentResource{
-		&IdmcProviderResource{},
+		IdmcProviderResource{
+			Name: "runtime_environment",
+		},
 	}
 }
 
@@ -42,17 +44,8 @@ type RuntimeEnvironmentResourceModel struct {
 	Agents      types.Set    `tfsdk:"agents"`
 }
 
-// TODO: Implement serverless config.
-
-// Metadata <editor-fold desc="Metadata" defaultstate="collapsed">
-func (r RuntimeEnvironmentResource) Metadata(ctx context.Context, req MetadataRequest, resp *MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_runtime_environment"
-}
-
-// </editor-fold>
-
 // Schema <editor-fold desc="Schema" defaultstate="collapsed">
-func (r RuntimeEnvironmentResource) Schema(ctx context.Context, req SchemaRequest, resp *SchemaResponse) {
+func (r *RuntimeEnvironmentResource) Schema(ctx context.Context, req SchemaRequest, resp *SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-2-resources/runtime_environments.html",
 		Attributes: map[string]schema.Attribute{
@@ -117,7 +110,7 @@ func (r RuntimeEnvironmentResource) Schema(ctx context.Context, req SchemaReques
 // </editor-fold>
 
 // Create <editor-fold desc="Create" defaultstate="collapsed">
-func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateRequest, resp *CreateResponse) {
+func (r *RuntimeEnvironmentResource) Create(ctx context.Context, req CreateRequest, resp *CreateResponse) {
 	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadCreate)
 	defer func() { diags.HandlePanic(recover()) }()
 
@@ -170,7 +163,7 @@ func (r RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReques
 // </editor-fold>
 
 // Create <editor-fold desc="Read" defaultstate="collapsed">
-func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
+func (r *RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
 	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadRead)
 	defer func() { diags.HandlePanic(recover()) }()
 
@@ -229,7 +222,7 @@ func (r RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, r
 // </editor-fold>
 
 // Update <editor-fold desc="Update" defaultstate="collapsed">
-func (r RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateRequest, resp *UpdateResponse) {
+func (r *RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateRequest, resp *UpdateResponse) {
 	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadUpdate)
 	defer func() { diags.HandlePanic(recover()) }()
 
@@ -300,7 +293,7 @@ func (r RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateReques
 // </editor-fold>
 
 // Delete <editor-fold desc="Delete" defaultstate="collapsed">
-func (r RuntimeEnvironmentResource) Delete(ctx context.Context, req DeleteRequest, resp *DeleteResponse) {
+func (r *RuntimeEnvironmentResource) Delete(ctx context.Context, req DeleteRequest, resp *DeleteResponse) {
 	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadDelete)
 	defer func() { diags.HandlePanic(recover()) }()
 
@@ -342,7 +335,7 @@ func (r RuntimeEnvironmentResource) Delete(ctx context.Context, req DeleteReques
 
 // </editor-fold>
 
-func (r RuntimeEnvironmentResource) updateRuntimeEnvironmentState(
+func (r *RuntimeEnvironmentResource) updateRuntimeEnvironmentState(
 	diags DiagsHandler,
 	state *RuntimeEnvironmentResourceModel,
 	data *v2.RuntimeEnvironment,

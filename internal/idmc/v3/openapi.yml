@@ -425,6 +425,9 @@ components:
             $ref: '#/components/schemas/loginResponseBodyProduct'
         userInfo:
           $ref: '#/components/schemas/loginResponseBodyUserInfo'
+      required:
+        - userInfo
+        - products
     loginResponseBodyProduct:
       type: object
       properties:
@@ -436,6 +439,9 @@ components:
           type: string
           description: |-
             Base API URL for the product. Use in REST API requests.
+      required:
+        - name
+        - baseApiUrl
     loginResponseBodyUserInfo:
       type: object
       properties:
@@ -478,6 +484,15 @@ components:
           enum:
             - Active
             - Inactive
+      required:
+        - sessionId
+        - id
+        - name
+        - parentOrgId
+        - orgId
+        - orgName
+        - groups
+        - status
 
     getRolesResponseBody:
       type: array

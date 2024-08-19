@@ -17,14 +17,17 @@ import (
 )
 
 var _ ResourceWithConfigure = &RoleResource{}
+var _ ResourceWithImportState = &RoleResource{}
 
 type RoleResource struct {
-	*IdmcProviderResource
+	IdmcProviderResource
 }
 
 func NewRoleResource() Resource {
 	return &RoleResource{
-		&IdmcProviderResource{},
+		IdmcProviderResource{
+			Name: "role",
+		},
 	}
 }
 
@@ -44,15 +47,8 @@ type RoleResourceModel struct {
 	UpdatedTime        types.String `tfsdk:"updated_time"`
 }
 
-// Metadata <editor-fold desc="Metadata" defaultstate="collapsed">
-func (r RoleResource) Metadata(_ context.Context, req MetadataRequest, resp *MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_role"
-}
-
-// </editor-fold>
-
 // Schema <editor-fold desc="Schema" defaultstate="collapsed">
-func (r RoleResource) Schema(_ context.Context, _ SchemaRequest, resp *SchemaResponse) {
+func (r *RoleResource) Schema(_ context.Context, _ SchemaRequest, resp *SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform_rest_api_version_3_resources/roles.html",
 		Attributes: map[string]schema.Attribute{
@@ -125,7 +121,7 @@ func (r RoleResource) Schema(_ context.Context, _ SchemaRequest, resp *SchemaRes
 // </editor-fold>
 
 // Create <editor-fold desc="Create" defaultstate="collapsed">
-func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *CreateResponse) {
+func (r *RoleResource) Create(ctx context.Context, req CreateRequest, resp *CreateResponse) {
 	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadCreate)
 	defer func() { diags.HandlePanic(recover()) }()
 
@@ -196,8 +192,8 @@ func (r RoleResource) Create(ctx context.Context, req CreateRequest, resp *Creat
 
 // </editor-fold>
 
-// Create <editor-fold desc="Read" defaultstate="collapsed">
-func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
+// Read <editor-fold desc="Read" defaultstate="collapsed">
+func (r *RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadResponse) {
 	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadRead)
 	defer func() { diags.HandlePanic(recover()) }()
 
@@ -286,7 +282,7 @@ func (r RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadRespo
 // </editor-fold>
 
 // Update <editor-fold desc="Update" defaultstate="collapsed">
-func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *UpdateResponse) {
+func (r *RoleResource) Update(ctx context.Context, req UpdateRequest, resp *UpdateResponse) {
 	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadDelete)
 	defer func() { diags.HandlePanic(recover()) }()
 
@@ -350,7 +346,7 @@ func (r RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Updat
 // </editor-fold>
 
 // Delete <editor-fold desc="Delete" defaultstate="collapsed">
-func (r RoleResource) Delete(ctx context.Context, req DeleteRequest, resp *DeleteResponse) {
+func (r *RoleResource) Delete(ctx context.Context, req DeleteRequest, resp *DeleteResponse) {
 	diags := NewDiagsHandler(ctx, &resp.Diagnostics, MsgResourceBadDelete)
 	defer func() { diags.HandlePanic(recover()) }()
 
@@ -393,7 +389,7 @@ func (r RoleResourceModel) getPrivileges(diags DiagsHandler) *HashSet[string] {
 	})
 }
 
-//func (r RoleResource) updateRoleState(
+//func (r *RoleResource) updateRoleState(
 //	diags *diag.Diagnostics,
 //	state *RoleResourceModel,
 //	data

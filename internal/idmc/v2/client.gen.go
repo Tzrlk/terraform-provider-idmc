@@ -25,19 +25,16 @@ import (
 
 // Client which conforms to the OpenAPI3 specification for this service.
 type Client struct {
-	common.ClientConfig
+	*common.ClientConfig
+	Editors common.ClientConfigEditor
 }
 
 // Creates a new Client, with reasonable defaults
-func NewClient(server string, opts ...common.ClientOption) (*Client, error) {
-	config, err := common.NewClientConfig(server, opts...)
-	return &Client{*config}, err
-}
-
-var _ common.Client = &Client{}
-
-func (c *Client) Config() *common.ClientConfig {
-	return &c.ClientConfig
+func NewClient(config *common.ClientConfig, editors common.ClientConfigEditor) Client {
+	return Client{
+		ClientConfig: config,
+		Editors:      editors,
+	}
 }
 
 // The interface specification for the client above.
@@ -71,61 +68,61 @@ type ClientInterface interface {
 }
 
 func (c *Client) GetAgentInstallerInfo(ctx context.Context, platform string, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewGetAgentInstallerInfoRequest(c.Server, platform)
 	})
 }
 
 func (c *Client) ListRuntimeEnvironments(ctx context.Context, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewListRuntimeEnvironmentsRequest(c.Server)
 	})
 }
 
 func (c *Client) CreateRuntimeEnvironmentWithBody(ctx context.Context, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewCreateRuntimeEnvironmentRequestWithBody(c.Server, contentType, body)
 	})
 }
 
 func (c *Client) CreateRuntimeEnvironment(ctx context.Context, body CreateRuntimeEnvironmentJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewCreateRuntimeEnvironmentRequest(c.Server, body)
 	})
 }
 
 func (c *Client) DeleteRuntimeEnvironment(ctx context.Context, id string, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewDeleteRuntimeEnvironmentRequest(c.Server, id)
 	})
 }
 
 func (c *Client) GetRuntimeEnvironment(ctx context.Context, id string, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewGetRuntimeEnvironmentRequest(c.Server, id)
 	})
 }
 
 func (c *Client) UpdateRuntimeEnvironmentWithBody(ctx context.Context, id string, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewUpdateRuntimeEnvironmentRequestWithBody(c.Server, id, contentType, body)
 	})
 }
 
 func (c *Client) UpdateRuntimeEnvironment(ctx context.Context, id string, body UpdateRuntimeEnvironmentJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewUpdateRuntimeEnvironmentRequest(c.Server, id, body)
 	})
 }
 
 func (c *Client) LoginWithBody(ctx context.Context, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewLoginRequestWithBody(c.Server, contentType, body)
 	})
 }
 
 func (c *Client) Login(ctx context.Context, body LoginJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error) {
-	return c.HandleRequest(ctx, editors, func() (*http.Request, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewLoginRequest(c.Server, body)
 	})
 }
@@ -391,17 +388,16 @@ func NewLoginRequestWithBody(server string, contentType string, body io.Reader) 
 
 // ClientWithResponses builds on Client to offer response payloads
 type ClientWithResponses struct {
-	*Client
+	Client
 }
 
 // NewClientWithResponses creates a new ClientWithResponses, which wraps
 // Client with return type handling
-func NewClientWithResponses(server string, opts ...common.ClientOption) (*ClientWithResponses, error) {
-	client, err := NewClient(server, opts...)
-	if err != nil {
-		return nil, err
+func NewClientWithResponses(config *common.ClientConfig, editors common.ClientConfigEditor) ClientWithResponses {
+	client := NewClient(config, editors)
+	return ClientWithResponses{
+		Client: client,
 	}
-	return &ClientWithResponses{client}, nil
 }
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.

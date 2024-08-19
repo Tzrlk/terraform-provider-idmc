@@ -13,8 +13,3 @@ type ClientOption func(*ClientConfig) error
 type HttpRequestDoer interface {
 	Do(req *http.Request) (*http.Response, error)
 }
-
-// Client provides access to client configuration.
-type Client interface {
-	Config() *ClientConfig
-}
