@@ -1,0 +1,86 @@
+openapi: '3.0.0'
+info:
+  title: 'Admin API for IDMC'
+  version: '3.0.0'
+externalDocs:
+  url: https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/informatica-intelligent-cloud-services-rest-api.html
+paths: { }
+components:
+
+  # https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/informatica-intelligent-cloud-services-rest-api/rest-api-responses.html
+  responses:
+
+    204:
+      description: |-
+        Successful operation with no response data.
+
+  schemas:
+
+    resourceIds:
+      type: object
+      description: |-
+        Resource identifiers assigned after creation.
+      properties:
+        id:
+          type: string
+          description: |-
+            The id assigned to the resource by IDMC.
+          readOnly: true
+        orgId:
+          type: string
+          description: |-
+            The id for the org the resource belongs to.
+          readOnly: true
+      required:
+        - id
+        - orgId
+
+    resourceDetails:
+      type: object
+      description: |-
+        Common details for resources.
+      properties:
+        name:
+          type: string
+          description: |-
+            The name of the resource.
+          minLength: 1 # assumed
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+          description: |-
+            A description of the resource.
+      required:
+        - name
+
+    resourceAudit:
+      type: object
+      description: |-
+        Properties of a resource that track changes.
+      properties:
+        createdBy:
+          type: string
+          description: |-
+            The user this resource was created by.
+          readOnly: true
+        updatedBy:
+          type: string
+          description: |-
+            The user this resource was last updated by.
+          readOnly: true
+        createTime:
+          type: string
+          description: |-
+            The date and time of this resource's creation.
+          readOnly: true
+        updateTime:
+          type: string
+          description: |-
+            The date and time of this resource's last update.
+          readOnly: true
+      required:
+        - createdBy
+        - updatedBy
+        - createTime
+        - updateTime

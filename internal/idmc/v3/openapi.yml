@@ -252,6 +252,215 @@ paths:
         503:
           $ref: '#/components/responses/503'
 
+  /public/core/v3/users:
+    parameters:
+      - $ref: '#/components/parameters/headerSession'
+    get:
+      operationId: getUser
+      description: |-
+        Use the users resource to request Informatica Intelligent Cloud Services user details. You can request the details for all users in the organization or request the details for a particular user.
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform-rest-api-version-3-resources/users/getting-user-details.html
+      parameters:
+        - $ref: '#/components/parameters/getUserQuery'
+        - $ref: '#/components/parameters/getUserLimit'
+        - $ref: '#/components/parameters/getUserSkip'
+      responses:
+        200:
+          description: |-
+            User(s) fetched successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getUserResponseBody'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
+    post:
+      operationId: createUser
+      description: |-
+        If you have administrator privileges, you can use the users resource to create a user.
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform-rest-api-version-3-resources/users/creating-a-user.html
+      requestBody:
+        $ref: '#/components/requestBodies/createUserRequest'
+      responses:
+        200:
+          description: |-
+            User created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/userDetails'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
+
+  /public/core/v3/users/{user_id}:
+    delete:
+      operationId: deleteUser
+      description: |-
+        If you have administrator privileges, you can use the users resource to delete a user.
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform-rest-api-version-3-resources/users/deleting-a-user.html
+      parameters:
+        - $ref: '#/components/parameters/pathUserId'
+      responses:
+        204:
+          $ref: '../common/openapi.yml#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
+
+  /public/core/v3/users/{user_id}/addRoles:
+    parameters:
+      - $ref: '#/components/parameters/pathUserId'
+    put:
+      operationId: addUserRoles
+      description: |-
+        Will assign the provided roles to the user.
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform-rest-api-version-3-resources/users/updating-role-assignments.html
+      requestBody:
+        $ref: '#/components/requestBodies/roleNamesRequest'
+      responses:
+        204:
+          $ref: '../common/openapi.yml#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
+
+  /public/core/v3/users/name/{user_name}/addRoles:
+    parameters:
+      - $ref: '#/components/parameters/pathUserName'
+    put:
+      operationId: addUserRolesByName
+      description: |-
+        Will assign the provided roles to the user.
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform-rest-api-version-3-resources/users/updating-role-assignments.html
+      requestBody:
+        $ref: '#/components/requestBodies/roleNamesRequest'
+      responses:
+        204:
+          $ref: '../common/openapi.yml#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
+
+  /public/core/v3/users/{user_id}/removeRoles:
+    parameters:
+      - $ref: '#/components/parameters/pathUserId'
+    put:
+      operationId: removeUserRoles
+      description: |-
+        Will remove role assignments from the user.
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform-rest-api-version-3-resources/users/updating-role-assignments.html
+      requestBody:
+        $ref: '#/components/requestBodies/roleNamesRequest'
+      responses:
+        204:
+          $ref: '../common/openapi.yml#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
+
+  /public/core/v3/users/name/{user_name}/removeRoles:
+    parameters:
+      - $ref: '#/components/parameters/pathUserName'
+    put:
+      operationId: removeUserRolesByName
+      description: |-
+        Will remove role assignments from the user.
+      externalDocs:
+        url: https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform-rest-api-version-3-resources/users/updating-role-assignments.html
+      requestBody:
+        $ref: '#/components/requestBodies/roleNamesRequest'
+      responses:
+        204:
+          $ref: '../common/openapi.yml#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+        503:
+          $ref: '#/components/responses/503'
+
 components:
 
   parameters:
@@ -272,6 +481,66 @@ components:
       description: |-
         Either role id or role name.
 
+    pathUserId:
+      name: user_id
+      in:   path
+      schema:
+        type: string
+      required: true
+      description: |-
+        Id of the user to act on.
+
+    pathUserName:
+      name: user_name
+      in:   path
+      schema:
+        type: string
+      required: true
+      description: |-
+        Name of the user to act on.
+
+    getUserQuery:
+      name: q
+      in: query
+      style: simple
+      schema:
+        type: string
+      description: |-
+        Query filter. You can filter using one of the following fields:
+        * userId. Unique identifier for the user.
+        * userName. Informatica Intelligent Cloud Services user name.
+      example: |-
+        /public/core/v3/users?q=userId==5N9JGth6pRYfOGjGKv3Q2D
+
+    getUserLimit:
+      name: limit
+      in: query
+      style: simple
+      schema:
+        type: integer
+        default: 100
+        minimum: 1 # assumed.
+        maximum: 200
+      description: |-
+        Maximum number of users to return.
+        Maximum of 200. Default is 100.
+      example: |-
+        /public/core/v3/users?q=userId==5N9JGth6pRYfOGjGKv3Q2D&limit=1
+
+    getUserSkip:
+      name: skip
+      in: query
+      style: simple
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+      description: |-
+        Amount to offset the list of results.
+        Default is 0.
+      example: |-
+        /public/core/v3/users?q=userId==5N9JGth6pRYfOGjGKv3Q2D&limit=1&skip=0
+
   requestBodies:
 
     rolePrivileges:
@@ -281,6 +550,22 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/updateRoleRequestBody'
+
+    createUserRequest:
+      description: |-
+        Configurable aspects of user creation.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/createUserRequestBody'
+
+    roleNamesRequest:
+      description: |-
+        A list of role names.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/roleNamesRequestBody'
 
   # https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/informatica-intelligent-cloud-services-rest-api/rest-api-responses.html
   responses:
@@ -396,6 +681,280 @@ components:
       required:
         - code
         - message
+
+    userDetailsEditable:
+      type: object
+      description: |-
+        User details that are editable and common between create and fetch.
+      properties:
+        # name not defined because it changes key between create and get
+        firstName:
+          type: string
+          description: |-
+            First name for the user account.
+        lastName:
+          type: string
+          description: |-
+            Last name for the user account.
+        description:
+          type: string
+          description: |-
+            Description of the user.
+        email:
+          type: string
+          description: |-
+            Email address for the user.
+        title:
+          type: string
+          description: |-
+            Job title of the user.
+        phone:
+          type: string
+          description: |-
+            Phone number for the user.
+          nullable: true
+        forcePasswordChange:
+          type: boolean
+          description: |-
+            Determines whether the user must reset the password after the user logs in for the first time.
+        maxLoginAttempts:
+          type: integer
+          description: |-
+            Number of times a user can attempt to log in before the account is locked.
+        authentication:
+          type: integer
+          description: |-
+            Determines whether the user accesses Informatica Intelligent Cloud Services through single sign-in (SAML).
+            Use one of the following values:
+            0. Native.
+            1. SAML.
+          enum:
+            - 0
+            - 1
+        aliasName:
+          type: string
+          description: |-
+            The user identifier or user name in the 3rd party system.
+        roles:
+          type: array
+          description: |-
+            IDs of the roles to assign to the user.
+          items:
+            type: string
+          uniqueItems: true
+        groups:
+          type: array
+          description: |-
+            IDs of the user groups to assign to the user.
+          items:
+            type: string
+          uniqueItems: true
+      required:
+        - firstName
+        - lastName
+        - email
+
+    userDetails:
+      allOf:
+        - $ref: '../common/openapi.yml#/components/schemas/resourceIds'
+        - $ref: '../common/openapi.yml#/components/schemas/resourceAudit'
+        - $ref: '#/components/schemas/userDetailsEditable'
+        - type: object
+          description: |-
+            User details that are provided by the platform.
+          properties:
+            userName:
+              type: string
+              description: |-
+                Informatica Intelligent Cloud Services user name.
+            state:
+              type: string
+              description: |-
+                State of the user account. Returns one of the following values:
+                * Active. User account exists and user has activated the account.
+                * Provisioned. User account exists but the user has not activated the account.
+                * Disabled. User account is disabled because the user exceeded the maximum number of login attempts.
+                NOTE: If the user's password is expired, the value is null.
+              enum:
+                - Active
+                - Provisioned
+                - Disabled
+              readOnly: true
+            timeZoneId:
+              type: string
+              description: |-
+                Time zone of the user.
+                For more information, see Time zone codes:
+                https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/rest-api-codes/time-zone-codes.html
+            lastLoginTime:
+              type: string
+              description: |-
+                The date and time that the user last logged in.
+              readOnly: true
+              nullable: true
+            lastLoginMode:
+              type: string
+              description: |-
+                Whether the user logged in through a REST API call or through the UI.
+              readOnly: true
+            roles:
+              type: array
+              description: |-
+                All the roles assigned to this user.
+              items:
+                $ref: '#/components/schemas/userDetailsRole'
+            groups:
+              type: array
+              description: |-
+                All the groups assigned to this user.
+              items:
+                $ref: '#/components/schemas/userDetailsGroup'
+          required:
+            - roles
+            - groups
+      example: |-
+        {
+          "id": "9EcgvBYZ9GGflOYr98GzOH",
+          "orgId": "cPYWk02I4aBeuLEvYRtaMS",
+          "createdBy": "a@abc.com",
+          "updatedBy": "a@abc.com",
+          "createTime": "2020-08-20T18:29:19.987Z",
+          "updateTime": "2020-08-20T18:29:20.653Z",
+          "userName": "c@abc.com",
+          "firstName": "c",
+          "lastName": "smith",
+          "description": null,
+          "title": "dev",
+          "phone": null,
+          "email": "c@abc.com",
+          "state": "Provisioned",
+          "timeZoneId": "America/Los_Angeles",
+          "maxLoginAttempts": "10",
+          "authentication": "Native",
+          "forcePasswordChange": false,
+          "lastLoginTime": null,
+          "lastLoginMode": "None",
+          "roles": [
+            {
+              "id": "5IPgtye09EbiWqz5XXuzwC",
+              "roleName": "test",
+              "description": ""
+            },
+            {
+              "id": "9gedBDoYQoQibNMohf5KCh",
+              "roleName": "Admin",
+              "description": "Role for performing administrative tasks for an organization. Has full access to all licensed services."
+            }
+          ],
+          "groups": [
+            {
+              "id": "a6x85hoMvH2kWUIlcIRBEh",
+              "userGroupName": "group_a",
+              "description": ""
+            }
+          ]
+        }
+
+    userDetailsRole:
+      type: object
+      description: |-
+        Full reference object for a role assigned to a user.
+      properties:
+        id:
+          type: string
+          description: |-
+            Role ID.
+        roleName:
+          type: string
+          description: |-
+            Role name.
+        description:
+          type: string
+          description: |-
+            Description of the role.
+        displayName:
+          type: string
+          description: |-
+            Role name that is displayed in the user interface.
+        displayDescription:
+          type: string
+          description: |-
+            Role description that is displayed in the user interface.
+      required:
+        - id
+        - roleName
+        - description
+
+    userDetailsGroup:
+      type: object
+      description: |-
+        Full reference object for a group assigned to a user.
+      properties:
+        id:
+          type: string
+          description: |-
+            User group ID.
+        userGroupName:
+          type: string
+          description: |-
+            User group name.
+        description:
+          type: string
+          description: |-
+            Description of the user group.
+      required:
+        - id
+        - userGroupName
+        - description
+
+    getUserResponseBody:
+      type: array
+      items:
+        $ref: '#/components/schemas/userDetails'
+
+    roleNamesRequestBody:
+      type: object
+      properties:
+        roles:
+          type: array
+          description: |-
+            A list of role names.
+          items:
+            type: string
+          uniqueItems: true
+          minLength: 1
+      required:
+        - roles
+
+    createUserRequestBody:
+      allOf:
+        - $ref: '../common/openapi.yml#/components/schemas/resourceDetails'
+        - $ref: '#/components/schemas/userDetailsEditable'
+        - type: object
+          properties:
+            name:
+              # just override the property description.
+              description: |-
+                Informatica Intelligent Cloud Services user name.
+            password:
+              type: string
+              description: |-
+                Informatica Intelligent Cloud Services password.
+                If password is empty, the user receives an activation email.
+                Maximum length is 255 characters.
+              maxLength: 255
+          required:
+            - name
+      example: |-
+        {
+          "name" : "c@abc.com",
+          "firstName" : "c",
+          "lastName" : "smith",
+          "email" : "c@abc.com",
+          "authentication" : 0,
+          "roles" : ["5IPgtye09EbiWqz5XXuzwC", "9gedBDoYQoQibNMohf5KCh"],
+          "groups" : ["a6x85hoMvH2kWUIlcIRBEh"]
+        }
 
     loginRequestBody:
       type: object

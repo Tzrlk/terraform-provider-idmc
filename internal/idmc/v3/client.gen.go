@@ -67,6 +67,37 @@ type ClientInterface interface {
 	RemoveRolePrivilegesWithBody(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error)
 
 	RemoveRolePrivileges(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	// GetUser request
+	GetUser(ctx context.Context, params *GetUserParams, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	// CreateUserWithBody request with any body
+	CreateUserWithBody(ctx context.Context, params *CreateUserParams, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	CreateUser(ctx context.Context, params *CreateUserParams, body CreateUserJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	// AddUserRolesByNameWithBody request with any body
+	AddUserRolesByNameWithBody(ctx context.Context, userName PathUserName, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	AddUserRolesByName(ctx context.Context, userName PathUserName, body AddUserRolesByNameJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	// RemoveUserRolesByNameWithBody request with any body
+	RemoveUserRolesByNameWithBody(ctx context.Context, userName PathUserName, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	RemoveUserRolesByName(ctx context.Context, userName PathUserName, body RemoveUserRolesByNameJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	// DeleteUser request
+	DeleteUser(ctx context.Context, userId PathUserId, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	// AddUserRolesWithBody request with any body
+	AddUserRolesWithBody(ctx context.Context, userId PathUserId, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	AddUserRoles(ctx context.Context, userId PathUserId, body AddUserRolesJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	// RemoveUserRolesWithBody request with any body
+	RemoveUserRolesWithBody(ctx context.Context, userId PathUserId, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error)
+
+	RemoveUserRoles(ctx context.Context, userId PathUserId, body RemoveUserRolesJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error)
 }
 
 func (c *Client) LoginWithBody(ctx context.Context, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error) {
@@ -132,6 +163,78 @@ func (c *Client) RemoveRolePrivilegesWithBody(ctx context.Context, roleRef PathR
 func (c *Client) RemoveRolePrivileges(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error) {
 	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
 		return NewRemoveRolePrivilegesRequest(c.Server, roleRef, params, body)
+	})
+}
+
+func (c *Client) GetUser(ctx context.Context, params *GetUserParams, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
+		return NewGetUserRequest(c.Server, params)
+	})
+}
+
+func (c *Client) CreateUserWithBody(ctx context.Context, params *CreateUserParams, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
+		return NewCreateUserRequestWithBody(c.Server, params, contentType, body)
+	})
+}
+
+func (c *Client) CreateUser(ctx context.Context, params *CreateUserParams, body CreateUserJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
+		return NewCreateUserRequest(c.Server, params, body)
+	})
+}
+
+func (c *Client) AddUserRolesByNameWithBody(ctx context.Context, userName PathUserName, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
+		return NewAddUserRolesByNameRequestWithBody(c.Server, userName, contentType, body)
+	})
+}
+
+func (c *Client) AddUserRolesByName(ctx context.Context, userName PathUserName, body AddUserRolesByNameJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
+		return NewAddUserRolesByNameRequest(c.Server, userName, body)
+	})
+}
+
+func (c *Client) RemoveUserRolesByNameWithBody(ctx context.Context, userName PathUserName, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
+		return NewRemoveUserRolesByNameRequestWithBody(c.Server, userName, contentType, body)
+	})
+}
+
+func (c *Client) RemoveUserRolesByName(ctx context.Context, userName PathUserName, body RemoveUserRolesByNameJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
+		return NewRemoveUserRolesByNameRequest(c.Server, userName, body)
+	})
+}
+
+func (c *Client) DeleteUser(ctx context.Context, userId PathUserId, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
+		return NewDeleteUserRequest(c.Server, userId)
+	})
+}
+
+func (c *Client) AddUserRolesWithBody(ctx context.Context, userId PathUserId, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
+		return NewAddUserRolesRequestWithBody(c.Server, userId, contentType, body)
+	})
+}
+
+func (c *Client) AddUserRoles(ctx context.Context, userId PathUserId, body AddUserRolesJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
+		return NewAddUserRolesRequest(c.Server, userId, body)
+	})
+}
+
+func (c *Client) RemoveUserRolesWithBody(ctx context.Context, userId PathUserId, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
+		return NewRemoveUserRolesRequestWithBody(c.Server, userId, contentType, body)
+	})
+}
+
+func (c *Client) RemoveUserRoles(ctx context.Context, userId PathUserId, body RemoveUserRolesJSONRequestBody, editors ...common.ClientConfigEditor) (*http.Response, error) {
+	return c.HandleRequest(ctx, c.Editors.AsSlice(editors...), func() (*http.Request, error) {
+		return NewRemoveUserRolesRequest(c.Server, userId, body)
 	})
 }
 
@@ -509,6 +612,375 @@ func NewRemoveRolePrivilegesRequestWithBody(server string, roleRef PathRole, par
 	return req, nil
 }
 
+// NewGetUserRequest generates requests for GetUser
+func NewGetUserRequest(server string, params *GetUserParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/public/core/v3/users")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Q != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("simple", true, "q", runtime.ParamLocationQuery, *params.Q); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("simple", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Skip != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("simple", true, "skip", runtime.ParamLocationQuery, *params.Skip); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "INFA-SESSION-ID", runtime.ParamLocationHeader, params.INFASESSIONID)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("INFA-SESSION-ID", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewCreateUserRequest calls the generic CreateUser builder with application/json body
+func NewCreateUserRequest(server string, params *CreateUserParams, body CreateUserJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateUserRequestWithBody(server, params, "application/json", bodyReader)
+}
+
+// NewCreateUserRequestWithBody generates requests for CreateUser with any type of body
+func NewCreateUserRequestWithBody(server string, params *CreateUserParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/public/core/v3/users")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "INFA-SESSION-ID", runtime.ParamLocationHeader, params.INFASESSIONID)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("INFA-SESSION-ID", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewAddUserRolesByNameRequest calls the generic AddUserRolesByName builder with application/json body
+func NewAddUserRolesByNameRequest(server string, userName PathUserName, body AddUserRolesByNameJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAddUserRolesByNameRequestWithBody(server, userName, "application/json", bodyReader)
+}
+
+// NewAddUserRolesByNameRequestWithBody generates requests for AddUserRolesByName with any type of body
+func NewAddUserRolesByNameRequestWithBody(server string, userName PathUserName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "user_name", runtime.ParamLocationPath, userName)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/public/core/v3/users/name/%s/addRoles", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewRemoveUserRolesByNameRequest calls the generic RemoveUserRolesByName builder with application/json body
+func NewRemoveUserRolesByNameRequest(server string, userName PathUserName, body RemoveUserRolesByNameJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRemoveUserRolesByNameRequestWithBody(server, userName, "application/json", bodyReader)
+}
+
+// NewRemoveUserRolesByNameRequestWithBody generates requests for RemoveUserRolesByName with any type of body
+func NewRemoveUserRolesByNameRequestWithBody(server string, userName PathUserName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "user_name", runtime.ParamLocationPath, userName)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/public/core/v3/users/name/%s/removeRoles", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteUserRequest generates requests for DeleteUser
+func NewDeleteUserRequest(server string, userId PathUserId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "user_id", runtime.ParamLocationPath, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/public/core/v3/users/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAddUserRolesRequest calls the generic AddUserRoles builder with application/json body
+func NewAddUserRolesRequest(server string, userId PathUserId, body AddUserRolesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAddUserRolesRequestWithBody(server, userId, "application/json", bodyReader)
+}
+
+// NewAddUserRolesRequestWithBody generates requests for AddUserRoles with any type of body
+func NewAddUserRolesRequestWithBody(server string, userId PathUserId, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "user_id", runtime.ParamLocationPath, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/public/core/v3/users/%s/addRoles", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewRemoveUserRolesRequest calls the generic RemoveUserRoles builder with application/json body
+func NewRemoveUserRolesRequest(server string, userId PathUserId, body RemoveUserRolesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRemoveUserRolesRequestWithBody(server, userId, "application/json", bodyReader)
+}
+
+// NewRemoveUserRolesRequestWithBody generates requests for RemoveUserRoles with any type of body
+func NewRemoveUserRolesRequestWithBody(server string, userId PathUserId, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "user_id", runtime.ParamLocationPath, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/public/core/v3/users/%s/removeRoles", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // </editor-fold> //////////////////////////////////////////////////////////////
 // <editor-fold desc="client-with-responses" defaultstate="collapsed"> /////////
 
@@ -556,6 +1028,37 @@ type ClientWithResponsesInterface interface {
 	RemoveRolePrivilegesWithBodyWithResponse(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*RemoveRolePrivilegesResponse, error)
 
 	RemoveRolePrivilegesWithResponse(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody, editors ...common.ClientConfigEditor) (*RemoveRolePrivilegesResponse, error)
+
+	// GetUserWithResponse request
+	GetUserWithResponse(ctx context.Context, params *GetUserParams, editors ...common.ClientConfigEditor) (*GetUserResponse, error)
+
+	// CreateUserWithBodyWithResponse request with any body
+	CreateUserWithBodyWithResponse(ctx context.Context, params *CreateUserParams, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*CreateUserResponse, error)
+
+	CreateUserWithResponse(ctx context.Context, params *CreateUserParams, body CreateUserJSONRequestBody, editors ...common.ClientConfigEditor) (*CreateUserResponse, error)
+
+	// AddUserRolesByNameWithBodyWithResponse request with any body
+	AddUserRolesByNameWithBodyWithResponse(ctx context.Context, userName PathUserName, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*AddUserRolesByNameResponse, error)
+
+	AddUserRolesByNameWithResponse(ctx context.Context, userName PathUserName, body AddUserRolesByNameJSONRequestBody, editors ...common.ClientConfigEditor) (*AddUserRolesByNameResponse, error)
+
+	// RemoveUserRolesByNameWithBodyWithResponse request with any body
+	RemoveUserRolesByNameWithBodyWithResponse(ctx context.Context, userName PathUserName, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*RemoveUserRolesByNameResponse, error)
+
+	RemoveUserRolesByNameWithResponse(ctx context.Context, userName PathUserName, body RemoveUserRolesByNameJSONRequestBody, editors ...common.ClientConfigEditor) (*RemoveUserRolesByNameResponse, error)
+
+	// DeleteUserWithResponse request
+	DeleteUserWithResponse(ctx context.Context, userId PathUserId, editors ...common.ClientConfigEditor) (*DeleteUserResponse, error)
+
+	// AddUserRolesWithBodyWithResponse request with any body
+	AddUserRolesWithBodyWithResponse(ctx context.Context, userId PathUserId, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*AddUserRolesResponse, error)
+
+	AddUserRolesWithResponse(ctx context.Context, userId PathUserId, body AddUserRolesJSONRequestBody, editors ...common.ClientConfigEditor) (*AddUserRolesResponse, error)
+
+	// RemoveUserRolesWithBodyWithResponse request with any body
+	RemoveUserRolesWithBodyWithResponse(ctx context.Context, userId PathUserId, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*RemoveUserRolesResponse, error)
+
+	RemoveUserRolesWithResponse(ctx context.Context, userId PathUserId, body RemoveUserRolesJSONRequestBody, editors ...common.ClientConfigEditor) (*RemoveUserRolesResponse, error)
 }
 
 type LoginResponse struct {
@@ -642,6 +1145,85 @@ type RemoveRolePrivilegesResponse struct {
 	JSON503 *N503
 }
 
+type GetUserResponse struct {
+	common.ClientResponse
+	JSON200 *GetUserResponseBody
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
+}
+
+type CreateUserResponse struct {
+	common.ClientResponse
+	JSON200 *UserDetails
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
+}
+
+type AddUserRolesByNameResponse struct {
+	common.ClientResponse
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
+}
+
+type RemoveUserRolesByNameResponse struct {
+	common.ClientResponse
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
+}
+
+type DeleteUserResponse struct {
+	common.ClientResponse
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
+}
+
+type AddUserRolesResponse struct {
+	common.ClientResponse
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
+}
+
+type RemoveUserRolesResponse struct {
+	common.ClientResponse
+	JSON400 *N400
+	JSON401 *N401
+	JSON403 *N403
+	JSON404 *N404
+	JSON500 *N500
+	JSON502 *N502
+	JSON503 *N503
+}
+
 // LoginWithBodyWithResponse request with arbitrary body returning *LoginResponse
 func (c *ClientWithResponses) LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*LoginResponse, error) {
 	return common.HandleAction(c.ClientConfig, ctx, editors, ParseLoginResponse, func(ctx context.Context) (*http.Response, error) {
@@ -712,6 +1294,85 @@ func (c *ClientWithResponses) RemoveRolePrivilegesWithBodyWithResponse(ctx conte
 func (c *ClientWithResponses) RemoveRolePrivilegesWithResponse(ctx context.Context, roleRef PathRole, params *RemoveRolePrivilegesParams, body RemoveRolePrivilegesJSONRequestBody, editors ...common.ClientConfigEditor) (*RemoveRolePrivilegesResponse, error) {
 	return common.HandleAction(c.ClientConfig, ctx, editors, ParseRemoveRolePrivilegesResponse, func(ctx context.Context) (*http.Response, error) {
 		return c.RemoveRolePrivileges(ctx, roleRef, params, body, editors...)
+	})
+}
+
+// GetUserWithResponse request returning *GetUserResponse
+func (c *ClientWithResponses) GetUserWithResponse(ctx context.Context, params *GetUserParams, editors ...common.ClientConfigEditor) (*GetUserResponse, error) {
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseGetUserResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.GetUser(ctx, params, editors...)
+	})
+}
+
+// CreateUserWithBodyWithResponse request with arbitrary body returning *CreateUserResponse
+func (c *ClientWithResponses) CreateUserWithBodyWithResponse(ctx context.Context, params *CreateUserParams, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*CreateUserResponse, error) {
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseCreateUserResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.CreateUserWithBody(ctx, params, contentType, body, editors...)
+	})
+}
+
+func (c *ClientWithResponses) CreateUserWithResponse(ctx context.Context, params *CreateUserParams, body CreateUserJSONRequestBody, editors ...common.ClientConfigEditor) (*CreateUserResponse, error) {
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseCreateUserResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.CreateUser(ctx, params, body, editors...)
+	})
+}
+
+// AddUserRolesByNameWithBodyWithResponse request with arbitrary body returning *AddUserRolesByNameResponse
+func (c *ClientWithResponses) AddUserRolesByNameWithBodyWithResponse(ctx context.Context, userName PathUserName, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*AddUserRolesByNameResponse, error) {
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseAddUserRolesByNameResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.AddUserRolesByNameWithBody(ctx, userName, contentType, body, editors...)
+	})
+}
+
+func (c *ClientWithResponses) AddUserRolesByNameWithResponse(ctx context.Context, userName PathUserName, body AddUserRolesByNameJSONRequestBody, editors ...common.ClientConfigEditor) (*AddUserRolesByNameResponse, error) {
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseAddUserRolesByNameResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.AddUserRolesByName(ctx, userName, body, editors...)
+	})
+}
+
+// RemoveUserRolesByNameWithBodyWithResponse request with arbitrary body returning *RemoveUserRolesByNameResponse
+func (c *ClientWithResponses) RemoveUserRolesByNameWithBodyWithResponse(ctx context.Context, userName PathUserName, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*RemoveUserRolesByNameResponse, error) {
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseRemoveUserRolesByNameResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.RemoveUserRolesByNameWithBody(ctx, userName, contentType, body, editors...)
+	})
+}
+
+func (c *ClientWithResponses) RemoveUserRolesByNameWithResponse(ctx context.Context, userName PathUserName, body RemoveUserRolesByNameJSONRequestBody, editors ...common.ClientConfigEditor) (*RemoveUserRolesByNameResponse, error) {
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseRemoveUserRolesByNameResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.RemoveUserRolesByName(ctx, userName, body, editors...)
+	})
+}
+
+// DeleteUserWithResponse request returning *DeleteUserResponse
+func (c *ClientWithResponses) DeleteUserWithResponse(ctx context.Context, userId PathUserId, editors ...common.ClientConfigEditor) (*DeleteUserResponse, error) {
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseDeleteUserResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.DeleteUser(ctx, userId, editors...)
+	})
+}
+
+// AddUserRolesWithBodyWithResponse request with arbitrary body returning *AddUserRolesResponse
+func (c *ClientWithResponses) AddUserRolesWithBodyWithResponse(ctx context.Context, userId PathUserId, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*AddUserRolesResponse, error) {
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseAddUserRolesResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.AddUserRolesWithBody(ctx, userId, contentType, body, editors...)
+	})
+}
+
+func (c *ClientWithResponses) AddUserRolesWithResponse(ctx context.Context, userId PathUserId, body AddUserRolesJSONRequestBody, editors ...common.ClientConfigEditor) (*AddUserRolesResponse, error) {
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseAddUserRolesResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.AddUserRoles(ctx, userId, body, editors...)
+	})
+}
+
+// RemoveUserRolesWithBodyWithResponse request with arbitrary body returning *RemoveUserRolesResponse
+func (c *ClientWithResponses) RemoveUserRolesWithBodyWithResponse(ctx context.Context, userId PathUserId, contentType string, body io.Reader, editors ...common.ClientConfigEditor) (*RemoveUserRolesResponse, error) {
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseRemoveUserRolesResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.RemoveUserRolesWithBody(ctx, userId, contentType, body, editors...)
+	})
+}
+
+func (c *ClientWithResponses) RemoveUserRolesWithResponse(ctx context.Context, userId PathUserId, body RemoveUserRolesJSONRequestBody, editors ...common.ClientConfigEditor) (*RemoveUserRolesResponse, error) {
+	return common.HandleAction(c.ClientConfig, ctx, editors, ParseRemoveUserRolesResponse, func(ctx context.Context) (*http.Response, error) {
+		return c.RemoveUserRoles(ctx, userId, body, editors...)
 	})
 }
 
@@ -1172,6 +1833,482 @@ func ParseRemoveRolePrivilegesResponse(rsp *http.Response) (*RemoveRolePrivilege
 		}
 		response.JSON204 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest N502
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetUserResponse parses an HTTP response from a GetUserWithResponse call.
+func ParseGetUserResponse(rsp *http.Response) (*GetUserResponse, error) {
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &GetUserResponse{ClientResponse: clientResponse}
+	if err != nil {
+		return response, err
+	}
+
+	bodyBytes := response.Body
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GetUserResponseBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest N502
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateUserResponse parses an HTTP response from a CreateUserWithResponse call.
+func ParseCreateUserResponse(rsp *http.Response) (*CreateUserResponse, error) {
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &CreateUserResponse{ClientResponse: clientResponse}
+	if err != nil {
+		return response, err
+	}
+
+	bodyBytes := response.Body
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UserDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest N502
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAddUserRolesByNameResponse parses an HTTP response from a AddUserRolesByNameWithResponse call.
+func ParseAddUserRolesByNameResponse(rsp *http.Response) (*AddUserRolesByNameResponse, error) {
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &AddUserRolesByNameResponse{ClientResponse: clientResponse}
+	if err != nil {
+		return response, err
+	}
+
+	bodyBytes := response.Body
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest N502
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRemoveUserRolesByNameResponse parses an HTTP response from a RemoveUserRolesByNameWithResponse call.
+func ParseRemoveUserRolesByNameResponse(rsp *http.Response) (*RemoveUserRolesByNameResponse, error) {
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &RemoveUserRolesByNameResponse{ClientResponse: clientResponse}
+	if err != nil {
+		return response, err
+	}
+
+	bodyBytes := response.Body
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest N502
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteUserResponse parses an HTTP response from a DeleteUserWithResponse call.
+func ParseDeleteUserResponse(rsp *http.Response) (*DeleteUserResponse, error) {
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &DeleteUserResponse{ClientResponse: clientResponse}
+	if err != nil {
+		return response, err
+	}
+
+	bodyBytes := response.Body
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest N502
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAddUserRolesResponse parses an HTTP response from a AddUserRolesWithResponse call.
+func ParseAddUserRolesResponse(rsp *http.Response) (*AddUserRolesResponse, error) {
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &AddUserRolesResponse{ClientResponse: clientResponse}
+	if err != nil {
+		return response, err
+	}
+
+	bodyBytes := response.Body
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest N502
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRemoveUserRolesResponse parses an HTTP response from a RemoveUserRolesWithResponse call.
+func ParseRemoveUserRolesResponse(rsp *http.Response) (*RemoveUserRolesResponse, error) {
+
+	// Prepare the api response by wrapping the http response.
+	clientResponse, err := common.NewClientResponse(rsp)
+	response := &RemoveUserRolesResponse{ClientResponse: clientResponse}
+	if err != nil {
+		return response, err
+	}
+
+	bodyBytes := response.Body
+	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest N400
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
