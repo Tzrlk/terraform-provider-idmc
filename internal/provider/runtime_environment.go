@@ -2,6 +2,8 @@ package provider
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -10,10 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"terraform-provider-idmc/internal/idmc/v2"
-	"terraform-provider-idmc/internal/utils"
 
 	. "github.com/hashicorp/terraform-plugin-framework/resource"
 	. "terraform-provider-idmc/internal/provider/utils"
+	. "terraform-provider-idmc/internal/utils"
 )
 
 var _ ResourceWithConfigure = &RuntimeEnvironmentResource{}
@@ -31,80 +33,52 @@ func NewRuntimeEnvironmentResource() Resource {
 }
 
 type RuntimeEnvironmentResourceModel struct {
-	Id          types.String `tfsdk:"id"`
-	OrgId       types.String `tfsdk:"org_id"`
-	Name        types.String `tfsdk:"name"`
-	Description types.String `tfsdk:"description"`
-	CreatedTime types.String `tfsdk:"created_time"`
-	UpdatedTime types.String `tfsdk:"updated_time"`
-	CreatedBy   types.String `tfsdk:"created_by"`
-	UpdatedBy   types.String `tfsdk:"updated_by"`
-	Shared      types.Bool   `tfsdk:"shared"`
-	FederatedId types.String `tfsdk:"federated_id"`
-	Agents      types.Set    `tfsdk:"agents"`
+	Id          types.String      `tfsdk:"id"`
+	OrgId       types.String      `tfsdk:"org_id"`
+	Name        types.String      `tfsdk:"name"`
+	Description types.String      `tfsdk:"description"`
+	CreatedTime timetypes.RFC3339 `tfsdk:"created_time"`
+	UpdatedTime timetypes.RFC3339 `tfsdk:"updated_time"`
+	CreatedBy   types.String      `tfsdk:"created_by"`
+	UpdatedBy   types.String      `tfsdk:"updated_by"`
+	Shared      types.Bool        `tfsdk:"shared"`
+	FederatedId types.String      `tfsdk:"federated_id"`
+	Agents      types.Set         `tfsdk:"agents"`
 }
 
 // Schema <editor-fold desc="Schema" defaultstate="collapsed">
 func (r *RuntimeEnvironmentResource) Schema(ctx context.Context, req SchemaRequest, resp *SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Description: "https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-2-resources/runtime_environments.html",
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Description: "Runtime environment ID.",
-				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"name": schema.StringAttribute{
-				Description: "Runtime environment name.",
-				Required:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"shared": schema.BoolAttribute{
-				Description: "Indicates whether the Secure Agent group is shared.",
-				Optional:    true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
-				},
-			},
-			"description": schema.StringAttribute{
-				Description: "Description of the runtime environment.",
-				Computed:    true,
-			},
-			"org_id": schema.StringAttribute{
-				Description: "Organization ID.",
-				Computed:    true,
-			},
-			"federated_id": schema.StringAttribute{
-				Description: "Global unique identifier.",
-				Computed:    true,
-			},
-			"agents": schema.SetAttribute{
-				Description: "The agents allocated to this runtime environment.",
-				Computed:    true,
-				ElementType: types.StringType,
-			},
-			"created_by": schema.StringAttribute{
-				Description: "User who created the runtime environment.",
-				Computed:    true,
-			},
-			"updated_by": schema.StringAttribute{
-				Description: "User who last updated the runtime environment.",
-				Computed:    true,
-			},
-			"created_time": schema.StringAttribute{
-				Description: "Date and time the runtime environment was created.",
-				Computed:    true,
-			},
-			"updated_time": schema.StringAttribute{
-				Description: "Date and time that the runtime environment was last updated.",
-				Computed:    true,
+	r.IdmcProviderResource.Schema(ctx, req, resp)
+	resp.Schema.Description = "https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform-rest-api-version-2-resources/runtime_environments.html"
+	resp.Schema.Attributes = MapMerge(resp.Schema.Attributes, map[string]schema.Attribute{
+		"name": schema.StringAttribute{
+			Description: "Runtime environment name.",
+			Required:    true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
 			},
 		},
-	}
+		"shared": schema.BoolAttribute{
+			Description: "Indicates whether the Secure Agent group is shared.",
+			Optional:    true,
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.RequiresReplace(),
+			},
+		},
+		"description": schema.StringAttribute{
+			Description: "Description of the runtime environment.",
+			Computed:    true,
+		},
+		"federated_id": schema.StringAttribute{
+			Description: "Global unique identifier.",
+			Computed:    true,
+		},
+		"agents": schema.SetAttribute{
+			Description: "The agents allocated to this runtime environment.",
+			Computed:    true,
+			ElementType: types.StringType,
+		},
+	})
 }
 
 // </editor-fold>
@@ -124,7 +98,7 @@ func (r *RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReque
 	}
 
 	reqBody := v2.CreateRuntimeEnvironmentJSONRequestBody{
-		Type:     utils.Ptr(v2.RuntimeEnvironmentDataMinimalTypeRuntimeEnvironment),
+		Type:     Ptr(v2.RuntimeEnvironmentDataMinimalTypeRuntimeEnvironment),
 		Name:     data.Name.ValueString(),
 		IsShared: data.Shared.ValueBoolPointer(),
 	}
@@ -151,7 +125,7 @@ func (r *RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReque
 		return
 	}
 
-	if r.updateRuntimeEnvironmentState(diags, &data, apiRes.JSON200) {
+	if data.update(diags, apiRes.JSON200) {
 		return
 	}
 
@@ -210,7 +184,7 @@ func (r *RuntimeEnvironmentResource) Read(ctx context.Context, req ReadRequest, 
 		return
 	}
 
-	if r.updateRuntimeEnvironmentState(diags, &data, apiRes.JSON200) {
+	if data.update(diags, apiRes.JSON200) {
 		return
 	}
 
@@ -281,7 +255,7 @@ func (r *RuntimeEnvironmentResource) Update(ctx context.Context, req UpdateReque
 		return
 	}
 
-	if r.updateRuntimeEnvironmentState(diags, &plan, apiRes.JSON200) {
+	if plan.update(diags, apiRes.JSON200) {
 		return
 	}
 
@@ -335,9 +309,8 @@ func (r *RuntimeEnvironmentResource) Delete(ctx context.Context, req DeleteReque
 
 // </editor-fold>
 
-func (r *RuntimeEnvironmentResource) updateRuntimeEnvironmentState(
+func (r *RuntimeEnvironmentResourceModel) update(
 	diags DiagsHandler,
-	state *RuntimeEnvironmentResourceModel,
 	data *v2.RuntimeEnvironment,
 ) bool {
 	if data == nil {
@@ -346,39 +319,45 @@ func (r *RuntimeEnvironmentResource) updateRuntimeEnvironmentState(
 	}
 
 	// Update the configured state so instabilities can be detected.
-	state.Id = types.StringPointerValue(data.Id)
-	state.Name = types.StringValue(data.Name)
-	state.Description = types.StringPointerValue(data.Description)
-	state.Shared = types.BoolPointerValue(data.IsShared)
+	r.Id = types.StringPointerValue(data.Id)
+	r.Name = types.StringValue(data.Name)
+	r.Description = types.StringPointerValue(data.Description)
+	r.Shared = types.BoolPointerValue(data.IsShared)
 
 	// Update derived values
-	state.OrgId = types.StringPointerValue(data.OrgId)
-	state.CreatedBy = types.StringPointerValue(data.CreatedBy)
-	state.UpdatedBy = types.StringPointerValue(data.UpdatedBy)
-	state.CreatedTime = types.StringPointerValue(data.CreateTime)
-	state.UpdatedTime = types.StringPointerValue(data.UpdateTime)
-	state.FederatedId = types.StringPointerValue(data.FederatedId)
+	r.OrgId = types.StringPointerValue(data.OrgId)
+	r.CreatedBy = types.StringPointerValue(data.CreatedBy)
+	r.UpdatedBy = types.StringPointerValue(data.UpdatedBy)
+	r.CreatedTime = diags.TimePointer(data.CreateTime)
+	r.UpdatedTime = diags.TimePointer(data.UpdateTime)
+	r.FederatedId = types.StringPointerValue(data.FederatedId)
 
-	agentsDiags := diags.AtName("agents")
-	if data.Agents == nil {
+	// Update nested values
+	return r.updateAgents(diags, data.Agents)
+
+}
+
+func (r *RuntimeEnvironmentResourceModel) updateAgents(
+	diags DiagsHandler,
+	data *[]v2.RuntimeEnvironmentAgent,
+) bool {
+	diags = diags.AtName("agents")
+
+	// Protect against nil data.
+	if data == nil {
 		diags.WithTitle("Issue handling API response").AddWarning(
 			"Runtime Environment is expected to have at least an empty list of agents.")
-		state.Agents = types.SetNull(types.StringType)
+		r.Agents = types.SetNull(types.StringType)
 		return diags.HasError()
 	}
 
-	agentsAttrs := make([]attr.Value, len(*data.Agents))
-	for index, agent := range *data.Agents {
-		agentsAttrs[index] = types.StringPointerValue(agent.Id)
-	}
+	// Transform all the values into attributes.
+	agentsAttrs := TransformSlice(*data, func(agent v2.RuntimeEnvironmentAgent) attr.Value {
+		return types.StringPointerValue(agent.Id)
+	})
 
-	agentsAttr := agentsDiags.SetValue(types.StringType, agentsAttrs)
-	if diags.HasError() {
-		state.Agents = types.SetUnknown(types.StringType)
-		return true
-	}
+	// Update the state
+	r.Agents = diags.SetValue(types.StringType, agentsAttrs)
 
-	state.Agents = agentsAttr
 	return diags.HasError()
-
 }

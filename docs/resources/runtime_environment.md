@@ -47,11 +47,11 @@ output "example" {
 ### Read-Only
 
 - `agents` (Set of String) The agents allocated to this runtime environment.
-- `created_by` (String) User who created the runtime environment.
-- `created_time` (String) Date and time the runtime environment was created.
+- `created_by` (String) User who created the resource.
+- `created_time` (String) Date and time the resource was created.
 - `description` (String) Description of the runtime environment.
 - `federated_id` (String) Global unique identifier.
-- `id` (String) Runtime environment ID.
-- `org_id` (String) Organization ID.
-- `updated_by` (String) User who last updated the runtime environment.
-- `updated_time` (String) Date and time that the runtime environment was last updated.
+- `id` (String) Service generated resource identifier.
+- `org_id` (String) ID of the organization the resource belongs to.
+- `updated_by` (String) User who last updated the resource.
+- `updated_time` (String) Date and time the resource was last updated.

@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -32,90 +33,62 @@ func NewRoleResource() Resource {
 }
 
 type RoleResourceModel struct {
-	Id                 types.String `tfsdk:"id"`
-	Name               types.String `tfsdk:"name"`
-	Description        types.String `tfsdk:"description"`
-	Privileges         types.Set    `tfsdk:"privileges"`
-	OrgId              types.String `tfsdk:"org_id"`
-	DisplayName        types.String `tfsdk:"display_name"`
-	DisplayDescription types.String `tfsdk:"display_description"`
-	SystemRole         types.Bool   `tfsdk:"system_role"`
-	Status             types.String `tfsdk:"status"`
-	CreatedBy          types.String `tfsdk:"created_by"`
-	UpdatedBy          types.String `tfsdk:"updated_by"`
-	CreatedTime        types.String `tfsdk:"created_time"`
-	UpdatedTime        types.String `tfsdk:"updated_time"`
+	Id                 types.String      `tfsdk:"id"`
+	Name               types.String      `tfsdk:"name"`
+	Description        types.String      `tfsdk:"description"`
+	Privileges         types.Set         `tfsdk:"privileges"`
+	OrgId              types.String      `tfsdk:"org_id"`
+	DisplayName        types.String      `tfsdk:"display_name"`
+	DisplayDescription types.String      `tfsdk:"display_description"`
+	SystemRole         types.Bool        `tfsdk:"system_role"`
+	Status             types.String      `tfsdk:"status"`
+	CreatedBy          types.String      `tfsdk:"created_by"`
+	UpdatedBy          types.String      `tfsdk:"updated_by"`
+	CreatedTime        timetypes.RFC3339 `tfsdk:"created_time"`
+	UpdatedTime        timetypes.RFC3339 `tfsdk:"updated_time"`
 }
 
 // Schema <editor-fold desc="Schema" defaultstate="collapsed">
-func (r *RoleResource) Schema(_ context.Context, _ SchemaRequest, resp *SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Description: "https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform_rest_api_version_3_resources/roles.html",
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Description: "Service generated identifier for the role.",
-				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"name": schema.StringAttribute{
-				Description: "Name of the role.",
-				Required:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"description": schema.StringAttribute{
-				Description: "Description of the role.",
-				Optional:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"privileges": schema.SetAttribute{
-				Description: "The privileges assigned to the role.",
-				Required:    true,
-				ElementType: types.StringType,
-			},
-			"org_id": schema.StringAttribute{
-				Description: "ID of the organization the role belongs to.",
-				Computed:    true,
-			},
-			"display_name": schema.StringAttribute{
-				Description: "Role name displayed in the user interface.",
-				Computed:    true,
-			},
-			"display_description": schema.StringAttribute{
-				Description: "Description displayed in the user interface.",
-				Computed:    true,
-			},
-			"system_role": schema.BoolAttribute{
-				Description: "Whether the role is a system-defined role.",
-				Computed:    true,
-			},
-			"status": schema.StringAttribute{
-				Description: "Whether the organization's license to use the role is valid or has expired.",
-				Computed:    true,
-			},
-			"created_by": schema.StringAttribute{
-				Description: "User who created the role.",
-				Computed:    true,
-			},
-			"updated_by": schema.StringAttribute{
-				Description: "User who last updated the role.",
-				Computed:    true,
-			},
-			"created_time": schema.StringAttribute{
-				Description: "Date and time the role was created.",
-				Computed:    true,
-			},
-			"updated_time": schema.StringAttribute{
-				Description: "Date and time the role was last updated.",
-				Computed:    true,
+func (r *RoleResource) Schema(ctx context.Context, req SchemaRequest, resp *SchemaResponse) {
+	r.IdmcProviderResource.Schema(ctx, req, resp)
+	resp.Schema.Description = "https://docs.informatica.com/integration-cloud/data-integration/current-version/rest-api-reference/platform_rest_api_version_3_resources/roles.html"
+	resp.Schema.Attributes = MapMerge(resp.Schema.Attributes, map[string]schema.Attribute{
+		"name": schema.StringAttribute{
+			Description: "Name of the role.",
+			Required:    true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
 			},
 		},
-	}
+		"description": schema.StringAttribute{
+			Description: "Description of the role.",
+			Optional:    true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			},
+		},
+		"privileges": schema.SetAttribute{
+			Description: "The privileges assigned to the role.",
+			Required:    true,
+			ElementType: types.StringType,
+		},
+		"display_name": schema.StringAttribute{
+			Description: "Role name displayed in the user interface.",
+			Computed:    true,
+		},
+		"display_description": schema.StringAttribute{
+			Description: "Description displayed in the user interface.",
+			Computed:    true,
+		},
+		"system_role": schema.BoolAttribute{
+			Description: "Whether the role is a system-defined role.",
+			Computed:    true,
+		},
+		"status": schema.StringAttribute{
+			Description: "Whether the organization's license to use the role is valid or has expired.",
+			Computed:    true,
+		},
+	})
 }
 
 // </editor-fold>
@@ -180,10 +153,15 @@ func (r *RoleResource) Create(ctx context.Context, req CreateRequest, resp *Crea
 	data.Status = types.StringPointerValue((*string)(respData.Status))
 	data.CreatedBy = types.StringPointerValue(respData.CreatedBy)
 	data.UpdatedBy = types.StringPointerValue(respData.UpdatedBy)
-	data.CreatedTime = types.StringPointerValue(respData.CreateTime)
-	data.UpdatedTime = types.StringPointerValue(respData.UpdateTime)
+	data.CreatedTime = diags.TimePointer(respData.CreateTime)
+	data.UpdatedTime = diags.TimePointer(respData.UpdateTime)
 
 	// NOTE: Create does not return any privileges in the response.
+
+	// If we had trouble parsing the data.
+	if diags.HasError() {
+		return
+	}
 
 	// Save creation result back to state.
 	diags.Append(resp.State.Set(ctx, &data))
@@ -258,8 +236,8 @@ func (r *RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadResp
 	data.Status = types.StringPointerValue((*string)(apiItems[0].Status))
 	data.CreatedBy = types.StringPointerValue(apiItems[0].CreatedBy)
 	data.UpdatedBy = types.StringPointerValue(apiItems[0].UpdatedBy)
-	data.CreatedTime = types.StringPointerValue(apiItems[0].CreateTime)
-	data.UpdatedTime = types.StringPointerValue(apiItems[0].UpdateTime)
+	data.CreatedTime = diags.TimePointer(apiItems[0].CreateTime)
+	data.UpdatedTime = diags.TimePointer(apiItems[0].UpdateTime)
 
 	// Handle more sketchy data
 	data.Privileges = diags.SetValuePointerFromFn(types.StringType, func() *[]attr.Value {
@@ -273,6 +251,11 @@ func (r *RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadResp
 			return types.StringValue(item.Id)
 		}))
 	})
+
+	// If we had trouble parsing the data.
+	if diags.HasError() {
+		return
+	}
 
 	// Save creation result back to state.
 	diags.Append(resp.State.Set(ctx, &data))
@@ -374,7 +357,7 @@ func (r *RoleResource) Delete(ctx context.Context, req DeleteRequest, resp *Dele
 
 // </editor-fold>
 
-func (r RoleResourceModel) getPrivileges(diags DiagsHandler) *HashSet[string] {
+func (r *RoleResourceModel) getPrivileges(diags DiagsHandler) *HashSet[string] {
 	privilegesPath := path.Root("privileges")
 	return NewHashSetAfter(func(set *HashSet[string]) {
 		for _, element := range r.Privileges.Elements() {

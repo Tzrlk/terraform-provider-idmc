@@ -51,13 +51,13 @@ output "example" {
 
 ### Read-Only
 
-- `created_by` (String) User who created the role.
-- `created_time` (String) Date and time the role was created.
+- `created_by` (String) User who created the resource.
+- `created_time` (String) Date and time the resource was created.
 - `display_description` (String) Description displayed in the user interface.
 - `display_name` (String) Role name displayed in the user interface.
-- `id` (String) Service generated identifier for the role.
-- `org_id` (String) ID of the organization the role belongs to.
+- `id` (String) Service generated resource identifier.
+- `org_id` (String) ID of the organization the resource belongs to.
 - `status` (String) Whether the organization's license to use the role is valid or has expired.
 - `system_role` (Boolean) Whether the role is a system-defined role.
-- `updated_by` (String) User who last updated the role.
-- `updated_time` (String) Date and time the role was last updated.
+- `updated_by` (String) User who last updated the resource.
+- `updated_time` (String) Date and time the resource was last updated.
