@@ -2,6 +2,10 @@ package utils
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 
@@ -38,4 +42,54 @@ func (r *IdmcProviderResource) Configure(ctx context.Context, req ConfigureReque
 // ImportState implements ResourceWithImportState for all resources unless overridden.
 func (r *IdmcProviderResource) ImportState(ctx context.Context, req ImportStateRequest, res *ImportStateResponse) {
 	ImportStatePassthroughID(ctx, path.Root("id"), req, res)
+}
+
+// Schema configures a bunch of common attributes used across all resources.
+func (r *IdmcProviderResource) Schema(_ context.Context, _ SchemaRequest, resp *SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+
+			"id": schema.StringAttribute{
+				Description: "Service generated resource identifier.",
+				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"org_id": schema.StringAttribute{
+				Description: "ID of the organization the resource belongs to.",
+				Computed:    true,
+			},
+
+			// These will almost certainly need to be overridden, but here
+			// because they're pretty standard to exist.
+			"name": schema.StringAttribute{
+				Description: "Name of the resource.",
+				Required:    true,
+			},
+			"description": schema.StringAttribute{
+				Description: "Description of the resource.",
+				Optional:    true,
+			},
+
+			"created_by": schema.StringAttribute{
+				Description: "User who created the resource.",
+				Computed:    true,
+			},
+			"updated_by": schema.StringAttribute{
+				Description: "User who last updated the resource.",
+				Computed:    true,
+			},
+			"created_time": schema.StringAttribute{
+				Description: "Date and time the resource was created.",
+				CustomType:  timetypes.RFC3339Type{},
+				Computed:    true,
+			},
+			"updated_time": schema.StringAttribute{
+				Description: "Date and time the resource was last updated.",
+				CustomType:  timetypes.RFC3339Type{},
+				Computed:    true,
+			},
+		},
+	}
 }
