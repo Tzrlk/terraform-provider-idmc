@@ -2,14 +2,14 @@ package provider
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	. "terraform-provider-idmc/internal/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 
@@ -35,8 +35,8 @@ func NewUserResource() Resource {
 
 // Schema <editor-fold desc="Schema" defaultstate="collapsed">
 func (r UserResource) Schema(ctx context.Context, req SchemaRequest, rsp *SchemaResponse) {
-	rsp.Schema = schema.Schema{
-		MarkdownDescription: `
+	r.IdmcProviderResource.Schema(ctx, req, rsp)
+	rsp.Schema.MarkdownDescription = `
 Use the users resource to request Informatica Intelligent Cloud Services user
 details, create users, update role and user group assignments, and delete users.
 
@@ -52,100 +52,109 @@ assign to them.
 Backed by api operations outlined in [the IDMC user api docs][users].
 
 [users]: https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform-rest-api-version-3-resources/users.html
-`,
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Description: "",
-				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+`
+	rsp.Schema.Attributes = MapMerge(rsp.Schema.Attributes, map[string]schema.Attribute{
+		"name": schema.StringAttribute{
+			Description: "Informatica Intelligent Cloud Services user name. Maximum length is 255 characters.",
+			Required:    true,
+			Validators: []validator.String{
+				stringvalidator.LengthAtMost(255),
 			},
-			"name": schema.StringAttribute{
-				Description: "Informatica Intelligent Cloud Services user name. Maximum length is 255 characters.",
-				Required:    true,
-				Validators: []validator.String{
-					stringvalidator.LengthAtMost(255),
-				},
-			},
-			"first_name": schema.StringAttribute{
-				Description: "First name for the user account.",
-				Required:    true,
-			},
-			"last_name": schema.StringAttribute{
-				Description: "Last name for the user account.",
-				Required:    true,
-			},
-			"password": schema.StringAttribute{
-				Description: "Informatica Intelligent Cloud Services password.\nIf password is empty, the user receives an activation email.",
-				Optional:    true,
-				Sensitive:   true,
-				Validators: []validator.String{
-					stringvalidator.LengthAtMost(255),
-				},
-			},
-			"description": schema.StringAttribute{
-				Description: "Description of the user.",
-				Optional:    true,
-			},
-			"email": schema.StringAttribute{
-				Description: "Email address for the user.",
-				Required:    true,
-			},
-			"title": schema.StringAttribute{
-				Description: "Job title of the user.",
-				Optional:    true,
-			},
-			"phone": schema.StringAttribute{
-				Description: "Phone number for the user.",
-				Optional:    true,
-			},
-			"force_password_change": schema.BoolAttribute{
-				Description: "Determines whether the user must reset the password after the user logs in for the first time.",
-				Optional:    true,
-			},
-			"max_login_attempts": schema.Int32Attribute{
-				Description: "Number of times a user can attempt to log in before the account is locked.",
-				Optional:    true,
-				Validators: []validator.Int32{
-					int32validator.AtLeast(1),
-				},
-			},
-			"saml": schema.BoolAttribute{
-				Description: "Determines whether the user accesses Informatica Intelligent Cloud Services through single sign-in (SAML).",
-				Optional:    true,
-			},
-			"saml_alias": schema.StringAttribute{
-				Description: "The user identifier or user name in the 3rd party system.",
-				Optional:    true,
-			},
-			"roles": schema.ListAttribute{
-				Description: "IDs of the roles to assign to the user.",
-				ElementType: types.StringType,
-				Optional:    true,
-			},
-			"groups": schema.ListAttribute{
-				Description: "IDs of the user groups to assign to the user.",
-				ElementType: types.StringType,
-				Optional:    true,
-			},
-			// vvvvvv from creation response.
-			"last_login_time": nil,
-			"last_login_mode": nil,
-			"timezone":        nil,
-			"state":           nil,
-			"created_by":      nil,
-			"updated_by":      nil,
-			"created_time":    nil,
-			"updated_time":    nil,
-			"org_id":          nil,
 		},
-	}
+		"first_name": schema.StringAttribute{
+			Description: "First name for the user account.",
+			Required:    true,
+		},
+		"last_name": schema.StringAttribute{
+			Description: "Last name for the user account.",
+			Required:    true,
+		},
+		"password": schema.StringAttribute{
+			Description: "Informatica Intelligent Cloud Services password.\nIf password is empty, the user receives an activation email.",
+			Optional:    true,
+			Sensitive:   true,
+			Validators: []validator.String{
+				stringvalidator.LengthAtMost(255),
+			},
+		},
+		"description": schema.StringAttribute{
+			Description: "Description of the user.",
+			Optional:    true,
+		},
+		"email": schema.StringAttribute{
+			Description: "Email address for the user.",
+			Required:    true,
+		},
+		"title": schema.StringAttribute{
+			Description: "Job title of the user.",
+			Optional:    true,
+		},
+		"phone": schema.StringAttribute{
+			Description: "Phone number for the user.",
+			Optional:    true,
+		},
+		"force_password_change": schema.BoolAttribute{
+			Description: "Whether the user must reset the password after the user logs in for the first time.",
+			Optional:    true,
+		},
+		"max_login_attempts": schema.Int32Attribute{
+			Description: "Number of times a user can attempt to log in before the account is locked.",
+			Optional:    true,
+			Validators: []validator.Int32{
+				int32validator.AtLeast(1),
+			},
+		},
+		"saml": schema.BoolAttribute{
+			Description: "Whether the user accesses Informatica Intelligent Cloud Services through single sign-in (SAML).",
+			Optional:    true,
+		},
+		"saml_alias": schema.StringAttribute{
+			Description: "The user identifier or user name in the 3rd party system.",
+			Optional:    true,
+		},
+		"roles": schema.ListAttribute{
+			Description: "IDs of the roles to assign to the user.",
+			ElementType: types.StringType,
+			Optional:    true,
+		},
+		"groups": schema.ListAttribute{
+			Description: "IDs of the user groups to assign to the user.",
+			ElementType: types.StringType,
+			Optional:    true,
+		},
+		"last_login_time": schema.StringAttribute{
+			Description: "Date and time the user last logged-in.",
+			CustomType:  timetypes.RFC3339Type{},
+			Computed:    true,
+		},
+		"last_login_mode": schema.StringAttribute{
+			Description: "Whether the user logged in through a REST API call or through the UI.",
+			Computed:    true,
+		},
+		"timezone": schema.StringAttribute{
+			MarkdownDescription: `
+Time zone of the user.<br/>
+For more information, see [Time zone codes](https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/rest-api-codes/time-zone-codes.html).
+`,
+			Computed: true,
+		},
+		"state": schema.StringAttribute{
+			Computed: true,
+			MarkdownDescription: `
+State of the user account. Returns one of the following values:<br/>
+* Active. User account exists and user has activated the account.
+* Provisioned. User account exists but the user has not activated the account.
+* Disabled. User account is disabled because the user exceeded the maximum number of login attempts.
+
+NOTE: If the user's password is expired, the value is null.
+`,
+		},
+	})
 }
 
 // </editor-fold>
 
-func (r UserResource) ConfigValidators(ctx context.Context) []ConfigValidator {
+func (r UserResource) ConfigValidators(_ context.Context) []ConfigValidator {
 	return []ConfigValidator{
 		resourcevalidator.AtLeastOneOf(
 			path.MatchRoot("roles"),
