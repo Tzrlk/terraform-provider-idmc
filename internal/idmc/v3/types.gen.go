@@ -392,7 +392,7 @@ type UserDetails struct {
 	// Use one of the following values:
 	// 0. Native.
 	// 1. SAML.
-	Authentication *UserDetailsAuthentication `json:"authentication,omitempty"`
+	Authentication UserDetailsAuthentication `json:"authentication"`
 
 	// CreateTime The date and time of this resource's creation.
 	CreateTime *string `json:"createTime,omitempty"`
@@ -401,7 +401,7 @@ type UserDetails struct {
 	CreatedBy *string `json:"createdBy,omitempty"`
 
 	// Description Description of the user.
-	Description *string `json:"description,omitempty"`
+	Description string `json:"description"`
 
 	// Email Email address for the user.
 	Email string `json:"email"`
@@ -410,7 +410,7 @@ type UserDetails struct {
 	FirstName string `json:"firstName"`
 
 	// ForcePasswordChange Determines whether the user must reset the password after the user logs in for the first time.
-	ForcePasswordChange *bool `json:"forcePasswordChange,omitempty"`
+	ForcePasswordChange bool `json:"forcePasswordChange"`
 
 	// Groups All the groups assigned to this user.
 	Groups []UserDetailsGroup `json:"groups"`
@@ -428,13 +428,13 @@ type UserDetails struct {
 	LastName string `json:"lastName"`
 
 	// MaxLoginAttempts Number of times a user can attempt to log in before the account is locked.
-	MaxLoginAttempts *int `json:"maxLoginAttempts,omitempty"`
+	MaxLoginAttempts int `json:"maxLoginAttempts"`
 
 	// OrgId The id for the org the resource belongs to.
 	OrgId *string `json:"orgId,omitempty"`
 
 	// Phone Phone number for the user.
-	Phone nullable.Nullable[string] `json:"phone,omitempty"`
+	Phone nullable.Nullable[string] `json:"phone"`
 
 	// Roles All the roles assigned to this user.
 	Roles []UserDetailsRole `json:"roles"`
@@ -449,10 +449,10 @@ type UserDetails struct {
 	// TimeZoneId Time zone of the user.
 	// For more information, see Time zone codes:
 	// https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/rest-api-codes/time-zone-codes.html
-	TimeZoneId *string `json:"timeZoneId,omitempty"`
+	TimeZoneId string `json:"timeZoneId"`
 
 	// Title Job title of the user.
-	Title *string `json:"title,omitempty"`
+	Title string `json:"title"`
 
 	// UpdateTime The date and time of this resource's last update.
 	UpdateTime *string `json:"updateTime,omitempty"`
@@ -461,7 +461,7 @@ type UserDetails struct {
 	UpdatedBy *string `json:"updatedBy,omitempty"`
 
 	// UserName Informatica Intelligent Cloud Services user name.
-	UserName *string `json:"userName,omitempty"`
+	UserName string `json:"userName"`
 }
 
 // UserDetailsAuthentication Determines whether the user accesses Informatica Intelligent Cloud Services through single sign-in (SAML).

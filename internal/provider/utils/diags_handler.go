@@ -28,6 +28,12 @@ func NewDiagsHandler(ctx context.Context, diags *diag.Diagnostics, title string)
 	}
 }
 
+func UnwrapDiags[T any](handler DiagsHandler, action func() (T, diag.Diagnostics)) T {
+	result, diags := action()
+	handler.Append(diags)
+	return result
+}
+
 // Overrides ///////////////////////////////////////////////////////////////////
 
 func (d DiagsHandler) HasError() bool {

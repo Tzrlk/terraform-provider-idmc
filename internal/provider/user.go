@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	v3 "terraform-provider-idmc/internal/idmc/v3"
 	. "terraform-provider-idmc/internal/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -31,6 +32,30 @@ func NewUserResource() Resource {
 			Name: "user",
 		},
 	}
+}
+
+type UserResourceModel struct {
+	Id                  types.String      `tfsdk:"id"`
+	OrgId               types.String      `tfsdk:"org_id"`
+	Name                types.String      `tfsdk:"name"`
+	Description         types.String      `tfsdk:"description"`
+	FirstName           types.String      `tfsdk:"first_name"`
+	LastName            types.String      `tfsdk:"last_name"`
+	Title               types.String      `tfsdk:"title"`
+	Phone               types.String      `tfsdk:"phone"`
+	Email               types.String      `tfsdk:"email"`
+	State               types.String      `tfsdk:"state"`
+	TimeZone            types.String      `tfsdk:"time_zone"`
+	MaxLoginAttempts    types.Int32       `tfsdk:"max_login_attempts"`
+	AuthMode            types.String      `tfsdk:"auth_mode"`
+	AuthAlias           types.String      `tfsdk:"auth_alias"`
+	ForcePasswordChange types.Bool        `tfsdk:"force_password_change"`
+	LastLoginTime       timetypes.RFC3339 `tfsdk:"last_login_time"`
+	LastLoginMode       types.String      `tfsdk:"last_login_mode"`
+	CreatedBy           types.String      `tfsdk:"created_by"`
+	UpdatedBy           types.String      `tfsdk:"updated_by"`
+	CreatedTime         timetypes.RFC3339 `tfsdk:"created_time"`
+	UpdatedTime         timetypes.RFC3339 `tfsdk:"updated_time"`
 }
 
 // Schema <editor-fold desc="Schema" defaultstate="collapsed">
@@ -104,11 +129,11 @@ Backed by api operations outlined in [the IDMC user api docs][users].
 				int32validator.AtLeast(1),
 			},
 		},
-		"saml": schema.BoolAttribute{
-			Description: "Whether the user accesses Informatica Intelligent Cloud Services through single sign-in (SAML).",
+		"auth_mode": schema.StringAttribute{
+			Description: "The authentication mode configured by this user (Native/SAML)",
 			Optional:    true,
 		},
-		"saml_alias": schema.StringAttribute{
+		"auth_alias": schema.StringAttribute{
 			Description: "The user identifier or user name in the 3rd party system.",
 			Optional:    true,
 		},
@@ -160,18 +185,124 @@ func (r UserResource) ConfigValidators(_ context.Context) []ConfigValidator {
 			path.MatchRoot("roles"),
 			path.MatchRoot("groups"),
 		),
-		resourcevalidator.RequiredTogether(
-			path.MatchRoot("saml"),
-			path.MatchRoot("saml_alias"),
-		),
+		DependentValidator{
+			Dependent: path.MatchRoot("auth_alias"),
+			Dependencies: path.Expressions{
+				path.MatchRoot("auth_mode"),
+			},
+		},
 	}
 }
 
 // Create <editor-fold desc="Create" defaultstate="collapsed">
 // https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform-rest-api-version-3-resources/users/creating-a-user.html
 func (r UserResource) Create(ctx context.Context, req CreateRequest, rsp *CreateResponse) {
-	//TODO implement me
-	panic("implement me")
+	diags := NewDiagsHandler(ctx, &rsp.Diagnostics, MsgResourceBadCreate)
+	defer func() { diags.HandlePanic(recover()) }()
+
+	client := r.GetApi().V3.Client
+
+	var data UserResourceModel
+	if diags.Append(req.Plan.Get(ctx, &data)) {
+		return
+	}
+
+	reqData := v3.CreateUserRequestBody{
+		Name:                data.Name.ValueString(),
+		FirstName:           data.FirstName.ValueString(),
+		LastName:            data.LastName.ValueString(),
+		Description:         data.Description.ValueStringPointer(),
+		Email:               data.Email.ValueString(),
+		Title:               data.Title.ValueStringPointer(),
+		Phone:               NullableFromPointer(data.Phone.ValueStringPointer()),
+		ForcePasswordChange: data.ForcePasswordChange.ValueBoolPointer(),
+		MaxLoginAttempts:    IntPtrFromInt32Attr(data.MaxLoginAttempts),
+		AliasName:           data.AuthAlias.ValueStringPointer(),
+	}
+
+	// Handle annoying auth edge-case.
+	if !data.AuthMode.IsNull() {
+		switch data.AuthMode.ValueString() {
+		case "Native":
+			reqData.Authentication = Ptr(v3.CreateUserRequestBodyAuthenticationN0)
+		case "SAML":
+			reqData.Authentication = Ptr(v3.CreateUserRequestBodyAuthenticationN1)
+		default:
+			diags.AddError("Invalid authentication mode: %s", data.AuthMode.ValueString())
+		}
+	}
+
+	// TODO: roles
+
+	// TODO: groups
+
+	// Actually fire-off the request.
+	apiRes, err := client.CreateUserWithResponse(ctx, &v3.CreateUserParams{}, reqData)
+	if diags.HandleError(err) {
+		return
+	}
+
+	// Handle error cases.
+	if apiRes.StatusCode != 201 {
+		CheckApiErrorV3(diags,
+			apiRes.JSON400,
+			apiRes.JSON401,
+			apiRes.JSON403,
+			apiRes.JSON404,
+			apiRes.JSON500,
+			apiRes.JSON502,
+			apiRes.JSON503,
+		)
+		if !diags.HasError() {
+			diags.HandleError(RequireHttpStatus(&apiRes.ClientResponse, 201))
+		}
+		return
+	}
+
+	respData := *apiRes.JSON200
+
+	// Update the configured state so instabilities can be detected.
+	data.Id = types.StringPointerValue(respData.Id)
+	data.Name = types.StringValue(respData.UserName)
+	data.Description = types.StringValue(respData.Description)
+	data.FirstName = types.StringValue(respData.FirstName)
+	data.LastName = types.StringValue(respData.LastName)
+	data.Email = types.StringValue(respData.Email)
+	data.Phone = NullableToStringAttr(respData.Phone)
+	data.Title = types.StringValue(respData.Title)
+	data.ForcePasswordChange = types.BoolValue(respData.ForcePasswordChange)
+	data.MaxLoginAttempts = types.Int32Value(int32(respData.MaxLoginAttempts))
+	data.AuthAlias = types.StringPointerValue(respData.AliasName)
+
+	// Update derived values
+	data.OrgId = types.StringPointerValue(respData.OrgId)
+	data.State = types.StringPointerValue((*string)(respData.State))
+	data.CreatedBy = types.StringPointerValue(respData.CreatedBy)
+	data.CreatedTime = diags.TimePointer(respData.CreateTime)
+	data.UpdatedBy = types.StringPointerValue(respData.UpdatedBy)
+	data.UpdatedTime = diags.TimePointer(respData.UpdateTime)
+
+	// Update annoying values
+	switch respData.Authentication {
+	case 0:
+		data.AuthMode = types.StringValue("Native")
+	case 1:
+		data.AuthMode = types.StringValue("SAML")
+	default:
+		data.AuthMode = types.StringUnknown()
+	}
+
+	// TODO: roles
+	// TODO: groups
+
+	// If we had trouble parsing the data.
+	if diags.HasError() {
+		return
+	}
+
+	// Save creation result back to state.
+	diags.Append(rsp.State.Set(ctx, &data))
+
 }
 
 // </editor-fold>

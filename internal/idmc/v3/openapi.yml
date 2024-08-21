@@ -810,6 +810,26 @@ components:
               items:
                 $ref: '#/components/schemas/userDetailsGroup'
           required:
+            - id
+            - orgId
+            - createdBy
+            - updatedBy
+            - createTime
+            - updateTime
+            - userName
+            - firstName
+            - lastName
+            - description
+            - title
+            - phone
+            - email
+            - state
+            - timeZoneId
+            - maxLoginAttempts
+            - authentication
+            - forcePasswordChange
+            - lastLoginTime
+            - lastLoginMode
             - roles
             - groups
       example: |-
