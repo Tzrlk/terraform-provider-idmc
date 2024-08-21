@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
@@ -9,7 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"terraform-provider-idmc/internal/idmc/common"
 	v3 "terraform-provider-idmc/internal/idmc/v3"
+	"terraform-provider-idmc/internal/provider/models"
 	. "terraform-provider-idmc/internal/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -32,30 +35,6 @@ func NewUserResource() Resource {
 			Name: "user",
 		},
 	}
-}
-
-type UserResourceModel struct {
-	Id                  types.String      `tfsdk:"id"`
-	OrgId               types.String      `tfsdk:"org_id"`
-	Name                types.String      `tfsdk:"name"`
-	Description         types.String      `tfsdk:"description"`
-	FirstName           types.String      `tfsdk:"first_name"`
-	LastName            types.String      `tfsdk:"last_name"`
-	Title               types.String      `tfsdk:"title"`
-	Phone               types.String      `tfsdk:"phone"`
-	Email               types.String      `tfsdk:"email"`
-	State               types.String      `tfsdk:"state"`
-	TimeZone            types.String      `tfsdk:"time_zone"`
-	MaxLoginAttempts    types.Int32       `tfsdk:"max_login_attempts"`
-	AuthMode            types.String      `tfsdk:"auth_mode"`
-	AuthAlias           types.String      `tfsdk:"auth_alias"`
-	ForcePasswordChange types.Bool        `tfsdk:"force_password_change"`
-	LastLoginTime       timetypes.RFC3339 `tfsdk:"last_login_time"`
-	LastLoginMode       types.String      `tfsdk:"last_login_mode"`
-	CreatedBy           types.String      `tfsdk:"created_by"`
-	UpdatedBy           types.String      `tfsdk:"updated_by"`
-	CreatedTime         timetypes.RFC3339 `tfsdk:"created_time"`
-	UpdatedTime         timetypes.RFC3339 `tfsdk:"updated_time"`
 }
 
 // Schema <editor-fold desc="Schema" defaultstate="collapsed">
@@ -167,9 +146,9 @@ For more information, see [Time zone codes](https://docs.informatica.com/integra
 			Computed: true,
 			MarkdownDescription: `
 State of the user account. Returns one of the following values:<br/>
-* Active. User account exists and user has activated the account.
-* Provisioned. User account exists but the user has not activated the account.
-* Disabled. User account is disabled because the user exceeded the maximum number of login attempts.
+* Active. UserResourceModel account exists and user has activated the account.
+* Provisioned. UserResourceModel account exists but the user has not activated the account.
+* Disabled. UserResourceModel account is disabled because the user exceeded the maximum number of login attempts.
 
 NOTE: If the user's password is expired, the value is null.
 `,
@@ -202,7 +181,7 @@ func (r UserResource) Create(ctx context.Context, req CreateRequest, rsp *Create
 
 	client := r.GetApi().V3.Client
 
-	var data UserResourceModel
+	var data models.UserResourceModel
 	if diags.Append(req.Plan.Get(ctx, &data)) {
 		return
 	}
@@ -218,23 +197,10 @@ func (r UserResource) Create(ctx context.Context, req CreateRequest, rsp *Create
 		ForcePasswordChange: data.ForcePasswordChange.ValueBoolPointer(),
 		MaxLoginAttempts:    IntPtrFromInt32Attr(data.MaxLoginAttempts),
 		AliasName:           data.AuthAlias.ValueStringPointer(),
+		Authentication:      data.GetAuthModeForCreate(),
+		Roles:               data.GetRoles(diags),
+		Groups:              data.GetGroups(diags),
 	}
-
-	// Handle annoying auth edge-case.
-	if !data.AuthMode.IsNull() {
-		switch data.AuthMode.ValueString() {
-		case "Native":
-			reqData.Authentication = Ptr(v3.CreateUserRequestBodyAuthenticationN0)
-		case "SAML":
-			reqData.Authentication = Ptr(v3.CreateUserRequestBodyAuthenticationN1)
-		default:
-			diags.AddError("Invalid authentication mode: %s", data.AuthMode.ValueString())
-		}
-	}
-
-	// TODO: roles
-
-	// TODO: groups
 
 	// Actually fire-off the request.
 	apiRes, err := client.CreateUserWithResponse(ctx, &v3.CreateUserParams{}, reqData)
@@ -259,44 +225,7 @@ func (r UserResource) Create(ctx context.Context, req CreateRequest, rsp *Create
 		return
 	}
 
-	respData := *apiRes.JSON200
-
-	// Update the configured state so instabilities can be detected.
-	data.Id = types.StringPointerValue(respData.Id)
-	data.Name = types.StringValue(respData.UserName)
-	data.Description = types.StringValue(respData.Description)
-	data.FirstName = types.StringValue(respData.FirstName)
-	data.LastName = types.StringValue(respData.LastName)
-	data.Email = types.StringValue(respData.Email)
-	data.Phone = NullableToStringAttr(respData.Phone)
-	data.Title = types.StringValue(respData.Title)
-	data.ForcePasswordChange = types.BoolValue(respData.ForcePasswordChange)
-	data.MaxLoginAttempts = types.Int32Value(int32(respData.MaxLoginAttempts))
-	data.AuthAlias = types.StringPointerValue(respData.AliasName)
-
-	// Update derived values
-	data.OrgId = types.StringPointerValue(respData.OrgId)
-	data.State = types.StringPointerValue((*string)(respData.State))
-	data.CreatedBy = types.StringPointerValue(respData.CreatedBy)
-	data.CreatedTime = diags.TimePointer(respData.CreateTime)
-	data.UpdatedBy = types.StringPointerValue(respData.UpdatedBy)
-	data.UpdatedTime = diags.TimePointer(respData.UpdateTime)
-
-	// Update annoying values
-	switch respData.Authentication {
-	case 0:
-		data.AuthMode = types.StringValue("Native")
-	case 1:
-		data.AuthMode = types.StringValue("SAML")
-	default:
-		data.AuthMode = types.StringUnknown()
-	}
-
-	// TODO: roles
-	// TODO: groups
-
-	// If we had trouble parsing the data.
-	if diags.HasError() {
+	if data.Update(diags, apiRes.JSON200) {
 		return
 	}
 
@@ -310,8 +239,69 @@ func (r UserResource) Create(ctx context.Context, req CreateRequest, rsp *Create
 // Read <editor-fold desc="Read" defaultstate="collapsed">
 // https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform-rest-api-version-3-resources/users/getting-user-details.html
 func (r UserResource) Read(ctx context.Context, req ReadRequest, rsp *ReadResponse) {
-	//TODO implement me
-	panic("implement me")
+	diags := NewDiagsHandler(ctx, &rsp.Diagnostics, MsgResourceBadCreate)
+	defer func() { diags.HandlePanic(recover()) }()
+
+	client := r.GetApi().V3.Client
+
+	var data models.UserResourceModel
+	if diags.Append(req.State.Get(ctx, &data)) {
+		return
+	}
+
+	params := &v3.GetUserParams{
+		Limit: Ptr(1),
+		Skip:  Ptr(0),
+	}
+	if !data.Id.IsNull() {
+		params.Q = Ptr(fmt.Sprintf("userId==\"%s\"", data.Id.ValueString()))
+	} else if !data.Name.IsNull() {
+		params.Q = Ptr(fmt.Sprintf("userName==\"%s\"", data.Name.ValueString()))
+		diags.AtName("id").WithTitle("Issue reading resource").AddWarning(
+			"No id for the user found in state. Falling back to name: %s", data.Name.ValueString())
+	} else {
+		diags.AtName("id").AddError(
+			"No id or name for the user found in state.")
+		return
+	}
+
+	// Perform the API request.
+	apiRes, err := client.GetUserWithResponse(ctx, params)
+	if diags.HandleError(err) {
+		return
+	}
+
+	apiItems, apiErr, err := common.CheckClientResponse[v3.GetUserResponse, v3.GetUserResponseBody, v3.ApiErrorResponseBody](apiRes, 200)
+	if diags.HandleError(err) {
+		return
+	}
+	if apiErr != nil {
+		diags.AddError("%s", apiErr)
+		return
+	}
+
+	// Check how many responses we got.
+	numItems := len(*apiItems)
+	if numItems == 0 {
+		// No matching resources, so junk it.
+		rsp.State.RemoveResource(ctx)
+		return
+	} else if numItems != 1 {
+		diags.AddError(
+			"Only one item was expected in the api response, not %d",
+			numItems,
+		)
+		return
+	}
+
+	// If we had trouble parsing the data.
+	if data.Update(diags, &(*apiItems)[0]) {
+		return
+	}
+
+	// Save result back to state.
+	diags.Append(rsp.State.Set(ctx, &data))
+
 }
 
 // </editor-fold>
@@ -320,8 +310,18 @@ func (r UserResource) Read(ctx context.Context, req ReadRequest, rsp *ReadRespon
 // https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform-rest-api-version-3-resources/users/updating-role-assignments.html
 // https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform-rest-api-version-3-resources/users/updating-user-group-assignments.html
 func (r UserResource) Update(ctx context.Context, req UpdateRequest, rsp *UpdateResponse) {
-	//TODO implement me
-	panic("implement me")
+	diags := NewDiagsHandler(ctx, &rsp.Diagnostics, MsgResourceBadCreate)
+	defer func() { diags.HandlePanic(recover()) }()
+
+	//client := r.GetApi().V3.Client
+
+	var data models.UserResourceModel
+	if diags.Append(req.Plan.Get(ctx, &data)) {
+		return
+	}
+
+	panic("TODO")
+
 }
 
 // </editor-fold>
@@ -329,8 +329,25 @@ func (r UserResource) Update(ctx context.Context, req UpdateRequest, rsp *Update
 // Delete <editor-fold desc="Delete" defaultstate="collapsed">
 // https://docs.informatica.com/integration-cloud/b2b-gateway/current-version/rest-api-reference/platform-rest-api-version-3-resources/users/deleting-a-user.html
 func (r UserResource) Delete(ctx context.Context, req DeleteRequest, rsp *DeleteResponse) {
-	//TODO implement me
-	panic("implement me")
+	diags := NewDiagsHandler(ctx, &rsp.Diagnostics, MsgResourceBadCreate)
+	defer func() { diags.HandlePanic(recover()) }()
+
+	client := r.GetApi().V3.Client
+
+	var state models.UserResourceModel
+	if diags.Append(req.State.Get(ctx, &state)) {
+		return
+	}
+
+	apiRes, apiErr := client.DeleteUserWithResponse(ctx, state.Id.ValueString())
+	if diags.HandleError(apiErr) {
+		return
+	}
+
+	if diags.HandleError(RequireHttpStatus(&apiRes.ClientResponse, 200, 204)) {
+		return
+	}
+
 }
 
 // </editor-fold>

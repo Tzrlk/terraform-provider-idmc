@@ -2,8 +2,11 @@ package common
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+	"reflect"
+	"slices"
 	"strings"
 
 	. "terraform-provider-idmc/internal/utils"
@@ -76,5 +79,52 @@ func NewIdmcClientResponse[DataType any, ErrorType any](rsp *http.Response) (Idm
 
 	// Handle any error messages, all expected to be the same format.
 	return response, json.Unmarshal(response.Body, &response.Failure)
+
+}
+
+func CheckClientResponse[ClientResponseType any, DataType any, ErrorType any](rsp *ClientResponseType, successCodes ...int) (*DataType, *ErrorType, error) {
+	if rsp == nil {
+		return nil, nil, fmt.Errorf("no response provided")
+	}
+	if len(successCodes) == 0 {
+		return nil, nil, fmt.Errorf("no success codes provided")
+	}
+
+	rspVal := reflect.ValueOf(rsp).Elem()
+	rspStatusCode := int(rspVal.FieldByName("StatusCode").Int())
+
+	// Try and get the response data field pointer for the response code.
+	rspDataPtr := rspVal.FieldByName(fmt.Sprintf("JSON%d", rspStatusCode))
+	if !rspDataPtr.IsValid() { // The field doesn't exist.
+		return nil, nil, nil
+	}
+
+	// Ensure the response actually has data to provide.
+	rspDataVal := rspDataPtr.Elem()
+	if !rspDataVal.IsValid() { // The pointer is nil.
+		return nil, nil, nil
+	}
+
+	// Resolve the data to a generic interface.
+	rspDataInt := rspDataVal.Interface()
+
+	// If the response is considered successful
+	if slices.Contains(successCodes, rspStatusCode) {
+
+		// Try casting the success data appropriately.
+		if rspData, ok := rspDataInt.(DataType); ok {
+			return &rspData, nil, nil
+		}
+
+		return nil, nil, fmt.Errorf("unexpected data type for %d response: %t", rspStatusCode, rspDataInt)
+
+	}
+
+	// Try casting the error data appropriately.
+	if rspData, ok := rspDataInt.(ErrorType); ok {
+		return nil, &rspData, nil
+	}
+
+	return nil, nil, fmt.Errorf("unexpected error type for %d response: %t", rspStatusCode, rspDataInt)
 
 }

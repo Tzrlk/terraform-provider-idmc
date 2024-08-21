@@ -32,3 +32,12 @@ func IntPtrFromInt32Attr(attr types.Int32) *int {
 
 	return Ptr(int(attr.ValueInt32()))
 }
+
+func TfSetToSlice[T any](diags DiagsHandler, tfSet types.Set) *[]T {
+	if tfSet.IsNull() {
+		return nil
+	}
+	var results []T
+	diags.Append(tfSet.ElementsAs(diags.Ctx, &results, false))
+	return &results
+}
