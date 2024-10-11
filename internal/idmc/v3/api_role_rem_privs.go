@@ -3,8 +3,7 @@ package v3
 import (
 	"context"
 	"fmt"
-
-	. "terraform-provider-idmc/internal/utils"
+	"github.com/samber/lo"
 )
 
 const MsgRemoveRolePrivilegesFailed = "unable to remove %d privileges from role %s: %v"
@@ -38,7 +37,7 @@ func (i *IdmcAdminV3Api) RemoveRolePrivileges(ctx context.Context, roleId string
 		return nil
 	}
 
-	errBody := Coalesce(
+	errBody := lo.CoalesceOrEmpty(
 		apiRes.JSON400,
 		apiRes.JSON401,
 		apiRes.JSON403,

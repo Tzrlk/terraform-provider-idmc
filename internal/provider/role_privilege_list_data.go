@@ -2,15 +2,14 @@ package provider
 
 import (
 	"context"
-	"golang.org/x/exp/maps"
+	"github.com/samber/lo"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	. "github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"golang.org/x/exp/maps"
 	"terraform-provider-idmc/internal/idmc/v3"
-	"terraform-provider-idmc/internal/utils"
-
-	. "github.com/hashicorp/terraform-plugin-framework/datasource"
 	. "terraform-provider-idmc/internal/provider/utils"
 )
 
@@ -111,7 +110,7 @@ func (d *RolePrivilegeListDataSource) Read(ctx context.Context, req ReadRequest,
 	}
 
 	// Set the privileges from the map values.
-	if config.setPrivileges(diags, utils.Ptr(maps.Values(privMap))) {
+	if config.setPrivileges(diags, lo.ToPtr(maps.Values(privMap))) {
 		return
 	}
 

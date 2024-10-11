@@ -17,7 +17,8 @@ func NewIdmcAdminV3Api(config *common.ClientConfig) IdmcAdminV3Api {
 
 	editors := common.ClientConfigEditor{
 		RequestEditors: []common.RequestEditorFn{
-			common.NewSessionHeaderRequestEditor("INFA-SESSION-ID"),
+			common.WithSessionHeader("INFA-SESSION-ID"),
+			common.WithRequestHeader("Accept", "application/json"),
 		},
 	}
 

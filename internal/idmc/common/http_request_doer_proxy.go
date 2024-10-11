@@ -1,8 +1,8 @@
 package common
 
 import (
+	"github.com/samber/lo"
 	"net/http"
-	"terraform-provider-idmc/internal/utils"
 )
 
 var _ HttpRequestDoer = &HttpRequestDoerProxy{}
@@ -30,7 +30,7 @@ func (h HttpRequestDoerProxy) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	// Then pass it on to the actual doer to get the response
-	resp, respErr := utils.Val(h.target).Do(req)
+	resp, respErr := lo.FromPtr(h.target).Do(req)
 	if respErr != nil {
 		return nil, respErr
 	}

@@ -3,8 +3,7 @@ package v3
 import (
 	"context"
 	"fmt"
-
-	. "terraform-provider-idmc/internal/utils"
+	"github.com/samber/lo"
 )
 
 const MsgGetRolePrivilegesFailed = "failed to fetch role privileges: %v"
@@ -33,7 +32,7 @@ func (i *IdmcAdminV3Api) GetRolePrivileges(ctx context.Context, status *string) 
 
 	// Handle error responses.
 	if apiRes.StatusCode != 200 {
-		errBody := Coalesce(
+		errBody := lo.CoalesceOrEmpty(
 			apiRes.JSON400,
 			apiRes.JSON401,
 			apiRes.JSON403,
@@ -86,7 +85,7 @@ func (i *IdmcAdminV3Api) lookupRolePrivilegeNames(ctx context.Context, privIds [
 	}
 
 	// Translate all the privilege ids into names.
-	privNames := TransformSlice(privIds, func(from string) string {
+	privNames := lo.Map(privIds, func(from string, _index int) string {
 		return privMap[from].Name
 	})
 

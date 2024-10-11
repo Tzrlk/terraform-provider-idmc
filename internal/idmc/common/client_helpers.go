@@ -3,8 +3,25 @@ package common
 import (
 	"context"
 	"net/http"
-	"net/url"
 )
+
+// ClientOption allows setting custom parameters during construction.
+type ClientOption func(*ClientConfig) error
+
+// ClientOptions a collection of ClientOption items.
+type ClientOptions []ClientOption
+
+// WithRequestEditorFn see common.WithRequestEditorFn.
+func (c ClientOptions) WithRequestEditorFn(fn RequestEditorFn) ClientOptions {
+	return append(c, WithRequestEditorFn(fn))
+}
+
+// WithRequestHeader see common.WithRequestHeader.
+func (c ClientOptions) WithRequestHeader(name string, values ...string) ClientOptions {
+	return c.WithRequestEditorFn(WithRequestHeader(name, values...))
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 // WithHTTPClient allows overriding the default Doer, which is
 // automatically created using http.Client. This is useful for tests.
@@ -42,18 +59,18 @@ func WithApiResponseEditorFn(fn ApiResponseEditorFn) ClientOption {
 	}
 }
 
-// WithBaseURL overrides the baseURL.
-func WithBaseURL(baseURL string) ClientOption {
-	return func(config *ClientConfig) error {
-		newBaseURL, err := url.Parse(baseURL)
-		if err == nil {
-			config.Server = newBaseURL.String()
-		}
-		return err
+// WithRequestHeader adds the specified header to any requests with the provided
+// values.
+func WithRequestHeader(name string, values ...string) RequestEditorFn {
+	return func(ctx context.Context, cfg *ClientConfig, req *http.Request) error {
+		req.Header[name] = values
+		return nil
 	}
 }
 
-func NewSessionHeaderRequestEditor(name string) RequestEditorFn {
+// WithSessionHeader injects the current session id into requests
+// as a header with the provided name.
+func WithSessionHeader(name string) RequestEditorFn {
 	return func(ctx context.Context, cfg *ClientConfig, req *http.Request) error {
 		req.Header[name] = []string{cfg.SessionId}
 		return nil

@@ -16,7 +16,8 @@ func NewIdmcAdminV2Api(config *common.ClientConfig) IdmcAdminV2Api {
 
 	editors := common.ClientConfigEditor{
 		RequestEditors: []common.RequestEditorFn{
-			common.NewSessionHeaderRequestEditor("icSessionId"),
+			common.WithSessionHeader("icSessionId"),
+			common.WithRequestHeader("Accept", "application/json"),
 		},
 	}
 

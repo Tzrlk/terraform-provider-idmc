@@ -3,9 +3,8 @@ package v3
 import (
 	"context"
 	"fmt"
+	"github.com/samber/lo"
 	"net/http"
-
-	. "terraform-provider-idmc/internal/utils"
 )
 
 const msgLoginFailed = "failed to log-in to %s as %s: %w"
@@ -27,7 +26,7 @@ func (i *IdmcAdminV3Api) Login(ctx context.Context, authUser string, authPass st
 	// We only want 200 responses.
 	if res.StatusCode != http.StatusOK {
 
-		errBody := Coalesce(
+		errBody := lo.CoalesceOrEmpty(
 			res.JSON400,
 			res.JSON401,
 			res.JSON403,
@@ -57,13 +56,16 @@ func (i *IdmcAdminV3Api) Login(ctx context.Context, authUser string, authPass st
 
 	// Attempt to update the client url
 	for _, product := range res.JSON200.Products {
-		if product.Name == "Integration Cloud" {
-			if err = i.Client.SetServer(product.BaseApiUrl); err != nil {
-				return fmt.Errorf(msgLoginFailed, i.Client.Server, authUser,
-					fmt.Errorf("found new api url, but failed update: %v", err))
-			}
-			return nil
+		if product.Name != "Integration Cloud" {
+			continue
 		}
+
+		if err = i.Client.SetServer(product.BaseApiUrl).Error(); err != nil {
+			return fmt.Errorf(msgLoginFailed, i.Client.Server, authUser,
+				fmt.Errorf("found new api url, but failed update: %v", err))
+		}
+
+		return nil
 	}
 
 	// Didn't find integration cloud api url in products.

@@ -3,8 +3,7 @@ package v3
 import (
 	"context"
 	"fmt"
-
-	. "terraform-provider-idmc/internal/utils"
+	"github.com/samber/lo"
 )
 
 const MsgAddRolePrivilegesFailed = "unable to add %d privileges to role %s: %w"
@@ -38,7 +37,7 @@ func (i *IdmcAdminV3Api) AddRolePrivileges(ctx context.Context, roleId string, p
 		return nil
 	}
 
-	errBody := Coalesce(
+	errBody := lo.CoalesceOrEmpty(
 		apiRes.JSON400,
 		apiRes.JSON401,
 		apiRes.JSON403,

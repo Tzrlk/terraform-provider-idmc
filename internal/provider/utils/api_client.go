@@ -2,14 +2,13 @@ package utils
 
 import (
 	"fmt"
+	"github.com/samber/lo"
 	"strconv"
 	"strings"
 
 	"terraform-provider-idmc/internal/idmc/common"
 	"terraform-provider-idmc/internal/idmc/v2"
 	"terraform-provider-idmc/internal/idmc/v3"
-
-	. "terraform-provider-idmc/internal/utils"
 )
 
 const (
@@ -18,20 +17,21 @@ const (
 )
 
 func RequireHttpStatus(apiRes *common.ClientResponse, statuses ...int) error {
+	badStatuses := make([]string, 0, len(statuses))
 	for _, status := range statuses {
 		if apiRes.StatusCode == status {
 			return nil
 		}
+		badStatuses = append(badStatuses, strconv.Itoa(status))
 	}
-	statusList := strings.Join(TransformSlice(statuses, strconv.Itoa), "/")
 	return fmt.Errorf("received http %s but expected %s",
-		apiRes.Status, statusList)
+		apiRes.Status, strings.Join(badStatuses, "/"))
 }
 
 func CheckApiErrorV2(diags DiagsHandler, apiErrors ...*v2.ApiErrorResponse) {
 	diags = diags.WithTitle(MsgApiBadResponse)
 
-	apiError := Coalesce(apiErrors...)
+	apiError := lo.CoalesceOrEmpty(apiErrors...)
 	if apiError == nil {
 		return
 	}
@@ -69,7 +69,7 @@ func CheckApiErrorV2(diags DiagsHandler, apiErrors ...*v2.ApiErrorResponse) {
 
 func CheckApiErrorV3(diags DiagsHandler, apiErrors ...*v3.ApiErrorResponseBody) {
 	diags = diags.WithTitle(MsgApiBadResponse)
-	if apiError := Coalesce(apiErrors...); apiError != nil {
+	if apiError := lo.CoalesceOrEmpty(apiErrors...); apiError != nil {
 		diags.AddError("%s", apiError)
 	}
 }
