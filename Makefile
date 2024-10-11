@@ -174,14 +174,23 @@ ${EXE_OUT}: \
 
 ################################################################################
 #: Run unit tests
-test: .build/gotest.jsonl
+test: .build/gotest-unit.jsonl
 .PHONY: test
 
-.build/gotest.jsonl: \
+################################################################################
+#: Run acceptance tests.
+verify: .build/gotest-acc.jsonl
+.PHONY: verify
+
+# Acceptance tests need a little extra env.
+.build/gotest-acc.jsonl: TF_ACC = 1
+
+# Both test types are executed the same.
+.build/gotest-%.jsonl: \
 		${GO_TEST_FILES} \
 		| .build/
-	go test -v -json ${GO_TEST_DIRS} \
-		| tee ${@}
+	go test -v -json ./... \
+    		| tee ${@}
 
 # Enforce a dependency to ensure individual tests are invalidated when their
 # corresponding source files are too. Gotta tell make not to delete them as
@@ -190,12 +199,6 @@ test: .build/gotest.jsonl
 %_test.go: %.go
 	touch ${@}
 .NOTINTERMEDIATE: %_test.go
-
-################################################################################
-#: Run acceptance tests.
-verify:
-	TF_ACC=1 go test ./... -v ${TESTARGS} -timeout 120m
-.PHONY: verify
 
 ################################################################################
 #: Run examples

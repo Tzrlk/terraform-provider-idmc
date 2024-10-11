@@ -1,21 +1,13 @@
 package provider
 
 import (
-	"bytes"
-	"context"
-	"fmt"
-	"io"
-	"net/http"
+	"errors"
+	"github.com/joho/godotenv"
 	"os"
-	"terraform-provider-idmc/internal/idmc/common"
-	"terraform-provider-idmc/internal/utils"
 	"testing"
 
-	"github.com/brianvoe/gofakeit/v7"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
-
-	. "github.com/onsi/gomega"
 )
 
 // testAccProtoV6ProviderFactories are used to instantiate a provider during
@@ -26,83 +18,41 @@ var testAccProviders = map[string]func() (tfprotov6.ProviderServer, error){
 	"idmc": providerserver.NewProtocol6WithError(New("test")()),
 }
 
-func TestDoLogin(t *testing.T) {
-	RegisterTestingT(t)
-
-	authHost := gofakeit.DomainName()
-	authUser := gofakeit.LetterN(8)
-	authPass := gofakeit.LetterN(8)
-
-	// Case inputs
-	ctx := context.TODO()
-
-	// Case outputs
-	fakeApiUrl := fmt.Sprintf("https://%s/saas", gofakeit.DomainName())
-	fakeSessionId := gofakeit.LetterN(8)
-	fakeBody := fmt.Sprintf(
-		`{
- 	"products": [
- 		{
- 			"name": "Integration Cloud",
- 			"baseApiUrl": "%s"
- 		}
- 	],
- 	"userInfo": {
- 		"sessionId": "%s",
- 		"id": "9L1GFroXSDHe2IIg7QhBaT",
- 		"name": "user",
- 		"parentOrgId": "52ZSTB0IDK6dXxaEQLUaQu",
- 		"orgId": "0cuQSDTq5sikvN7x8r1xm1",
- 		"orgName": "MyOrg_INFA",
- 		"groups": {},
- 		"status": "Active"
- 	}
-}`,
-		fakeApiUrl,
-		fakeSessionId,
-	)
-
-	baseApiUrl, sessionId, loginErr := doLogin(
-		ctx, authHost, authUser, authPass,
-		common.NewHttpRequestDoerSimple(func(req *http.Request) (*http.Response, error) {
-			return utils.OkPtr(&http.Response{
-				Status:        "200 OK",
-				StatusCode:    200,
-				Proto:         "HTTP/1.1",
-				ProtoMajor:    1,
-				ProtoMinor:    1,
-				Body:          io.NopCloser(bytes.NewBufferString(fakeBody)),
-				ContentLength: int64(len(fakeBody)),
-				Request:       req,
-				Header: http.Header{
-					"Content-Type": {"application/json"},
-				},
-			})
-		}),
-	)
-
-	Expect(loginErr).To(BeNil())
-	Expect(baseApiUrl).To(Equal(fakeApiUrl))
-	Expect(sessionId).To(Equal(fakeSessionId))
-
-}
-
-
 func testAccPreCheck(t *testing.T) func() {
 	return func() {
-		requireEnv(t, "TF_AUTH_HOST", "TF_AUTH_USER", "TF_AUTH_PASS")
-	}
-}
 
-func requireEnv(t *testing.T, keys ...string) {
-	failed := false
-	for _, key := range keys {
-		if val := os.Getenv(key); val == "" {
-			t.Log("Missing environment variable: " + key)
-			failed = true
+		// <editor-fold desc="DOTENV"> /////////////////////////////////////////
+		// Check if a dotenv file exists at the project root.
+		_, err := os.Stat("../../.env")
+		if err == nil {
+			// If it exists, try to load it for later.
+			err = godotenv.Load("../../.env")
+			if err != nil {
+				// The file exists, but failed to load.
+				t.Fatal("error loading .env file", err)
+			}
+		} else if !errors.Is(err, os.ErrNotExist) {
+			// The file has some other issue apart from existence.
+			t.Fatal("failed to stat dotenv file", err)
+		} else {
+			// The file just doesn't exist.
+			t.Log("dotenv file not found at project root")
 		}
-	}
-	if failed {
-		t.FailNow()
+		// </editor-fold> //////////////////////////////////////////////////////
+
+		// <editor-fold desc="IDMC AUTH"> //////////////////////////////////////
+		// Ensure required environment variables are set.
+		failed := false
+		for _, key := range []string{"HOST", "USER", "PASS"} {
+			if val := os.Getenv("IDMC_AUTH_" + key); val == "" {
+				t.Log("Missing environment variable: " + key)
+				failed = true
+			}
+		}
+		if failed {
+			t.FailNow()
+		}
+		// </editor-fold> //////////////////////////////////////////////////////
+
 	}
 }
