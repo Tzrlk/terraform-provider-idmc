@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/samber/lo"
 	"terraform-provider-idmc/internal/idmc/common"
 	v3 "terraform-provider-idmc/internal/idmc/v3"
 	"terraform-provider-idmc/internal/provider/models"
@@ -250,13 +251,13 @@ func (r UserResource) Read(ctx context.Context, req ReadRequest, rsp *ReadRespon
 	}
 
 	params := &v3.GetUserParams{
-		Limit: Ptr(1),
-		Skip:  Ptr(0),
+		Limit: lo.ToPtr(1),
+		Skip:  lo.ToPtr(0),
 	}
 	if !data.Id.IsNull() {
-		params.Q = Ptr(fmt.Sprintf("userId==\"%s\"", data.Id.ValueString()))
+		params.Q = lo.ToPtr(fmt.Sprintf("userId==\"%s\"", data.Id.ValueString()))
 	} else if !data.Name.IsNull() {
-		params.Q = Ptr(fmt.Sprintf("userName==\"%s\"", data.Name.ValueString()))
+		params.Q = lo.ToPtr(fmt.Sprintf("userName==\"%s\"", data.Name.ValueString()))
 		diags.AtName("id").WithTitle("Issue reading resource").AddWarning(
 			"No id for the user found in state. Falling back to name: %s", data.Name.ValueString())
 	} else {

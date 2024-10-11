@@ -19,6 +19,7 @@ require (
 	github.com/hashicorp/terraform-plugin-docs v0.19.4
 	github.com/hashicorp/terraform-plugin-testing v1.9.0
 	github.com/joho/godotenv v1.5.1
+	github.com/oapi-codegen/nullable v1.1.0
 	github.com/oapi-codegen/oapi-codegen/v2 v2.3.0
 	github.com/samber/lo v1.47.0
 	github.com/samber/mo v1.13.0
