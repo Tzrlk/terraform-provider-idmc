@@ -1,14 +1,13 @@
 module terraform-provider-idmc
 
 go 1.22
-
 toolchain go1.22.5
 
 require (
 	github.com/hashicorp/terraform-plugin-framework v1.11.0
 	github.com/hashicorp/terraform-plugin-framework-timetypes v0.5.0
 	github.com/hashicorp/terraform-plugin-framework-validators v0.13.0
-	github.com/hashicorp/terraform-plugin-go v0.23.0
+	github.com/hashicorp/terraform-plugin-go v0.24.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/oapi-codegen/runtime v1.1.1
 	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc
@@ -64,7 +63,7 @@ require (
 	github.com/butuzov/mirror v1.2.0 // indirect
 	github.com/catenacyber/perfsprint v0.7.1 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.2 // indirect
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charithe/durationcheck v0.0.10 // indirect
 	github.com/chavacava/garif v0.1.0 // indirect
 	github.com/ckaznocha/intrange v0.1.2 // indirect
@@ -117,7 +116,7 @@ require (
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/hashicorp/go-plugin v1.6.0 // indirect
+	github.com/hashicorp/go-plugin v1.6.1 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect
 	github.com/hashicorp/hc-install v0.7.0 // indirect
@@ -254,9 +253,9 @@ require (
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/tools v0.23.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240227224415-6ceb2ff114de // indirect
-	google.golang.org/grpc v1.63.2 // indirect
-	google.golang.org/protobuf v1.34.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240604185151-ef581f913117 // indirect
+	google.golang.org/grpc v1.66.2 // indirect
+	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
