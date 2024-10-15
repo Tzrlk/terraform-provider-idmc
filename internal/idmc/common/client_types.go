@@ -4,9 +4,6 @@ import (
 	"net/http"
 )
 
-// ClientOption allows setting custom parameters during construction.
-type ClientOption func(*ClientConfig) error
-
 // HttpRequestDoer performs HTTP requests.
 //
 // The standard http.Client implements this interface.

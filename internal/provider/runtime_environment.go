@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/samber/lo"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -98,7 +99,7 @@ func (r *RuntimeEnvironmentResource) Create(ctx context.Context, req CreateReque
 	}
 
 	reqBody := v2.CreateRuntimeEnvironmentJSONRequestBody{
-		Type:     Ptr(v2.RuntimeEnvironmentDataMinimalTypeRuntimeEnvironment),
+		Type:     lo.ToPtr(v2.RuntimeEnvironmentDataMinimalTypeRuntimeEnvironment),
 		Name:     data.Name.ValueString(),
 		IsShared: data.Shared.ValueBoolPointer(),
 	}
@@ -352,7 +353,7 @@ func (r *RuntimeEnvironmentResourceModel) updateAgents(
 	}
 
 	// Transform all the values into attributes.
-	agentsAttrs := TransformSlice(*data, func(agent v2.RuntimeEnvironmentAgent) attr.Value {
+	agentsAttrs := lo.Map(*data, func(agent v2.RuntimeEnvironmentAgent, index int) attr.Value {
 		return types.StringPointerValue(agent.Id)
 	})
 

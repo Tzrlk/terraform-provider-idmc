@@ -8,6 +8,10 @@ import (
 	"net/url"
 	"reflect"
 	"strings"
+
+	"terraform-provider-idmc/internal/utils"
+
+	. "github.com/samber/mo"
 )
 
 type ClientConfig struct {
@@ -32,7 +36,7 @@ type ClientConfig struct {
 }
 
 // NewClientConfig sets up a new ClientConfig with reasonable defaults.
-func NewClientConfig(server string, opts ...ClientOption) (*ClientConfig, error) {
+func NewClientConfig(server string, opts ...ClientOption) Result[*ClientConfig] {
 	config := ClientConfig{
 		Server:  server,
 		Editors: ClientConfigEditor{},
@@ -41,7 +45,7 @@ func NewClientConfig(server string, opts ...ClientOption) (*ClientConfig, error)
 	// mutate client and add all optional params.
 	for _, opt := range opts {
 		if err := opt(&config); err != nil {
-			return nil, err
+			return Err[*ClientConfig](err)
 		}
 	}
 
@@ -55,25 +59,36 @@ func NewClientConfig(server string, opts ...ClientOption) (*ClientConfig, error)
 		config.Client = &http.Client{}
 	}
 
-	return &config, nil
+	return Ok(&config)
 }
 
-func (c *ClientConfig) SetServer(server string) error {
+func (c *ClientConfig) SetServer(server string) Result[url.URL] {
 
-	newBaseURL, err := url.Parse(server)
-	if err != nil {
-		return fmt.Errorf("unable to set server url to %s: %v", server, err)
-	}
+	// Parse the provided url string
+	urlPtr := Try(func() (*url.URL, error) {
+		return url.Parse(server)
+	}).MapErr(func(err error) (*url.URL, error) {
+		return nil, fmt.Errorf("unable to set server url to '%s': %v", server, err)
+	})
 
-	newBaseURL.Scheme = "https" // Ensure we're using https at all times.
-	c.Server = newBaseURL.String()
+	// Resolve the url pointer.
+	return utils.MapResultOk(urlPtr, func(value *url.URL) Result[url.URL] {
+		return Ok(*value)
+	}).FlatMap(func(value url.URL) Result[url.URL] {
 
-	// ensure the server URL always has a trailing slash.
-	if !strings.HasSuffix(c.Server, "/") {
-		c.Server += "/"
-	}
+		// Ensure we're using https at all times.
+		value.Scheme = "https"
 
-	return nil
+		// ensure the server URL always has a trailing slash.
+		if !strings.HasSuffix(value.Path, "/") {
+			value.Path += "/"
+		}
+
+		// Update the server url.
+		c.Server = value.String()
+
+		return Ok(value)
+	})
 }
 
 func (c *ClientConfig) HandleRequest(

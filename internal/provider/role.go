@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/samber/lo"
 	"terraform-provider-idmc/internal/idmc/v3"
 
 	. "github.com/hashicorp/terraform-plugin-framework/resource"
@@ -115,7 +116,7 @@ func (r *RoleResource) Create(ctx context.Context, req CreateRequest, resp *Crea
 	apiRes, apiErr := client.CreateRoleWithResponse(ctx, v3.CreateRoleJSONRequestBody{
 		Name:        data.Name.ValueStringPointer(),
 		Description: data.Description.ValueStringPointer(),
-		Privileges:  Ptr(rolePrivileges.ToSlice()),
+		Privileges:  lo.ToPtr(rolePrivileges.ToSlice()),
 	})
 	if diags.HandleError(apiErr) {
 		return
@@ -186,12 +187,12 @@ func (r *RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadResp
 
 	// Obtain request parameters from config.
 	params := &v3.GetRolesParams{
-		Expand: Ptr(v3.GetRolesParamsExpandPrivileges),
+		Expand: lo.ToPtr(v3.GetRolesParamsExpandPrivileges),
 	}
 	if !data.Id.IsNull() {
-		params.Q = Ptr(fmt.Sprintf("roleId==\"%s\"", data.Id.ValueString()))
+		params.Q = lo.ToPtr(fmt.Sprintf("roleId==\"%s\"", data.Id.ValueString()))
 	} else if !data.Name.IsNull() {
-		params.Q = Ptr(fmt.Sprintf("roleName==\"%s\"", data.Name.ValueString()))
+		params.Q = lo.ToPtr(fmt.Sprintf("roleName==\"%s\"", data.Name.ValueString()))
 		diags.AtName("id").WithTitle("Issue reading resource").AddWarning(
 			"No id for the role found in state. Falling back to name: %s", data.Name.ValueString())
 	} else {
@@ -247,7 +248,7 @@ func (r *RoleResource) Read(ctx context.Context, req ReadRequest, resp *ReadResp
 			return nil
 		}
 
-		return Ptr(TransformSlice(*apiItems[0].Privileges, func(item v3.RolePrivilegeItem) attr.Value {
+		return lo.ToPtr(lo.Map(*apiItems[0].Privileges, func(item v3.RolePrivilegeItem, index int) attr.Value {
 			return types.StringValue(item.Id)
 		}))
 	})
@@ -301,7 +302,7 @@ func (r *RoleResource) Update(ctx context.Context, req UpdateRequest, resp *Upda
 		}
 		// Save update result back to state.
 		state.Privileges = diags.SetValueFromFn(types.StringType, func() []attr.Value {
-			return TransformSlice(statePrivileges.Union(privsToAdd).ToSlice(), func(from string) attr.Value {
+			return lo.Map(statePrivileges.Union(privsToAdd).ToSlice(), func(from string, index int) attr.Value {
 				return types.StringValue(from)
 			})
 		})

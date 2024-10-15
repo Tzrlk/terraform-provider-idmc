@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"strings"
 
@@ -135,24 +134,25 @@ func (p *IdmcProvider) Configure(
 	}
 
 	// Initialise a new IDMC api client.
-	idmcApi, err := idmc.NewIdmcApi(
+	api := idmc.NewIdmcApi(
 		fmt.Sprintf("https://%s/saas/", authHost),
-		common.WithHTTPClient(&http.Client{}),
-		common.WithRequestEditorFn(LogHttpRequest),
-		common.WithApiResponseEditorFn(LogApiResponse),
+		common.ClientOptions{
+			common.WithRequestEditorFn(LogHttpRequest),
+			common.WithApiResponseEditorFn(LogApiResponse),
+		},
 	)
-	if diags.HandleError(err) {
+	if diags.HandleError(api.Error()) {
 		return
 	}
 
 	// Perform a login to get the api to be functional.
-	err = idmcApi.V3.Login(ctx, authUser, authPass)
+	err := api.MustGet().V3.Login(ctx, authUser, authPass)
 	if diags.HandleError(err) {
 		return
 	}
 
 	// Save the api and set the provider data
-	p.Api = idmcApi
+	p.Api = api.MustGet()
 	resp.DataSourceData = p.IdmcProviderData
 	resp.ResourceData = p.IdmcProviderData
 

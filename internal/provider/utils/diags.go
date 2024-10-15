@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/samber/mo"
 
 	paths "github.com/hashicorp/terraform-plugin-framework/path"
 )
@@ -72,6 +73,14 @@ func (d DiagsHandler) Append(diags diag.Diagnostics) bool {
 func (d DiagsHandler) HandleError(err error) bool {
 	if err != nil {
 		d.AddError("%s", err.Error())
+		return true
+	}
+	return d.diags.HasError()
+}
+
+func (d DiagsHandler) HandleResult(result mo.Result[any]) bool {
+	if result.IsError() {
+		d.AddError("%s", result.Error())
 		return true
 	}
 	return d.diags.HasError()

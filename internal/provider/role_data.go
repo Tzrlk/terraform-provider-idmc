@@ -6,13 +6,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	. "github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/samber/lo"
 	"terraform-provider-idmc/internal/idmc/v3"
-	"terraform-provider-idmc/internal/utils"
-
-	. "github.com/hashicorp/terraform-plugin-framework/datasource"
 	. "terraform-provider-idmc/internal/provider/utils"
 )
 
@@ -174,12 +173,12 @@ func (d *RoleDataSource) Read(ctx context.Context, req ReadRequest, resp *ReadRe
 
 	// Obtain request parameters from config.
 	params := &v3.GetRolesParams{
-		Expand: utils.Ptr(v3.GetRolesParamsExpandPrivileges),
+		Expand: lo.ToPtr(v3.GetRolesParamsExpandPrivileges),
 	}
 	if !config.Id.IsNull() {
-		params.Q = utils.Ptr(fmt.Sprintf("roleId==\"%s\"", config.Id.ValueString()))
+		params.Q = lo.ToPtr(fmt.Sprintf("roleId==\"%s\"", config.Id.ValueString()))
 	} else if !config.Name.IsNull() {
-		params.Q = utils.Ptr(fmt.Sprintf("roleName==\"%s\"", config.Name.ValueString()))
+		params.Q = lo.ToPtr(fmt.Sprintf("roleName==\"%s\"", config.Name.ValueString()))
 	}
 
 	// Perform the API request.
