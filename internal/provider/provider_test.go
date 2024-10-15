@@ -2,12 +2,12 @@ package provider
 
 import (
 	"errors"
-	"github.com/joho/godotenv"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/joho/godotenv"
 )
 
 // testAccProtoV6ProviderFactories are used to instantiate a provider during

@@ -82,6 +82,6 @@ jobs:
           terraform_wrapper: false
       - run: go mod download
       - env:
-          TF_ACC: "1"
+          TF_ACC: null # '1' (turned-off due to lack of creds)
         run: go test -v -cover ./internal/provider/
         timeout-minutes: 10
